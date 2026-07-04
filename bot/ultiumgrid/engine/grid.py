@@ -56,6 +56,8 @@ class GridState:
     entry_avg: float = 0.0
     active: bool = False
     deepest_buy_index: int = -1
+    # Achat marché initial (inventaire pour les SELL) — traçabilité frais/slippage
+    initial_buy: dict | None = None
 
     @property
     def gross_pnl(self) -> float:
@@ -89,8 +91,8 @@ def compute_levels(
 
 
 def qty_per_level(cfg: StrategyConfig, center_price: Decimal, filters: SymbolFilters) -> Decimal:
-    """Spot pur : capital USDT réparti sur les paliers BUY (pas de levier)."""
-    notional = Decimal(str(cfg.capital_usdt))
+    """Spot pur : moitié du capital → inventaire SELL (achat marché), moitié → limites BUY."""
+    notional = Decimal(str(cfg.capital_usdt)) / Decimal("2")
     buy_levels = max(cfg.num_levels // 2, 1)
     per = notional / Decimal(buy_levels) / center_price
     qty = filters.round_qty(per)
@@ -114,26 +116,142 @@ class GridEngine:
         self.on_level_incomplete = on_level_incomplete
 
     def open_grid(self, center_price: Decimal | None = None) -> GridState:
+        """Séquence unique d'ouverture :
+        1) niveaux 2) BUY marché inventaire SELL 3) limites BUY+SELL 4) état.
+        """
         symbol = self.cfg.symbol
-        filters = self.client.get_symbol_filters(symbol)
+        filters = self.client.get_symbol_filters(symbol, force=True)
         if center_price is None:
-            center_price = Decimal(self.client.ticker_price(symbol)["price"])
+            center_price = Decimal(self.client.ticker_price(symbol, force=True)["price"])
         center_price = filters.round_price(center_price)
+        theoretical_center = float(center_price)
 
         qty = qty_per_level(self.cfg, center_price, filters)
         levels = compute_levels(center_price, self.cfg, filters, qty)
-        self.state = GridState(symbol=symbol, center_price=center_price, levels=levels, active=True)
+        sell_levels = [lv for lv in levels if lv.side == "SELL"]
+        sell_qty_total = filters.round_qty(
+            sum((lv.quantity for lv in sell_levels), Decimal("0"))
+        )
+        if sell_qty_total * center_price < filters.min_notional:
+            sell_qty_total = filters.round_qty(
+                filters.min_notional / center_price * Decimal("1.05")
+            )
+        if sell_qty_total < filters.min_qty:
+            sell_qty_total = filters.min_qty
 
-        # Spot : au démarrage on n'a souvent que du quote (USDT).
-        # On place uniquement les BUY ; les SELL sont placés après fill d'un BUY.
-        free_base = self.client.balance_free(filters.base_asset)
+        # Étape 2 — inventaire pour les SELL (achat marché si besoin)
+        free_base = Decimal(str(self.client.balance_free(filters.base_asset, force=True)))
+        need = sell_qty_total - free_base
+        initial_buy: dict | None = None
+        entry_avg = float(center_price)
+        position_qty = float(free_base)
+
+        if need >= filters.min_qty:
+            # Buffer frais éventuels en base asset + minNotional
+            need = filters.round_qty(need + filters.step_size)
+            if need * center_price < filters.min_notional:
+                need = filters.round_qty(
+                    filters.min_notional / center_price * Decimal("1.05")
+                )
+            order = self.client.place_order(
+                symbol=symbol,
+                side="BUY",
+                order_type="MARKET",
+                quantity=need,
+                purpose="initial_inventory_buy",
+            )
+            executed = Decimal(str(order.get("executedQty") or "0"))
+            quote = Decimal(str(order.get("cummulativeQuoteQty") or "0"))
+            if executed <= 0:
+                raise RuntimeError(
+                    f"initial_inventory_buy non fillé: order={order.get('orderId')} status={order.get('status')}"
+                )
+            # Confirmation myTrades (retry) — fallback fills de la réponse ordre
+            import time as _time
+
+            trades: list = []
+            for _ in range(6):
+                trades = self.client.my_trades(
+                    symbol, limit=20, order_id=int(order["orderId"])
+                )
+                if trades:
+                    break
+                _time.sleep(0.25)
+            confirm_source = "myTrades"
+            if not trades:
+                fills = order.get("fills") or []
+                if not fills:
+                    raise RuntimeError(
+                        f"initial_inventory_buy sans myTrades/fills orderId={order.get('orderId')}"
+                    )
+                trades = fills
+                confirm_source = "order.fills"
+            entry_avg = float(quote / executed) if executed else theoretical_center
+            slippage_pct = (
+                (entry_avg - theoretical_center) / theoretical_center * 100.0
+                if theoretical_center
+                else 0.0
+            )
+            fees_usdt = 0.0
+            for t in trades:
+                comm = float(t.get("commission") or 0)
+                asset = str(t.get("commissionAsset") or "")
+                px = float(t.get("price") or entry_avg)
+                if asset in ("USDT", "USDC", "BUSD"):
+                    fees_usdt += comm
+                else:
+                    fees_usdt += comm * px
+            # Base nette après frais éventuels en BTC
+            free_after = Decimal(
+                str(self.client.balance_free(filters.base_asset, force=True))
+            )
+            if free_after < sell_qty_total:
+                raise RuntimeError(
+                    f"inventaire insuffisant après buy: free={free_after} need={sell_qty_total}"
+                )
+            initial_buy = {
+                "orderId": order.get("orderId"),
+                "clientOrderId": order.get("clientOrderId"),
+                "executedQty": float(executed),
+                "cummulativeQuoteQty": float(quote),
+                "avg_price": entry_avg,
+                "theoretical_center": theoretical_center,
+                "slippage_pct": slippage_pct,
+                "fees_usdt": fees_usdt,
+                "confirm_source": confirm_source,
+                "myTrades_count": len(trades),
+                "purpose": "initial_inventory_buy",
+            }
+            position_qty = float(free_after)
+            logger.info(
+                "initial_inventory_buy orderId=%s qty=%s avg=%s fees_usdt=%s src=%s",
+                order.get("orderId"),
+                executed,
+                entry_avg,
+                fees_usdt,
+                confirm_source,
+            )
+        else:
+            logger.info(
+                "initial_inventory_buy skipped — free_base=%s >= sell_qty=%s",
+                free_base,
+                sell_qty_total,
+            )
+
+        self.state = GridState(
+            symbol=symbol,
+            center_price=center_price,
+            levels=levels,
+            active=True,
+            position_qty=position_qty,
+            entry_avg=entry_avg,
+            initial_buy=initial_buy,
+        )
+
+        # Étape 3 — limites BUY et SELL (inventaire garanti pour les SELL)
         for level in levels:
-            if level.side == "SELL" and free_base < float(level.quantity):
-                level.status = "pending"  # attend un fill BUY
-                continue
             self._place_level_order(level)
-            if level.side == "SELL" and level.status == "open":
-                free_base -= float(level.quantity)
+
         return self.state
 
     def _place_level_order(self, level: GridLevel) -> None:

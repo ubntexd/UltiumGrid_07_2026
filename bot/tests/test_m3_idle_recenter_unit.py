@@ -11,12 +11,12 @@ from ultiumgrid.engine.config import StrategyConfig
 from ultiumgrid.engine.grid import GridEngine, GridLevel, GridState
 
 
-def test_idle_recenter_triggers_when_out_of_range_no_position_no_fill():
+def test_idle_recenter_triggers_when_out_of_range_no_fill():
     client = MagicMock()
     client.get_symbol_filters.return_value = MagicMock(
         base_asset="BTC", quote_asset="USDT", min_qty=Decimal("0.00001")
     )
-    client.balance_total.return_value = 0.0
+    client.balance_total.return_value = 0.001  # inventaire SELL initial OK
     client._log_attempt = MagicMock()
 
     session = MagicMock()
@@ -56,17 +56,17 @@ def test_idle_recenter_triggers_when_out_of_range_no_position_no_fill():
     assert cycle_row.close_reason == "idle_recenter_no_fill"
 
 
-def test_idle_recenter_skips_when_position_exists():
+def test_idle_recenter_skips_when_fill_occurred():
     client = MagicMock()
     client.get_symbol_filters.return_value = MagicMock(
         base_asset="BTC", quote_asset="USDT", min_qty=Decimal("0.00001")
     )
-    client.balance_total.return_value = 0.01  # position réelle
+    client.balance_total.return_value = 0.01
     session = MagicMock()
     cfg = StrategyConfig(idle_recenter_min=0.05)
     bot = BotRunner(client, session, cfg)
     bot.running = True
-    bot._last_fill_at = None
+    bot._last_fill_at = datetime.now(timezone.utc)  # fill grille déjà vu
     bot._out_of_range_since = datetime.now(timezone.utc) - timedelta(minutes=30)
     bot.engine.state = GridState(
         symbol="BTCUSDT",
@@ -74,7 +74,7 @@ def test_idle_recenter_skips_when_position_exists():
         active=True,
         levels=[
             GridLevel(0, Decimal("90"), "BUY", Decimal("0.001"), status="open", order_id=1),
-            GridLevel(1, Decimal("110"), "SELL", Decimal("0.001"), status="pending"),
+            GridLevel(1, Decimal("110"), "SELL", Decimal("0.001"), status="open", order_id=2),
         ],
     )
     bot.engine.close_cycle = MagicMock()

@@ -33,12 +33,25 @@ Référence : `docs/spec.md`.
 | Exigence | Statut | Preuve |
 |---|---|---|
 | 20 niveaux arithmétiques pas 0,25–0,26 % | conforme (unit) | `test_compute_20_levels_arithmetic` |
-| Placement initial / replacement fills | conforme (integration antérieure) | `m3_grid_integration.json` |
+| Placement initial / replacement fills | conforme | `m3_open_sequence.json` (BUY+SELL avec `order_id`) |
 | PnL Grid+Floating (pas funding) | conforme | formules dans `engine/grid.py` |
-| Floating recalculé à chaque tick WS (sans fill) | conforme | `m3_floating_live_tick.json` — Δmark=+13.48 → Δfloat=+0.00147, `mark_source=ws`, openOrders inchangés |
-| Trigger +15 fermeture/recentrage | code présent | **non vérifié** live cycle complet |
-| §2bis idle_recenter_no_fill | conforme (**unit**) | `test_m3_idle_recenter_unit.py` |
-| §2bis forced_sell_stuck_level | code présent | **non vérifié** integration live |
+| Floating recalculé à chaque tick WS (sans fill) | conforme | `m3_floating_live_tick.json` |
+| Trigger +15 fermeture/recentrage | code présent | **non vérifié** live cycle complet organique |
+| §2bis idle_recenter_no_fill | conforme | `m3_open_sequence.json` T2 (seuil test 0.05 min) |
+| §2bis forced_sell_stuck_level | conforme | `m3_open_sequence.json` T3 |
+
+## Séquence d'ouverture de cycle (achat initial + recentrage)
+
+Preuve unique : `docs/proofs/m3_open_sequence.json` (grille test 4 paliers, `capital_usdt=100`).
+
+| Test | Résultat | Preuve clé |
+|---|---|---|
+| **T1** Start — achat marché + BUY/SELL limites | **conforme** | `initial_inventory_buy` orderId réel, 2 BUY + 2 SELL `open` avec `order_id`, `fees_paid` ≥ 1, 1 cycle `open` |
+| **T2** Cas A idle recenter | **conforme** | cycle 14→15, `idle_recenter_no_fill`, **nouvel** `initial_buy`, SELL tous avec `order_id` (seuil temporaire 0.05 min) |
+| **T3** Cas B stuck sell | **conforme** | `forced_sell_stuck_level` en `order_attempts`, palier `status=filled` |
+| **T4** Anti-doublon interaction | **conforme** | Start pendant `_opening_cycle` → `already_running` ; Start actif → pas de 2ᵉ cycle ; 1 seul `open` |
+
+Mécanisme unifié : `GridEngine.open_grid` (étapes 1–3) + `BotRunner._open_new_cycle` (réservation DB **avant** achat marché, lock `_opening_cycle`). Capital : moitié inventaire SELL / moitié limites BUY.
 
 ## Module 4 — Coupe progressive
 

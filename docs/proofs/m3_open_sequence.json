@@ -1,0 +1,77 @@
+{
+  "timestamp_utc": "2026-07-04T15:50:12.457801+00:00",
+  "tests": {
+    "t1_open_sequence": {
+      "initial_buy": {
+        "orderId": 45962892719,
+        "clientOrderId": "ugfd0b9adefe7048c2a5a68f3ad39b4f6d",
+        "executedQty": 0.00078,
+        "cummulativeQuoteQty": 49.084932,
+        "avg_price": 62929.4,
+        "theoretical_center": 62929.39,
+        "slippage_pct": 1.5890826213375448e-05,
+        "fees_usdt": 0.049084932000000005,
+        "confirm_source": "myTrades",
+        "myTrades_count": 1,
+        "purpose": "initial_inventory_buy"
+      },
+      "buys_open": 2,
+      "sells_open": 2,
+      "buys_n": 2,
+      "sells_n": 2,
+      "binance_buys": 2,
+      "binance_sells": 2,
+      "fees": 1,
+      "cycles_open": 1,
+      "conforme": true
+    },
+    "t4_anti_doublon": {
+      "while_opening": {
+        "ok": true,
+        "cycle_id": 14,
+        "already_running": true,
+        "message": "Ouverture de cycle d\u00e9j\u00e0 en cours \u2014 pas de second achat"
+      },
+      "while_active": {
+        "ok": true,
+        "cycle_id": 14,
+        "already_running": true,
+        "message": "Cycle d\u00e9j\u00e0 actif \u2014 aucun nouveau cycle cr\u00e9\u00e9"
+      },
+      "cycles_open": 1,
+      "mkt_buys": 4,
+      "conforme": true
+    },
+    "t2_idle_recenter": {
+      "old_cycle": 14,
+      "new_cycle": 15,
+      "old_center": 62929.39,
+      "new_center": 62929.39,
+      "new_initial_buy": {
+        "orderId": 45962892725,
+        "clientOrderId": "ug4a312830450146f5a7f9fd7fc0901c8c",
+        "executedQty": 0.00078,
+        "cummulativeQuoteQty": 49.084932,
+        "avg_price": 62929.4,
+        "theoretical_center": 62929.39,
+        "slippage_pct": 1.5890826213375448e-05,
+        "fees_usdt": 0.049084932000000005,
+        "confirm_source": "myTrades",
+        "myTrades_count": 1,
+        "purpose": "initial_inventory_buy"
+      },
+      "sells_with_id": 2,
+      "sells_n": 2,
+      "cycles_open": 1,
+      "idle_closed": 3,
+      "conforme": true
+    },
+    "t3_stuck_sell": {
+      "level": 2,
+      "status_after": "filled",
+      "forced_sell_logs": 2,
+      "conforme": true
+    }
+  },
+  "all_conforme": true
+}

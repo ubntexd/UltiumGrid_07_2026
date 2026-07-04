@@ -58,6 +58,7 @@ class BotRunner:
         self._last_live_persist: float = 0.0
         self._ws_stop = False
         self._session_factory = None  # set by main_loop for thread-safe WS writes
+        self._opening_cycle = False  # lock séquence ouverture (anti double achat marché)
 
     def _persist_order_attempt(self, entry: dict) -> None:
         row = OrderAttempt(
@@ -253,6 +254,13 @@ class BotRunner:
         # Panic précédent : autoriser un redémarrage explicite (clear du flag)
         if self.guards.state.panic:
             self.guards.state.panic = False
+        if self._opening_cycle:
+            return {
+                "ok": True,
+                "cycle_id": self.cycle_id,
+                "already_running": True,
+                "message": "Ouverture de cycle déjà en cours — pas de second achat",
+            }
         if self.running and self.engine.state.active and self.cycle_id:
             self.save_state()
             return {
@@ -272,6 +280,7 @@ class BotRunner:
             "cycle_id": self.cycle_id,
             "already_running": False,
             "message": "Démarré",
+            "initial_buy": (self.engine.state.initial_buy or None),
         }
 
     def stop(self) -> dict[str, Any]:
@@ -378,35 +387,84 @@ class BotRunner:
         self.cycle_id = keep_id
 
     def _open_new_cycle(self) -> None:
-        # Fermer explicitement tout cycle encore open avant d'en ouvrir un nouveau
-        opens = (
-            self.session.query(Cycle)
-            .filter(Cycle.symbol == self.cfg.symbol, Cycle.status == "open")
-            .all()
-        )
-        for c in opens:
-            c.status = "closed"
-            c.closed_at = utcnow()
-            c.close_reason = "superseded_by_new_cycle"
-        if opens:
-            self.session.commit()
-            logger.warning(
-                "Superseded %s open cycle(s) before opening new one: %s",
-                len(opens),
-                [c.id for c in opens],
+        """Séquence unique : réserve le cycle en DB AVANT l'achat marché (anti-doublon)."""
+        if self._opening_cycle:
+            logger.warning("open_new_cycle ignored — already in progress cycle_id=%s", self.cycle_id)
+            return
+        self._opening_cycle = True
+        cycle = None
+        try:
+            # Fermer tout open existant AVANT l'achat inventaire
+            opens = (
+                self.session.query(Cycle)
+                .filter(Cycle.symbol == self.cfg.symbol, Cycle.status == "open")
+                .all()
             )
-        state = self.engine.open_grid()
-        cycle = Cycle(
-            symbol=self.cfg.symbol,
-            status="open",
-            center_price=float(state.center_price),
-            levels_json=self.engine.levels_as_dict(),
-        )
-        self.session.add(cycle)
-        self.session.commit()
-        self.session.refresh(cycle)
-        self.cycle_id = cycle.id
-        self.save_state()
+            for c in opens:
+                c.status = "closed"
+                c.closed_at = utcnow()
+                c.close_reason = "superseded_by_new_cycle"
+            if opens:
+                self.session.commit()
+                logger.warning(
+                    "Superseded %s open cycle(s) before opening new one: %s",
+                    len(opens),
+                    [c.id for c in opens],
+                )
+
+            # Réservation unique (index partiel) avant étape 2 marché
+            cycle = Cycle(
+                symbol=self.cfg.symbol,
+                status="open",
+                center_price=0.0,
+                levels_json=[],
+            )
+            self.session.add(cycle)
+            try:
+                self.session.commit()
+            except Exception as exc:
+                self.session.rollback()
+                logger.error("cycle reservation failed (anti-doublon): %s", exc)
+                return
+            self.session.refresh(cycle)
+            self.cycle_id = cycle.id
+
+            try:
+                state = self.engine.open_grid()
+            except Exception:
+                cycle.status = "closed"
+                cycle.closed_at = utcnow()
+                cycle.close_reason = "open_failed"
+                self.session.commit()
+                self.cycle_id = None
+                raise
+
+            cycle.center_price = float(state.center_price)
+            cycle.levels_json = self.engine.levels_as_dict()
+            # Coût achat initial rattaché au cycle (métadonnée dans levels_json via bot_state)
+            self.session.commit()
+
+            initial_buy = state.initial_buy
+            if initial_buy and initial_buy.get("orderId"):
+                self._record_fees_for_order(int(initial_buy["orderId"]))
+                # Persister le détail d'achat initial
+                meta = self.session.query(BotState).filter(
+                    BotState.key == f"cycle_meta_{cycle.id}"
+                ).first()
+                payload = {"initial_buy": initial_buy, "cycle_id": cycle.id}
+                if not meta:
+                    self.session.add(BotState(key=f"cycle_meta_{cycle.id}", value_json=payload))
+                else:
+                    meta.value_json = payload
+                    meta.updated_at = utcnow()
+                self.session.commit()
+
+            self._last_fill_at = None
+            self._out_of_range_since = None
+            self._stuck_sell_since.clear()
+            self.save_state()
+        finally:
+            self._opening_cycle = False
 
     def tick(self) -> dict[str, Any]:
         """Un cycle de surveillance (appelé en boucle)."""
@@ -576,7 +634,7 @@ class BotRunner:
         return min(prices), max(prices)
 
     def _check_idle_recenter(self, mark: float) -> None:
-        """Cas A §2bis : hors fourchette, sans position, sans fill → recentrage."""
+        """Cas A §2bis : hors fourchette + aucun fill grille → fermer et rouvrir (séquence complète)."""
         if not self.engine.state.active or not self.running:
             return
         low, high = self._grid_price_bounds()
@@ -593,30 +651,50 @@ class BotRunner:
         elapsed_min = (now - self._out_of_range_since).total_seconds() / 60.0
         if elapsed_min < float(self.cfg.idle_recenter_min):
             return
-        # Aucun fill depuis l'ouverture du cycle
+        # Aucun fill de grille depuis l'ouverture (l'inventaire SELL initial ne compte pas)
         if self._last_fill_at is not None:
             return
-        # Position réelle base (hors sacs) doit être nulle
         try:
             filters = self.client.get_symbol_filters(self.cfg.symbol)
             base_total = self.client.balance_total(filters.base_asset, force=True)
-            bags_q = self.bags.bags_qty()
-            grid_qty = max(0.0, base_total - bags_q)
         except Exception as exc:
             logger.error("idle_recenter balance check failed: %s", exc)
-            return
-        if grid_qty > float(filters.min_qty):
             return
         proof = {
             "mark": mark,
             "range_low": low,
             "range_high": high,
             "out_of_range_min": elapsed_min,
-            "grid_qty": grid_qty,
             "base_total": base_total,
+            "note": "inventaire SELL initial autorisé; recentrage si aucun fill grille",
         }
         logger.warning("idle_recenter_no_fill %s", proof)
         result = self.engine.close_cycle()
+        # Aplatir l'inventaire résiduel pour forcer un nouvel achat initial à la réouverture
+        try:
+            filters = self.client.get_symbol_filters(self.cfg.symbol, force=True)
+            free = float(self.client.balance_free(filters.base_asset, force=True))
+            bags_q = self.bags.bags_qty()
+            sell_amt = free - bags_q
+            if sell_amt >= float(filters.min_qty):
+                from decimal import Decimal, ROUND_DOWN
+
+                step = filters.step_size
+                qty = (Decimal(str(sell_amt)) / step).to_integral_value(rounding=ROUND_DOWN) * step
+                if qty >= filters.min_qty:
+                    px = Decimal(str(mark))
+                    if qty * px >= filters.min_notional:
+                        flat = self.client.place_order(
+                            symbol=self.cfg.symbol,
+                            side="SELL",
+                            order_type="MARKET",
+                            quantity=qty,
+                            purpose="idle_recenter_flatten",
+                        )
+                        result["flatten_order"] = flat
+                        proof["flatten_qty"] = float(qty)
+        except Exception as exc:
+            logger.warning("idle_recenter flatten failed: %s", exc)
         self._close_cycle_db(result, "idle_recenter_no_fill")
         self.client._log_attempt(
             {

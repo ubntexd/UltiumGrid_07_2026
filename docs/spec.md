@@ -18,17 +18,21 @@
 ## 2. Grille — étage 1 (cycle +15 / +10)
 
 - 20 niveaux arithmétiques, pas **0,25 %** (bornes 0,05–2 %).
-- Capital défaut **5 000 USDT** (Spot pur, sans levier).
-- Placement initial, replacement après fill.
-- PnL : **Grid Profit + Floating Profit** (pas de funding).
-- **Floating Profit recalculé à chaque tick WebSocket** (`bookTicker`) : `(mark - entry_avg) * position_qty`. Le broadcast UI peut rester à 5 s, mais la valeur envoyée utilise toujours le **dernier prix WS**.
-- Déclenchement cycle à **+15 USD brut**.
+- Capital défaut **5 000 USDT** (Spot pur) : **moitié** inventaire SELL (achat marché), **moitié** limites BUY.
+- **Séquence unique d’ouverture** (Start, post-+15, recentrage Cas A/B) :
+  1. Calcul des niveaux autour du prix actuel
+  2. BUY marché = somme des quantités SELL (confirmé `myTrades`)
+  3. Placement **10 BUY + 10 SELL** limites (tous avec `order_id` — plus de SELL `pending` sans ordre)
+  4. Cycle `open` + coût d’achat initial (`cycle_meta_*`, `fees_paid`)
+- Anti-doublon **avant** l’achat marché (réservation DB + lock `_opening_cycle`).
+- PnL : Grid Profit + Floating Profit ; floating recalculé à **chaque tick WS**.
+- Déclenchement +15 USD brut puis **même séquence** pour le cycle suivant.
 - Objectif UI : **+10 USD net** / cycle.
 
 ## 2bis. Recentrage hors fourchette
 
-- **Cas A** (`idle_recenter_no_fill`, défaut 20 min) : prix hors fourchette complète, **aucun fill** depuis l’ouverture, solde base grille réel ≈ 0 (vérifié via `balances`) → annuler, clôturer le cycle, ouvrir un nouveau centré sur le prix actuel.
-- **Cas B** (`forced_sell_stuck_level`, défaut 15 min) : SELL `open` avec prix marché déjà ≥ prix du palier sans fill → annuler la limite, vendre au marché la qty, journaliser la preuve.
+- **Cas A** (`idle_recenter_no_fill`, défaut 20 min) : hors fourchette, aucun fill, solde grille ≈ 0 → fermer puis **rejouer la séquence complète** (nouvel achat inventaire).
+- **Cas B** (`forced_sell_stuck_level`, défaut 15 min) : SELL `open`, mark ≥ prix palier trop longtemps → vente marché forcée ; si le cycle se clôture, **même séquence** de réouverture.
 
 ## 3. Risque — étage 2 (coupe progressive)
 
