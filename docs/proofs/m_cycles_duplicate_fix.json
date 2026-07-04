@@ -1,0 +1,24 @@
+{
+  "timestamp_utc": "2026-07-04T14:20:11.804358+00:00",
+  "root_cause": "_open_new_cycle INSERT without closing existing open cycles; no DB unique partial index",
+  "cycle1": {
+    "id": 1,
+    "was": "open orphan, all levels error, no order_ids",
+    "now": "closed orphan_superseded"
+  },
+  "cycle2": {
+    "id": 2,
+    "status": "open",
+    "only_cycle_with_binance_orders": true
+  },
+  "binance_impact": "DB-only duplicate; no dual live grid",
+  "proofs": [
+    "docs/proofs/m_cycles_duplicate_binance.json",
+    "docs/audit_ui_bugfix.md \u00a76"
+  ],
+  "non_regression": {
+    "orphan_on_restore_log": "Closed 1 orphan open cycle(s) for BTCUSDT keep_id=2 reason=orphan_on_restore",
+    "unique_index_blocks_second_open": true,
+    "open_count_after_restart": 1
+  }
+}

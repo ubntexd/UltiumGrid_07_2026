@@ -1,0 +1,247 @@
+{
+  "timestamp_utc": "2026-07-04T14:02:53.432923+00:00",
+  "binance_raw": {
+    "account": {
+      "status": 200,
+      "canTrade": true,
+      "balances_nonzero": {
+        "BTC": {
+          "asset": "BTC",
+          "free": "0.00000964",
+          "locked": "0.00000000"
+        },
+        "USDT": {
+          "asset": "USDT",
+          "free": "4999.35190534",
+          "locked": "0.00000000"
+        },
+        "USDC": {
+          "asset": "USDC",
+          "free": "5000.00000000",
+          "locked": "0.00000000"
+        }
+      },
+      "raw_prefix": "{\"makerCommission\":10,\"takerCommission\":10,\"buyerCommission\":0,\"sellerCommission\":0,\"commissionRates\":{\"maker\":\"0.00100000\",\"taker\":\"0.00100000\",\"buyer\":\"0.00000000\",\"seller\":\"0.00000000\"},\"canTrade\":true,\"canWithdraw\":true,\"canDeposit\":true,\"brokered\":false,\"requireSelfTradePrevention\":false,\"preventSor\":false,\"updateTime\":1783166726331,\"accountType\":\"SPOT\",\"balances\":[{\"asset\":\"BTC\",\"free\":\"0.00000964\",\"locked\":\"0.00000000\"},{\"asset\":\"LTC\",\"free\":\"0.00000000\",\"locked\":\"0.00000000\"},{\"asset\":\"E"
+    },
+    "ticker": {
+      "status": 200,
+      "body": {
+        "symbol": "BTCUSDT",
+        "price": "62636.00000000"
+      },
+      "raw": "{\"symbol\":\"BTCUSDT\",\"price\":\"62636.00000000\"}"
+    },
+    "openOrders": {
+      "status": 200,
+      "count": 0,
+      "orders": [],
+      "raw_prefix": "[]"
+    }
+  },
+  "api_running": {
+    "status": 200,
+    "mark_price": 62636.0,
+    "mark_stale": false,
+    "mark_error": null,
+    "capital": {
+      "quote_free": 4999.35190534,
+      "base_total": 9.64e-06,
+      "base_free": 9.64e-06,
+      "quote_asset": "USDT",
+      "base_asset": "BTC",
+      "canTrade": true,
+      "availableBalance": 4999.35190534,
+      "totalWalletBalance": 4999.35190534,
+      "stale": false,
+      "error": null
+    },
+    "exchange_orders": {
+      "openOrders_count": 0,
+      "openOrders_error": null,
+      "openOrders": [],
+      "levels_vs_openOrders": [
+        {
+          "index": 0,
+          "order_id": 45925072189,
+          "status_db": "canceled",
+          "in_openOrders": false,
+          "openOrders_status": null
+        },
+        {
+          "index": 1,
+          "order_id": 45925072190,
+          "status_db": "canceled",
+          "in_openOrders": false,
+          "openOrders_status": null
+        },
+        {
+          "index": 2,
+          "order_id": 45925072191,
+          "status_db": "canceled",
+          "in_openOrders": false,
+          "openOrders_status": null
+        },
+        {
+          "index": 3,
+          "order_id": 45925072192,
+          "status_db": "canceled",
+          "in_openOrders": false,
+          "openOrders_status": null
+        },
+        {
+          "index": 4,
+          "order_id": 45925072193,
+          "status_db": "canceled",
+          "in_openOrders": false,
+          "openOrders_status": null
+        },
+        {
+          "index": 5,
+          "order_id": 45925072194,
+          "status_db": "canceled",
+          "in_openOrders": false,
+          "openOrders_status": null
+        },
+        {
+          "index": 6,
+          "order_id": 45925072195,
+          "status_db": "canceled",
+          "in_openOrders": false,
+          "openOrders_status": null
+        },
+        {
+          "index": 7,
+          "order_id": 45925072196,
+          "status_db": "canceled",
+          "in_openOrders": false,
+          "openOrders_status": null
+        },
+        {
+          "index": 8,
+          "order_id": 45925072197,
+          "status_db": "canceled",
+          "in_openOrders": false,
+          "openOrders_status": null
+        },
+        {
+          "index": 9,
+          "order_id": 45925072198,
+          "status_db": "canceled",
+          "in_openOrders": false,
+          "openOrders_status": null
+        },
+        {
+          "index": 10,
+          "order_id": null,
+          "status_db": "pending",
+          "in_openOrders": false,
+          "openOrders_status": null
+        },
+        {
+          "index": 11,
+          "order_id": null,
+          "status_db": "pending",
+          "in_openOrders": false,
+          "openOrders_status": null
+        },
+        {
+          "index": 12,
+          "order_id": null,
+          "status_db": "pending",
+          "in_openOrders": false,
+          "openOrders_status": null
+        },
+        {
+          "index": 13,
+          "order_id": null,
+          "status_db": "pending",
+          "in_openOrders": false,
+          "openOrders_status": null
+        },
+        {
+          "index": 14,
+          "order_id": null,
+          "status_db": "pending",
+          "in_openOrders": false,
+          "openOrders_status": null
+        },
+        {
+          "index": 15,
+          "order_id": null,
+          "status_db": "pending",
+          "in_openOrders": false,
+          "openOrders_status": null
+        },
+        {
+          "index": 16,
+          "order_id": null,
+          "status_db": "pending",
+          "in_openOrders": false,
+          "openOrders_status": null
+        },
+        {
+          "index": 17,
+          "order_id": null,
+          "status_db": "pending",
+          "in_openOrders": false,
+          "openOrders_status": null
+        },
+        {
+          "index": 18,
+          "order_id": null,
+          "status_db": "pending",
+          "in_openOrders": false,
+          "openOrders_status": null
+        },
+        {
+          "index": 19,
+          "order_id": null,
+          "status_db": "pending",
+          "in_openOrders": false,
+          "openOrders_status": null
+        }
+      ],
+      "mismatches": []
+    },
+    "levels_summary": {
+      "total": 20,
+      "by_status": {
+        "canceled": 10,
+        "pending": 10
+      }
+    }
+  },
+  "api_capital": {
+    "status": 200,
+    "body": {
+      "quote_free": 4999.35190534,
+      "base_total": 9.64e-06,
+      "base_free": 9.64e-06,
+      "quote_asset": "USDT",
+      "base_asset": "BTC",
+      "canTrade": true,
+      "availableBalance": 4999.35190534,
+      "totalWalletBalance": 4999.35190534,
+      "stale": false,
+      "error": null
+    }
+  },
+  "mark_unification": {
+    "header_and_etat_source": "s.mark_price from GET /api/running (ticker /api/v3/ticker/price)",
+    "api_mark_equals_binance_ticker": true
+  },
+  "capital_path": {
+    "binance_account_status": 200,
+    "ui_fields_from": "running.capital via capital_snapshot (single account call)",
+    "quote_free_match": true,
+    "canTrade_match": true
+  },
+  "levels_vs_openOrders": {
+    "mismatches": [],
+    "has_true_mismatch": false,
+    "ui_statuses": {
+      "canceled": 10,
+      "pending": 10
+    }
+  }
+}

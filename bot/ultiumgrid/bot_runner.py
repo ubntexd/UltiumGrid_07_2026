@@ -14,11 +14,14 @@ from sqlalchemy.orm import Session
 from ultiumgrid.bags.manager import BagManager
 from ultiumgrid.connector.binance_spot import BinanceSpotClient
 from ultiumgrid.connector.binance_spot import RetryExhaustedError
+from datetime import datetime, timezone
+
 from ultiumgrid.db.models import (
     AlertEvent,
     BotState,
     Configuration,
     Cycle,
+    FeePaid,
     OrderAttempt,
     PnlSnapshot,
     PriceTick,
@@ -47,6 +50,9 @@ class BotRunner:
         self.cycle_id: int | None = None
         self._pending_config: StrategyConfig | None = None
         self._pending_config_mode: str | None = None  # wait_cycle | close_now
+        self._out_of_range_since: datetime | None = None
+        self._last_fill_at: datetime | None = None
+        self._stuck_sell_since: dict[int, datetime] = {}
 
     def _persist_order_attempt(self, entry: dict) -> None:
         row = OrderAttempt(
@@ -194,6 +200,8 @@ class BotRunner:
         self.engine.state.levels = levels
         self.cycle_id = data.get("cycle_id")
         self.running = bool(data.get("running"))
+        # Un seul cycle open par symbole (ferme les orphelins laissés par un start sans close)
+        self._ensure_single_open_cycle(reason="orphan_on_restore")
         # Réconciliation ordres ouverts Binance vs DB
         self._reconcile_orders_after_crash()
         logger.info("State restored cycle_id=%s running=%s", self.cycle_id, self.running)
@@ -228,6 +236,8 @@ class BotRunner:
         if self.guards.state.panic or self.guards.state.circuit_breaker_triggered:
             return {"ok": False, "error": "Bot bloqué par garde-fou"}
         self.running = True
+        # Toujours réconcilier les cycles open en DB avant d'en créer un nouveau
+        self._ensure_single_open_cycle(reason="orphan_on_start")
         if not self.engine.state.active:
             self._open_new_cycle()
         self.save_state()
@@ -238,7 +248,55 @@ class BotRunner:
         self.save_state()
         return {"ok": True}
 
+    def _ensure_single_open_cycle(self, *, reason: str = "orphan_superseded") -> None:
+        """Ferme tout cycle open du symbole sauf celui à conserver (cycle_id courant ou le plus récent)."""
+        opens = (
+            self.session.query(Cycle)
+            .filter(Cycle.symbol == self.cfg.symbol, Cycle.status == "open")
+            .order_by(Cycle.id.asc())
+            .all()
+        )
+        if not opens:
+            return
+        open_ids = [c.id for c in opens]
+        keep_id = self.cycle_id if self.cycle_id in open_ids else open_ids[-1]
+        closed = 0
+        for c in opens:
+            if c.id == keep_id:
+                continue
+            c.status = "closed"
+            c.closed_at = utcnow()
+            c.close_reason = reason
+            closed += 1
+        if closed:
+            self.session.commit()
+            logger.warning(
+                "Closed %s orphan open cycle(s) for %s keep_id=%s reason=%s",
+                closed,
+                self.cfg.symbol,
+                keep_id,
+                reason,
+            )
+        self.cycle_id = keep_id
+
     def _open_new_cycle(self) -> None:
+        # Fermer explicitement tout cycle encore open avant d'en ouvrir un nouveau
+        opens = (
+            self.session.query(Cycle)
+            .filter(Cycle.symbol == self.cfg.symbol, Cycle.status == "open")
+            .all()
+        )
+        for c in opens:
+            c.status = "closed"
+            c.closed_at = utcnow()
+            c.close_reason = "superseded_by_new_cycle"
+        if opens:
+            self.session.commit()
+            logger.warning(
+                "Superseded %s open cycle(s) before opening new one: %s",
+                len(opens),
+                [c.id for c in opens],
+            )
         state = self.engine.open_grid()
         cycle = Cycle(
             symbol=self.cfg.symbol,
@@ -350,6 +408,10 @@ class BotRunner:
             if self.running:
                 self._open_new_cycle()
 
+        # Section 2bis — hors fourchette / SELL bloqué
+        self._check_idle_recenter(mark)
+        self._check_stuck_sells(mark)
+
         # Réconciliation
         recon = self.bags.reconcile(self.engine.state.position_qty)
         self._snapshot_pnl(mark)
@@ -389,6 +451,8 @@ class BotRunner:
                     px = float(got.get("avgPrice") or lv.price)
                     qty = float(got.get("executedQty") or lv.quantity)
                     self.engine.on_fill(lv.index, px, qty)
+                    self._last_fill_at = utcnow()
+                    self._out_of_range_since = None
                     trade = Trade(
                         cycle_id=self.cycle_id,
                         symbol=self.cfg.symbol,
@@ -400,6 +464,199 @@ class BotRunner:
                     )
                     self.session.add(trade)
                     self.session.commit()
+                    self._record_fees_for_order(lv.order_id)
+
+    def _grid_price_bounds(self) -> tuple[float | None, float | None]:
+        prices = [float(lv.price) for lv in self.engine.state.levels]
+        if not prices:
+            return None, None
+        return min(prices), max(prices)
+
+    def _check_idle_recenter(self, mark: float) -> None:
+        """Cas A §2bis : hors fourchette, sans position, sans fill → recentrage."""
+        if not self.engine.state.active or not self.running:
+            return
+        low, high = self._grid_price_bounds()
+        if low is None or high is None:
+            return
+        now = utcnow()
+        out = mark < low or mark > high
+        if not out:
+            self._out_of_range_since = None
+            return
+        if self._out_of_range_since is None:
+            self._out_of_range_since = now
+            return
+        elapsed_min = (now - self._out_of_range_since).total_seconds() / 60.0
+        if elapsed_min < float(self.cfg.idle_recenter_min):
+            return
+        # Aucun fill depuis l'ouverture du cycle
+        if self._last_fill_at is not None:
+            return
+        # Position réelle base (hors sacs) doit être nulle
+        try:
+            filters = self.client.get_symbol_filters(self.cfg.symbol)
+            base_total = self.client.balance_total(filters.base_asset, force=True)
+            bags_q = self.bags.bags_qty()
+            grid_qty = max(0.0, base_total - bags_q)
+        except Exception as exc:
+            logger.error("idle_recenter balance check failed: %s", exc)
+            return
+        if grid_qty > float(filters.min_qty):
+            return
+        proof = {
+            "mark": mark,
+            "range_low": low,
+            "range_high": high,
+            "out_of_range_min": elapsed_min,
+            "grid_qty": grid_qty,
+            "base_total": base_total,
+        }
+        logger.warning("idle_recenter_no_fill %s", proof)
+        result = self.engine.close_cycle()
+        self._close_cycle_db(result, "idle_recenter_no_fill")
+        self.client._log_attempt(
+            {
+                "symbol": self.cfg.symbol,
+                "side": "NONE",
+                "order_type": "RECENTER",
+                "purpose": "idle_recenter_no_fill",
+                "client_order_id": f"idle-{int(now.timestamp())}",
+                "attempt_no": 1,
+                "outcome": "idle_recenter_no_fill",
+                "request_json": proof,
+                "response_json": result,
+                "verify_json": proof,
+            }
+        )
+        self._out_of_range_since = None
+        self._last_fill_at = None
+        if self.running:
+            self._open_new_cycle()
+
+    def _check_stuck_sells(self, mark: float) -> None:
+        """Cas B §2bis : SELL open, prix déjà au-dessus depuis trop longtemps → market sell."""
+        if not self.engine.state.active or not self.running:
+            return
+        now = utcnow()
+        threshold = float(self.cfg.stuck_sell_min)
+        for lv in self.engine.state.levels:
+            if lv.side != "SELL" or lv.status != "open" or not lv.order_id:
+                self._stuck_sell_since.pop(lv.index, None)
+                continue
+            if mark + 1e-12 < float(lv.price):
+                self._stuck_sell_since.pop(lv.index, None)
+                continue
+            since = self._stuck_sell_since.get(lv.index)
+            if since is None:
+                self._stuck_sell_since[lv.index] = now
+                continue
+            elapsed_min = (now - since).total_seconds() / 60.0
+            if elapsed_min < threshold:
+                continue
+            qty = float(lv.quantity)
+            proof = {
+                "level": lv.index,
+                "sell_price": float(lv.price),
+                "mark": mark,
+                "stuck_min": elapsed_min,
+                "qty": qty,
+                "order_id": lv.order_id,
+            }
+            try:
+                self.client.cancel_order(self.cfg.symbol, order_id=lv.order_id)
+            except Exception as exc:
+                logger.warning("stuck sell cancel failed: %s", exc)
+            try:
+                order = self.client.place_order(
+                    symbol=self.cfg.symbol,
+                    side="SELL",
+                    order_type="MARKET",
+                    quantity=qty,
+                    purpose="forced_sell_stuck_level",
+                    grid_level=lv.index,
+                )
+                fill_px = float(order.get("fills", [{}])[0].get("price") or mark) if order.get("fills") else mark
+                if order.get("fills"):
+                    fill_px = sum(
+                        float(f["price"]) * float(f["qty"]) for f in order["fills"]
+                    ) / sum(float(f["qty"]) for f in order["fills"])
+                self.engine.on_fill(lv.index, fill_px, qty)
+                self._last_fill_at = utcnow()
+                trade = Trade(
+                    cycle_id=self.cycle_id,
+                    symbol=self.cfg.symbol,
+                    side="SELL",
+                    price=fill_px,
+                    quantity=qty,
+                    order_id=str(order.get("orderId")),
+                    level_index=lv.index,
+                )
+                self.session.add(trade)
+                self.session.commit()
+                if order.get("orderId"):
+                    self._record_fees_for_order(int(order["orderId"]))
+                proof["market_order"] = order
+                self.client._log_attempt(
+                    {
+                        "symbol": self.cfg.symbol,
+                        "side": "SELL",
+                        "order_type": "MARKET",
+                        "purpose": "forced_sell_stuck_level",
+                        "client_order_id": order.get("clientOrderId") or f"stuck-{lv.index}",
+                        "attempt_no": 1,
+                        "outcome": "forced_sell_stuck_level",
+                        "order_id": str(order.get("orderId")),
+                        "request_json": proof,
+                        "response_json": order,
+                        "verify_json": proof,
+                        "grid_level": lv.index,
+                    }
+                )
+            except Exception as exc:
+                logger.error("forced_sell_stuck_level failed: %s", exc)
+                self._critical_alert("forced_sell_stuck_level_failed", str(exc), proof)
+            self._stuck_sell_since.pop(lv.index, None)
+
+    def _record_fees_for_order(self, order_id: int | None) -> None:
+        if not order_id:
+            return
+        try:
+            trades = self.client.my_trades(self.cfg.symbol, limit=50, order_id=int(order_id))
+        except Exception as exc:
+            logger.warning("myTrades failed order_id=%s: %s", order_id, exc)
+            return
+        for t in trades:
+            tid = str(t.get("id"))
+            exists = self.session.query(FeePaid).filter(FeePaid.trade_id == tid).first()
+            if exists:
+                continue
+            commission = float(t.get("commission") or 0)
+            asset = str(t.get("commissionAsset") or "")
+            price = float(t.get("price") or 0)
+            qty = float(t.get("qty") or 0)
+            # Conversion USDT : si commission déjà en USDT, sinon qty*price * commission/qty approx
+            if asset in ("USDT", "USDC", "BUSD"):
+                commission_usdt = commission
+            elif asset and price > 0:
+                # commission en base asset (ex. BTC) → USDT
+                commission_usdt = commission * price
+            else:
+                commission_usdt = 0.0
+            row = FeePaid(
+                symbol=self.cfg.symbol,
+                order_id=str(order_id),
+                trade_id=tid,
+                commission=commission,
+                commission_asset=asset,
+                commission_usdt=commission_usdt,
+                cycle_id=self.cycle_id,
+                is_buyer=t.get("isBuyer"),
+                price=price,
+                qty=qty,
+            )
+            self.session.add(row)
+        self.session.commit()
 
     def _close_cycle_db(self, result: dict, reason: str) -> None:
         if not self.cycle_id:
@@ -408,11 +665,17 @@ class BotRunner:
         if not cycle:
             return
         cycle.status = "closed"
-        cycle.grid_profit = result["grid_profit"]
-        cycle.floating_profit = result["floating_profit"]
+        cycle.grid_profit = result.get("grid_profit", 0.0)
+        cycle.floating_profit = result.get("floating_profit", 0.0)
         cycle.funding_pnl = 0.0  # Spot : pas de funding
-        cycle.gross_pnl = result["gross_pnl"]
-        cycle.net_pnl = result["gross_pnl"]  # frais non séparés ici
+        fees = (
+            self.session.query(FeePaid)
+            .filter(FeePaid.cycle_id == self.cycle_id)
+            .all()
+        )
+        fees_usdt = sum(f.commission_usdt for f in fees)
+        cycle.gross_pnl = result.get("gross_pnl", 0.0)
+        cycle.net_pnl = float(cycle.gross_pnl) - fees_usdt
         cycle.closed_at = utcnow()
         cycle.close_reason = reason
         self.session.commit()
@@ -488,24 +751,18 @@ class BotRunner:
 
     def status(self) -> dict[str, Any]:
         mark = None
+        mark_stale = False
+        mark_error = None
         try:
             mark = float(self.client.ticker_price(self.cfg.symbol)["price"])
             self.engine.update_floating(mark)
-        except Exception:
-            pass
-        account = {}
-        try:
-            filters = self.client.get_symbol_filters(self.cfg.symbol)
-            account = {
-                "quote_free": self.client.balance_free(filters.quote_asset),
-                "base_total": self.client.balance_total(filters.base_asset),
-                "base_free": self.client.balance_free(filters.base_asset),
-                "quote_asset": filters.quote_asset,
-                "base_asset": filters.base_asset,
-                "canTrade": self.client.account().get("canTrade"),
-            }
         except Exception as exc:
-            account = {"error": str(exc)}
+            mark_error = str(exc)
+            mark = self.client.last_ticker_price(self.cfg.symbol)
+            mark_stale = mark is not None
+            if mark is not None:
+                self.engine.update_floating(mark)
+        account = self.client.capital_snapshot(self.cfg.symbol)
         levels = self.engine.levels_as_dict()
         # Range / marge : ignorer les paliers incomplets (pas d'ordre = pas de réservation)
         placed_prices = [
@@ -518,6 +775,8 @@ class BotRunner:
             "running": self.running,
             "symbol": self.cfg.symbol,
             "mark_price": mark,
+            "mark_stale": mark_stale,
+            "mark_error": mark_error,
             "grid": {
                 "active": self.engine.state.active,
                 "center_price": float(self.engine.state.center_price) if self.engine.state.center_price else None,

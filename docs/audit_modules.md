@@ -33,9 +33,11 @@ Référence : `docs/spec.md`.
 | Exigence | Statut | Preuve |
 |---|---|---|
 | 20 niveaux arithmétiques pas 0,25–0,26 % | conforme (unit) | `test_compute_20_levels_arithmetic` |
-| Placement initial / replacement fills | **non vérifié** live | dépend ordres |
-| PnL Grid+Floating+funding | code présent | formules dans `engine/grid.py` |
-| Trigger +15 fermeture/recentrage | code présent | **non vérifié** live |
+| Placement initial / replacement fills | conforme (integration antérieure) | `m3_grid_integration.json` |
+| PnL Grid+Floating (pas funding) | conforme | formules dans `engine/grid.py` |
+| Trigger +15 fermeture/recentrage | code présent | **non vérifié** live cycle complet |
+| §2bis idle_recenter_no_fill | conforme (**unit**) | `test_m3_idle_recenter_unit.py` |
+| §2bis forced_sell_stuck_level | code présent | **non vérifié** integration live |
 
 ## Module 4 — Coupe progressive
 
@@ -91,6 +93,16 @@ Référence : `docs/spec.md`.
 | Indicateurs PnL formules | conformes (doc) | `/api/pnl` champ `formulas` |
 | Prix UI = Binance même instant | conforme (session test) | BTC 62533.0 = 62533.00 |
 
+## Module 7quater — Fees réels
+
+| Exigence | Statut | Preuve |
+|---|---|---|
+| `GET /api/v3/myTrades` → `fees_paid` | conforme | `m7quater_fees_mytrades.json` |
+| `/api/fees` + onglet Fees | conforme | API 5 rows, total USDT match |
+| Commission UI = brut myTrades | conforme | trade `254232167` commission `9e-08` BTC → `0.005625` USDT |
+| Activation paiement BNB côté compte | **non vérifié** | réglage compte Binance (BNB free=0) ; bot affiche solde seulement |
+| Écart théorique/réel par cycle | partiel | `by_cycle` exposé ; cycles clos avec fees liés encore rares |
+
 ## Module 8 — UI
 
 | Exigence | Statut | Preuve |
@@ -103,4 +115,5 @@ Référence : `docs/spec.md`.
 
 | Exigence | Statut | Preuve |
 |---|---|---|
-| restore_state + reconcile orders | code présent | **non vérifié** (pas d’ordres ouverts possibles) |
+| restore_state + reconcile orders | conforme | `m9_crash_recovery.json` |
+| Un seul cycle `open` après restart | conforme | `audit_ui_bugfix.md` §6, `m_cycles_duplicate_fix.json` |

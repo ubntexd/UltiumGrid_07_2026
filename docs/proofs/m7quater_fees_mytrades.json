@@ -1,0 +1,19 @@
+{
+  "timestamp_utc": "2026-07-04T14:39:29.142510+00:00",
+  "api_fees_rows": 5,
+  "total_fees_usdt_listed": 0.0387463414,
+  "bnb_free": 0.0,
+  "first_row": {
+    "id": 5,
+    "trade_id": "254232467",
+    "order_id": "45924970779",
+    "commission": 0.01124756,
+    "commission_asset": "USDT",
+    "commission_usdt": 0.01124756,
+    "cycle_id": null,
+    "price": 62486.45,
+    "qty": 0.00018,
+    "created_at": "2026-07-04T14:39:28.860547+00:00"
+  },
+  "note": "commission from GET /api/v3/myTrades stored in fees_paid, exposed via /api/fees"
+}

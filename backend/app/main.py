@@ -25,6 +25,7 @@ from ultiumgrid.db.models import (  # noqa: E402
     Bag,
     Configuration,
     Cycle,
+    FeePaid,
     PnlSnapshot,
     PriceTick,
     make_session_factory,
@@ -69,37 +70,72 @@ def build_status() -> dict[str, Any]:
             for lv in levels
             if lv.get("status") not in ("grid_level_incomplete", "error", "pending")
         ]
+        c = _client()
         mark = None
+        mark_stale = False
+        mark_error = None
         try:
-            mark = float(_client().ticker_price(cfg.symbol)["price"])
-        except Exception:
-            pass
-        account = {}
-        try:
-            c = _client()
-            filters = c.get_symbol_filters(cfg.symbol)
-            account = {
-                "quote_free": c.balance_free(filters.quote_asset),
-                "base_total": c.balance_total(filters.base_asset),
-                "base_free": c.balance_free(filters.base_asset),
-                "quote_asset": filters.quote_asset,
-                "base_asset": filters.base_asset,
-                "canTrade": c.account().get("canTrade"),
-                "availableBalance": c.balance_free(filters.quote_asset),
-                "totalWalletBalance": c.balance_free(filters.quote_asset),
-            }
+            mark = float(c.ticker_price(cfg.symbol)["price"])
         except Exception as exc:
-            account = {"error": str(exc)}
+            mark_error = str(exc)
+            mark = c.last_ticker_price(cfg.symbol)
+            mark_stale = mark is not None
+        account = c.capital_snapshot(cfg.symbol)
         bags = (
             session.query(Bag)
             .filter(Bag.symbol == cfg.symbol, Bag.status == "open")
             .all()
         )
         guards = state.get("guards") or {}
+        # openOrders (cache client via account TTL pattern — un seul appel si pas en cache)
+        open_orders: list[dict[str, Any]] = []
+        open_orders_error = None
+        try:
+            open_orders = c.open_orders(cfg.symbol)
+        except Exception as exc:
+            open_orders_error = str(exc)
+        levels_exchange = []
+        open_by_id = {str(o.get("orderId")): o for o in open_orders}
+        for lv in levels:
+            oid = lv.get("order_id")
+            oid_s = str(oid) if oid is not None else None
+            ex = open_by_id.get(oid_s) if oid_s else None
+            levels_exchange.append(
+                {
+                    "index": lv.get("index"),
+                    "order_id": oid,
+                    "status_db": lv.get("status"),
+                    "in_openOrders": ex is not None,
+                    "openOrders_status": ex.get("status") if ex else None,
+                }
+            )
+        mismatches = [
+            row
+            for row in levels_exchange
+            if (row["status_db"] == "open" and not row["in_openOrders"])
+            or (
+                row["status_db"] in ("canceled", "pending", "filled", "grid_level_incomplete")
+                and row["in_openOrders"]
+            )
+        ]
+        for o in open_orders:
+            if str(o.get("orderId")) not in {str(lv.get("order_id")) for lv in levels if lv.get("order_id")}:
+                mismatches.append(
+                    {
+                        "order_id": o.get("orderId"),
+                        "status_db": None,
+                        "in_openOrders": True,
+                        "openOrders_status": o.get("status"),
+                        "issue": "orphan_open_order",
+                    }
+                )
+
         return {
             "running": bool(state.get("running")),
             "symbol": cfg.symbol,
             "mark_price": mark,
+            "mark_stale": mark_stale,
+            "mark_error": mark_error,
             "grid": {
                 "active": g.get("active"),
                 "center_price": float(g["center_price"]) if g.get("center_price") else None,
@@ -127,6 +163,22 @@ def build_status() -> dict[str, Any]:
             ],
             "capital": account,
             "margin": account,
+            "exchange_orders": {
+                "openOrders_count": len(open_orders),
+                "openOrders_error": open_orders_error,
+                "openOrders": [
+                    {
+                        "orderId": o.get("orderId"),
+                        "side": o.get("side"),
+                        "price": o.get("price"),
+                        "origQty": o.get("origQty"),
+                        "status": o.get("status"),
+                    }
+                    for o in open_orders
+                ],
+                "levels_vs_openOrders": levels_exchange,
+                "mismatches": mismatches,
+            },
             "guards": {
                 "daily_pnl": guards.get("daily_pnl"),
                 "hard_stop": guards.get("hard_stop_triggered") or guards.get("hard_stop"),
@@ -156,7 +208,8 @@ async def _broadcast_loop() -> None:
                     _ws_clients.remove(ws)
         except Exception:
             pass
-        await asyncio.sleep(2)
+        # 5s : évite de saturer le poids Binance (ticker+account+openOrders)
+        await asyncio.sleep(5)
 
 
 @asynccontextmanager
@@ -742,28 +795,96 @@ def supervision_dashboard():
         session.close()
 
 
+@app.get("/api/fees")
+def fees(symbol: str | None = None, limit: int = 200):
+    """Commissions réelles (myTrades) stockées en fees_paid — pas d'estimation."""
+    session = get_session()
+    try:
+        status = build_status()
+        symbol = symbol or status["symbol"]
+        rows = (
+            session.query(FeePaid)
+            .filter(FeePaid.symbol == symbol)
+            .order_by(FeePaid.id.desc())
+            .limit(min(limit, 1000))
+            .all()
+        )
+        total_usdt = sum(r.commission_usdt for r in rows)
+        # frais théoriques par cycle clos (viabilité) vs réels
+        cycles = (
+            session.query(Cycle)
+            .filter(Cycle.symbol == symbol, Cycle.status == "closed")
+            .order_by(Cycle.id.desc())
+            .limit(20)
+            .all()
+        )
+        by_cycle = []
+        for c in cycles:
+            real = (
+                session.query(FeePaid)
+                .filter(FeePaid.cycle_id == c.id)
+                .all()
+            )
+            real_usdt = sum(f.commission_usdt for f in real)
+            by_cycle.append(
+                {
+                    "cycle_id": c.id,
+                    "gross_pnl": c.gross_pnl,
+                    "net_pnl": c.net_pnl,
+                    "fees_real_usdt": real_usdt,
+                    "close_reason": c.close_reason,
+                }
+            )
+        # BNB balance
+        c = _client()
+        try:
+            bnb_free = c.balance_free("BNB")
+        except Exception as exc:
+            bnb_free = None
+            bnb_err = str(exc)
+        else:
+            bnb_err = None
+        cfg = status.get("config") or {}
+        return {
+            "symbol": symbol,
+            "bnb_fee_discount_config": bool(cfg.get("bnb_fee_discount")),
+            "bnb_free": bnb_free,
+            "bnb_error": bnb_err,
+            "total_fees_usdt_listed": total_usdt,
+            "rows": [
+                {
+                    "id": r.id,
+                    "trade_id": r.trade_id,
+                    "order_id": r.order_id,
+                    "commission": r.commission,
+                    "commission_asset": r.commission_asset,
+                    "commission_usdt": r.commission_usdt,
+                    "cycle_id": r.cycle_id,
+                    "price": r.price,
+                    "qty": r.qty,
+                    "created_at": r.created_at.isoformat() if r.created_at else None,
+                }
+                for r in rows
+            ],
+            "by_cycle": by_cycle,
+            "note": "commission/commissionAsset issus de GET /api/v3/myTrades uniquement",
+        }
+    finally:
+        session.close()
+
+
 @app.get("/api/margin")
 @app.get("/api/capital")
 def capital():
     """Capital disponible Spot (quote free) — pas de marge/levier."""
     c = _client()
-    # symbole actif depuis bot_state
     session = get_session()
     try:
         state = read_main_state(session)
         symbol = (state.get("config") or {}).get("symbol") or "BTCUSDT"
     finally:
         session.close()
-    filters = c.get_symbol_filters(symbol)
-    return {
-        "quote_free": c.balance_free(filters.quote_asset),
-        "base_total": c.balance_total(filters.base_asset),
-        "base_free": c.balance_free(filters.base_asset),
-        "quote_asset": filters.quote_asset,
-        "base_asset": filters.base_asset,
-        "canTrade": c.account().get("canTrade"),
-        "availableBalance": c.balance_free(filters.quote_asset),
-    }
+    return c.capital_snapshot(symbol)
 
 
 @app.websocket("/ws")

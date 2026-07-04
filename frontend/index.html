@@ -26,6 +26,7 @@
     <button data-tab="bags">Bags</button>
     <button data-tab="config">Config</button>
     <button data-tab="market">Market</button>
+    <button data-tab="fees">Fees</button>
     <button data-tab="supervision">Supervision</button>
   </nav>
 
@@ -107,6 +108,18 @@
         <table id="market-table"><thead><tr><th>Symbol</th><th>Price</th><th>24h %</th><th>Volume</th></tr></thead><tbody></tbody></table>
       </div>
       <div class="card" id="market-detail"></div>
+    </section>
+
+    <section id="tab-fees" class="tab">
+      <div class="card" id="fees-summary"></div>
+      <div class="card">
+        <h2>Commissions réelles (myTrades)</h2>
+        <table id="fees-table"><thead><tr><th>ID</th><th>Trade</th><th>Order</th><th>Asset</th><th>Commission</th><th>USDT</th><th>Cycle</th><th>When</th></tr></thead><tbody></tbody></table>
+      </div>
+      <div class="card">
+        <h2>Par cycle clôturé</h2>
+        <table id="fees-cycles-table"><thead><tr><th>Cycle</th><th>Gross</th><th>Net</th><th>Fees réels USDT</th><th>Reason</th></tr></thead><tbody></tbody></table>
+      </div>
     </section>
 
     <section id="tab-supervision" class="tab">

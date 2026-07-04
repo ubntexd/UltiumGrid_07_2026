@@ -8,12 +8,14 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     Float,
+    Index,
     Integer,
     String,
     Text,
     JSON,
     ForeignKey,
     create_engine,
+    text,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker
 
@@ -28,6 +30,15 @@ class Base(DeclarativeBase):
 
 class Cycle(Base):
     __tablename__ = "cycles"
+    __table_args__ = (
+        # Un seul cycle "open" par symbole (PostgreSQL partial unique index).
+        Index(
+            "uq_cycles_one_open_per_symbol",
+            "symbol",
+            unique=True,
+            postgresql_where=text("status = 'open'"),
+        ),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     symbol: Mapped[str] = mapped_column(String(32), index=True)
@@ -130,6 +141,25 @@ class PriceTick(Base):
     range_low: Mapped[float | None] = mapped_column(Float, nullable=True)
     range_high: Mapped[float | None] = mapped_column(Float, nullable=True)
     ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+
+
+class FeePaid(Base):
+    """Commissions réelles Binance (myTrades) — jamais un frais théorique."""
+
+    __tablename__ = "fees_paid"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    symbol: Mapped[str] = mapped_column(String(32), index=True)
+    order_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    trade_id: Mapped[str | None] = mapped_column(String(64), nullable=True, unique=True)
+    commission: Mapped[float] = mapped_column(Float, default=0.0)
+    commission_asset: Mapped[str] = mapped_column(String(16), default="")
+    commission_usdt: Mapped[float] = mapped_column(Float, default=0.0)
+    cycle_id: Mapped[int | None] = mapped_column(ForeignKey("cycles.id"), nullable=True, index=True)
+    is_buyer: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    price: Mapped[float | None] = mapped_column(Float, nullable=True)
+    qty: Mapped[float | None] = mapped_column(Float, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 class AlertEvent(Base):

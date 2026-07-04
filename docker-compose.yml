@@ -42,7 +42,8 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "8000:8000"
+      # Internal only; user-owned port_beacon.py exposes 8000 for Cursor auto-forward
+      - "127.0.0.1:18000:8000"
     restart: unless-stopped
     networks:
       - ultiumnet
@@ -54,7 +55,8 @@ services:
     depends_on:
       - backend
     ports:
-      - "8080:80"
+      # Internal only; user-owned port_beacon.py exposes 8080 for Cursor auto-forward
+      - "127.0.0.1:18080:80"
     restart: unless-stopped
     networks:
       - ultiumnet

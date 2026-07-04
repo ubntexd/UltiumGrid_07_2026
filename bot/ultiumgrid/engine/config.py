@@ -23,6 +23,9 @@ class StrategyConfig:
     daily_circuit_breaker_usd: float = -40.0
     bags_capital_threshold_pct: float = 40.0  # capital immobilisé en sacs
     bnb_fee_discount: bool = False
+    # Section 2bis — recentrage hors fourchette (minutes ; tests peuvent baisser temporairement)
+    idle_recenter_min: float = 20.0
+    stuck_sell_min: float = 15.0
 
     BOUNDS = {
         "step_pct": (0.05, 2.0),
@@ -38,6 +41,8 @@ class StrategyConfig:
         "hard_stop_pct": (-50.0, -1.0),
         "daily_circuit_breaker_usd": (-10_000.0, -1.0),
         "bags_capital_threshold_pct": (5.0, 95.0),
+        "idle_recenter_min": (0.05, 240.0),
+        "stuck_sell_min": (0.05, 240.0),
     }
 
     def validate(self) -> list[str]:

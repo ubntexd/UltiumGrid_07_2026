@@ -24,6 +24,11 @@
 - Déclenchement cycle à **+15 USD brut**.
 - Objectif UI : **+10 USD net** / cycle.
 
+## 2bis. Recentrage hors fourchette
+
+- **Cas A** (`idle_recenter_no_fill`, défaut 20 min) : prix hors fourchette complète, **aucun fill** depuis l’ouverture, solde base grille réel ≈ 0 (vérifié via `balances`) → annuler, clôturer le cycle, ouvrir un nouveau centré sur le prix actuel.
+- **Cas B** (`forced_sell_stuck_level`, défaut 15 min) : SELL `open` avec prix marché déjà ≥ prix du palier sans fill → annuler la limite, vendre au marché la qty, journaliser la preuve.
+
 ## 3. Risque — étage 2 (coupe progressive)
 
 - Palier **10** → coupe **50 %** de la quantité réelle détenue (balances), transfert en sac.
@@ -65,6 +70,12 @@ Tables : `cycles`, `trades`, `bags`, `bot_state`, `configurations`, `pnl_snapsho
 | BNB fee discount | off |
 | Symbole | BTCUSDT |
 
+## 7quater. Commissions réelles (BNB)
+
+- Source unique : `GET /api/v3/myTrades` (`commission`, `commissionAsset`).
+- Table `fees_paid` ; PnL net cycle = gross − somme `commission_usdt`.
+- UI onglet Fees ; solde BNB affiché (activation paiement BNB = réglage compte Binance, pas un flag bot seul).
+
 ## 8–10. Backend, UI, reprise
 
-Inchangés dans le principe (Running / History / PnL / Bags, config, marché, panic, reprise crash), avec libellés « capital disponible » à la place de « marge ».
+Running / History / PnL / Bags / Config / Market / Fees / Supervision, libellés « capital disponible ».

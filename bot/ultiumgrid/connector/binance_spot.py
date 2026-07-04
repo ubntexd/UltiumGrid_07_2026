@@ -107,10 +107,18 @@ class BinanceSpotClient:
     rest_base: str = field(default_factory=lambda: _env_url("BINANCE_SPOT_REST_BASE", DEFAULT_REST))
     ws_base: str = field(default_factory=lambda: _env_url("BINANCE_SPOT_WS_BASE", DEFAULT_WS))
     timeout: int = 15
+    account_cache_ttl_s: float = 8.0
+    ticker_cache_ttl_s: float = 2.0
     _filters_cache: dict[str, SymbolFilters] = field(default_factory=dict, repr=False)
     _session: requests.Session = field(default_factory=requests.Session, repr=False)
     attempt_log: list[dict[str, Any]] = field(default_factory=list, repr=False)
     _order_log_callback: Callable[[dict[str, Any]], None] | None = field(default=None, repr=False)
+    _account_cache: tuple[float, dict] | None = field(default=None, repr=False)
+    _ticker_cache: dict[str, tuple[float, dict]] = field(default_factory=dict, repr=False)
+    _open_orders_cache: dict[str, tuple[float, list]] = field(default_factory=dict, repr=False)
+    _last_ticker: dict[str, float] = field(default_factory=dict, repr=False)
+    _last_capital: dict[str, dict] = field(default_factory=dict, repr=False)
+    _ban_until_ms: float = field(default=0.0, repr=False)
 
     def set_order_log_callback(self, callback: Callable[[dict[str, Any]], None] | None) -> None:
         self._order_log_callback = callback
@@ -164,6 +172,25 @@ class BinanceSpotClient:
                 body = None
         return resp.status_code, body, raw
 
+    def _raise_if_banned(self) -> None:
+        now_ms = time.time() * 1000
+        if self._ban_until_ms and now_ms < self._ban_until_ms:
+            raise requests.HTTPError(
+                f"418 {{\"code\":-1003,\"msg\":\"IP banned until {int(self._ban_until_ms)} (local backoff)\"}}"
+            )
+
+    def _note_ban_from_body(self, body: Any, raw: str) -> None:
+        if not isinstance(body, dict) or body.get("code") != -1003:
+            return
+        msg = str(body.get("msg") or "")
+        # "IP banned until 1783173740800"
+        for token in msg.replace(".", " ").split():
+            if token.isdigit() and len(token) >= 12:
+                self._ban_until_ms = float(token)
+                return
+        # fallback: 60s
+        self._ban_until_ms = time.time() * 1000 + 60_000
+
     def _request(
         self,
         method: str,
@@ -172,6 +199,7 @@ class BinanceSpotClient:
         signed: bool = False,
         retries: int = 3,
     ) -> Any:
+        self._raise_if_banned()
         last_exc: Exception | None = None
         for attempt in range(retries):
             status, body, raw = self._raw_request(method, path, params, signed=signed)
@@ -180,6 +208,10 @@ class BinanceSpotClient:
                     return {} if raw == "{}" else None
                 return body
             code = body.get("code") if isinstance(body, dict) else None
+            if status == 418 or code == -1003:
+                self._note_ban_from_body(body, raw)
+                logger.error("Binance Spot %s %s -> %s %s", method, path, status, raw)
+                raise requests.HTTPError(f"{status} {raw}")
             retryable = status in (502, 503) or code in (-1000, -1008)
             if retryable and attempt < retries - 1:
                 delay = BACKOFF_BASE_S * (2**attempt)
@@ -218,8 +250,21 @@ class BinanceSpotClient:
     def server_time(self) -> int:
         return int(self._request("GET", "/api/v3/time")["serverTime"])
 
-    def ticker_price(self, symbol: str) -> dict:
-        return self._request("GET", "/api/v3/ticker/price", {"symbol": symbol})
+    def ticker_price(self, symbol: str, *, force: bool = False) -> dict:
+        now = time.time()
+        cached = self._ticker_cache.get(symbol)
+        if not force and cached and now - cached[0] < self.ticker_cache_ttl_s:
+            return cached[1]
+        body = self._request("GET", "/api/v3/ticker/price", {"symbol": symbol})
+        self._ticker_cache[symbol] = (now, body)
+        try:
+            self._last_ticker[symbol] = float(body["price"])
+        except (KeyError, TypeError, ValueError):
+            pass
+        return body
+
+    def last_ticker_price(self, symbol: str) -> float | None:
+        return self._last_ticker.get(symbol)
 
     def ticker_24hr(self, symbol: str | None = None) -> Any:
         params = {"symbol": symbol} if symbol else None
@@ -280,23 +325,64 @@ class BinanceSpotClient:
 
     # --- Signed ---
 
-    def account(self) -> dict:
-        return self._request("GET", "/api/v3/account", signed=True)
+    def account(self, *, force: bool = False) -> dict:
+        """GET /api/v3/account — mis en cache pour éviter le ban poids (weight 20)."""
+        now = time.time()
+        if (
+            not force
+            and self._account_cache is not None
+            and now - self._account_cache[0] < self.account_cache_ttl_s
+        ):
+            return self._account_cache[1]
+        body = self._request("GET", "/api/v3/account", signed=True)
+        self._account_cache = (now, body)
+        return body
 
-    def balances(self) -> list[dict]:
-        return self.account().get("balances") or []
+    def balances(self, *, force: bool = False) -> list[dict]:
+        return self.account(force=force).get("balances") or []
 
-    def balance_free(self, asset: str) -> float:
-        for b in self.balances():
+    def balance_free(self, asset: str, *, force: bool = False) -> float:
+        for b in self.balances(force=force):
             if b.get("asset") == asset:
                 return float(b.get("free") or 0)
         return 0.0
 
-    def balance_total(self, asset: str) -> float:
-        for b in self.balances():
+    def balance_total(self, asset: str, *, force: bool = False) -> float:
+        for b in self.balances(force=force):
             if b.get("asset") == asset:
                 return float(b.get("free") or 0) + float(b.get("locked") or 0)
         return 0.0
+
+    def capital_snapshot(self, symbol: str, *, force: bool = False) -> dict[str, Any]:
+        """Un seul GET /api/v3/account pour quote/base/canTrade (+ cache TTL)."""
+        filters = self.get_symbol_filters(symbol)
+        try:
+            acc = self.account(force=force)
+            snap = {
+                "quote_free": self.balance_free(filters.quote_asset),
+                "base_total": self.balance_total(filters.base_asset),
+                "base_free": self.balance_free(filters.base_asset),
+                "quote_asset": filters.quote_asset,
+                "base_asset": filters.base_asset,
+                "canTrade": acc.get("canTrade"),
+                "availableBalance": self.balance_free(filters.quote_asset),
+                "totalWalletBalance": self.balance_free(filters.quote_asset),
+                "stale": False,
+                "error": None,
+            }
+            self._last_capital[symbol] = {k: v for k, v in snap.items() if k != "stale"}
+            return snap
+        except Exception as exc:
+            prev = dict(self._last_capital.get(symbol) or {})
+            prev.update(
+                {
+                    "quote_asset": filters.quote_asset,
+                    "base_asset": filters.base_asset,
+                    "stale": bool(prev),
+                    "error": str(exc),
+                }
+            )
+            return prev
 
     def base_asset_qty(self, symbol: str) -> float:
         """Solde réel de l'actif de base (ex. BTC pour BTCUSDT) — source de vérité Spot."""
@@ -307,9 +393,25 @@ class BinanceSpotClient:
         filters = self.get_symbol_filters(symbol)
         return self.balance_free(filters.quote_asset)
 
-    def open_orders(self, symbol: str | None = None) -> list:
+    def my_trades(self, symbol: str, *, limit: int = 50, order_id: int | None = None) -> list:
+        """GET /api/v3/myTrades — commissions réelles par fill."""
+        params: dict[str, Any] = {"symbol": symbol, "limit": limit}
+        if order_id is not None:
+            params["orderId"] = order_id
+        body = self._request("GET", "/api/v3/myTrades", params, signed=True)
+        return body if isinstance(body, list) else []
+
+    def open_orders(self, symbol: str | None = None, *, force: bool = False) -> list:
+        key = symbol or "*"
+        now = time.time()
+        cached = self._open_orders_cache.get(key)
+        if not force and cached and now - cached[0] < self.account_cache_ttl_s:
+            return cached[1]
         params = {"symbol": symbol} if symbol else {}
-        return self._request("GET", "/api/v3/openOrders", params, signed=True)
+        body = self._request("GET", "/api/v3/openOrders", params, signed=True)
+        orders = body if isinstance(body, list) else []
+        self._open_orders_cache[key] = (now, orders)
+        return orders
 
     def all_orders(self, symbol: str, limit: int = 100) -> list:
         return self._request(

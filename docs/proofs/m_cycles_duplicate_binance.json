@@ -1,0 +1,271 @@
+{
+  "timestamp_utc": "2026-07-04T14:17:47.098110+00:00",
+  "openOrders_count": 0,
+  "openOrders": [],
+  "allOrders_in_window_count": 37,
+  "cycle2_order_ids_found": [
+    {
+      "orderId": 45925072189,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "60732.35000000",
+      "time": 1783166453233
+    },
+    {
+      "orderId": 45925072190,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "60919.89000000",
+      "time": 1783166453246
+    },
+    {
+      "orderId": 45925072191,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "61107.43000000",
+      "time": 1783166453253
+    },
+    {
+      "orderId": 45925072192,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "61294.97000000",
+      "time": 1783166453261
+    },
+    {
+      "orderId": 45925072193,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "61482.51000000",
+      "time": 1783166453269
+    },
+    {
+      "orderId": 45925072194,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "61670.06000000",
+      "time": 1783166453276
+    },
+    {
+      "orderId": 45925072195,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "61857.60000000",
+      "time": 1783166453285
+    },
+    {
+      "orderId": 45925072196,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "62045.14000000",
+      "time": 1783166453293
+    },
+    {
+      "orderId": 45925072197,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "62232.68000000",
+      "time": 1783166453301
+    },
+    {
+      "orderId": 45925072198,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "62420.22000000",
+      "time": 1783166453308
+    }
+  ],
+  "other_orders_in_window": [
+    {
+      "orderId": 45907234023,
+      "status": "FILLED",
+      "side": "BUY",
+      "price": "62464.96000000",
+      "time": 1783159893566
+    },
+    {
+      "orderId": 45923519367,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "40000.00000000",
+      "time": 1783165882892
+    },
+    {
+      "orderId": 45923652708,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "40000.00000000",
+      "time": 1783165931572
+    },
+    {
+      "orderId": 45923655416,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "50004.06000000",
+      "time": 1783165932755
+    },
+    {
+      "orderId": 45923926839,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "40000.00000000",
+      "time": 1783166032986
+    },
+    {
+      "orderId": 45924000035,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "49991.31000000",
+      "time": 1783166059594
+    },
+    {
+      "orderId": 45924043848,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "43749.07000000",
+      "time": 1783166075220
+    },
+    {
+      "orderId": 45924076537,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "49998.94000000",
+      "time": 1783166087494
+    },
+    {
+      "orderId": 45924127978,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "43749.07000000",
+      "time": 1783166106158
+    },
+    {
+      "orderId": 45924419159,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "40000.00000000",
+      "time": 1783166213493
+    },
+    {
+      "orderId": 45924508544,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "62042.17000000",
+      "time": 1783166246420
+    },
+    {
+      "orderId": 45924508545,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "62354.73000000",
+      "time": 1783166246442
+    },
+    {
+      "orderId": 45924709635,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "62031.24000000",
+      "time": 1783166320243
+    },
+    {
+      "orderId": 45924709636,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "62343.74000000",
+      "time": 1783166320262
+    },
+    {
+      "orderId": 45924798928,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "62031.25000000",
+      "time": 1783166353882
+    },
+    {
+      "orderId": 45924798929,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "62343.75000000",
+      "time": 1783166353908
+    },
+    {
+      "orderId": 45924801630,
+      "status": "FILLED",
+      "side": "BUY",
+      "price": "0.00000000",
+      "time": 1783166354140
+    },
+    {
+      "orderId": 45924801631,
+      "status": "FILLED",
+      "side": "BUY",
+      "price": "0.00000000",
+      "time": 1783166354301
+    },
+    {
+      "orderId": 45924801632,
+      "status": "FILLED",
+      "side": "SELL",
+      "price": "0.00000000",
+      "time": 1783166354347
+    },
+    {
+      "orderId": 45924801633,
+      "status": "FILLED",
+      "side": "BUY",
+      "price": "0.00000000",
+      "time": 1783166354472
+    },
+    {
+      "orderId": 45924970776,
+      "status": "FILLED",
+      "side": "BUY",
+      "price": "0.00000000",
+      "time": 1783166416184
+    },
+    {
+      "orderId": 45924970778,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "49989.16000000",
+      "time": 1783166416204
+    },
+    {
+      "orderId": 45924970779,
+      "status": "FILLED",
+      "side": "SELL",
+      "price": "0.00000000",
+      "time": 1783166416252
+    },
+    {
+      "orderId": 45925821400,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "62082.86000000",
+      "time": 1783166726021
+    },
+    {
+      "orderId": 45925821401,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "62395.62000000",
+      "time": 1783166726048
+    },
+    {
+      "orderId": 45925821402,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "62082.86000000",
+      "time": 1783166726273
+    },
+    {
+      "orderId": 45925821403,
+      "status": "CANCELED",
+      "side": "BUY",
+      "price": "62395.62000000",
+      "time": 1783166726287
+    }
+  ],
+  "cycle1_had_order_ids_in_db": false,
+  "conclusion": "only cycle2 placed orders on Binance; cycle1 levels all error/null order_id \u2014 no dual live grid"
+}

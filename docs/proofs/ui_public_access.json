@@ -1,0 +1,62 @@
+{
+  "timestamp_utc": "2026-07-04T13:51:12Z",
+  "method": "cloudflared quick tunnel (trycloudflare.com)",
+  "human_intervention_required": false,
+  "cloudflared_version": "2026.6.1",
+  "cloudflared_pid": 449503,
+  "tunnel_left_running": true,
+  "local_target": "http://127.0.0.1:8080",
+  "public_url": "https://ada-leaf-tender-licenses.trycloudflare.com",
+  "visual_validation": {
+    "ok": true,
+    "tool": "cursor-ide-browser MCP + chromium headless",
+    "page_title": "UltiumGrid Spot",
+    "observed": [
+      "Running: OUI",
+      "Symbol: BTCUSDT",
+      "header ticker BTCUSDT live price ~62555",
+      "Cycle: 2",
+      "Grille Active: true",
+      "Center: 62514.00",
+      "Range: 60732.35 — 62420.22",
+      "Niveaux table: BUY canceled + SELL pending",
+      "Heartbeat bot age ~3.5s",
+      "buttons Start / Stop / Panic Close"
+    ]
+  },
+  "http_checks": {
+    "ui_root": {
+      "url": "https://ada-leaf-tender-licenses.trycloudflare.com/",
+      "status": 200,
+      "title": "UltiumGrid Spot"
+    },
+    "health": {
+      "url": "https://ada-leaf-tender-licenses.trycloudflare.com/health",
+      "status": 200,
+      "body": {
+        "ok": true,
+        "service": "backend",
+        "bot_heartbeat": {
+          "ts": "2026-07-04T13:51:09.414189+00:00",
+          "running": true,
+          "cycle_id": 2,
+          "pid": 1
+        },
+        "bot_heartbeat_age_s": 2.735089
+      }
+    },
+    "api_running": {
+      "url": "https://ada-leaf-tender-licenses.trycloudflare.com/api/running",
+      "status": 200,
+      "running": true,
+      "symbol": "BTCUSDT",
+      "mark_price": null
+    }
+  },
+  "screenshot": {
+    "path": "docs/proofs/ui_public_access.png",
+    "bytes": 116392,
+    "sha256": "adcf6a517c50a067ad060c142949a6c6a3ede36421815912b46d3759e4771ca6"
+  },
+  "diagnosis_prior": "Cursor port-forward tunnel broken on Windows; VPS service was healthy. Autonomous fix = cloudflared public HTTPS, no client action."
+}

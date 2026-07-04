@@ -18,6 +18,8 @@ const CONFIG_FIELDS = [
   ["daily_circuit_breaker_usd", "Circuit breaker USD"],
   ["bags_capital_threshold_pct", "Seuil capital sacs %"],
   ["bnb_fee_discount", "Réduction frais BNB (0/1)"],
+  ["idle_recenter_min", "Recentrage idle (min)"],
+  ["stuck_sell_min", "SELL bloqué (min)"],
 ];
 
 function pnlClass(v) {
@@ -253,6 +255,7 @@ function switchTab(name) {
   });
   if (name === "history") loadHistory();
   if (name === "pnl") loadPnl();
+  if (name === "fees") loadFees();
   if (name === "bags") loadBags();
   if (name === "config") loadConfig();
   if (name === "market") loadMarket();
@@ -351,22 +354,38 @@ document.getElementById("btn-panic").onclick = async () => {
 function renderRunning(s) {
   const g = s.grid || {};
   const m = s.capital || s.margin || {};
+  // Une seule source : s.mark_price (ticker Binance via /api/running).
+  // Avant : l'en-tête gardait l'ancienne valeur si mark=null, l'État affichait "—".
+  const mark = s.mark_price != null && s.mark_price !== "" ? Number(s.mark_price) : null;
+  const markText = mark != null && !Number.isNaN(mark) ? fmt(mark, 2) : "—";
+  const markSuffix = s.mark_error
+    ? ` <span class="neg" title="${String(s.mark_error).replace(/"/g, "&quot;")}">${s.mark_stale ? "(stale)" : "(err)"}</span>`
+    : s.mark_stale
+      ? ' <span class="neg">(stale)</span>'
+      : "";
   const live = document.getElementById("live-price");
-  const mark = s.mark_price;
-  if (live && mark != null) {
+  if (live) {
     const prev = _lastMark;
-    live.textContent = `${s.symbol || ""} ${fmt(mark, 2)}`;
-    if (prev != null && mark !== prev) flashEl(live, mark - prev);
-    _lastMark = mark;
+    live.innerHTML = `${s.symbol || ""} ${markText}${markSuffix}`;
+    if (mark != null && prev != null && mark !== prev) flashEl(live, mark - prev);
+    if (mark != null) _lastMark = mark;
   }
-  document.getElementById("margin-banner").textContent =
-    `Capital ${m.quote_asset || "USDT"} libre: ${fmt(m.quote_free ?? m.availableBalance)} | ` +
-    `${m.base_asset || "BASE"} total: ${fmt(m.base_total, 6)} | canTrade: ${m.canTrade ?? "—"}`;
+
+  const capErr = m.error ? String(m.error) : null;
+  if (capErr && m.quote_free == null && m.base_total == null) {
+    document.getElementById("margin-banner").innerHTML =
+      `<span class="neg" title="${capErr.replace(/"/g, "&quot;")}">Capital indisponible: ${capErr.slice(0, 120)}</span>`;
+  } else {
+    const stale = m.stale || capErr ? ' <span class="neg">(stale)</span>' : "";
+    document.getElementById("margin-banner").innerHTML =
+      `Capital ${m.quote_asset || "USDT"} libre: ${fmt(m.quote_free ?? m.availableBalance)} | ` +
+      `${m.base_asset || "BASE"} total: ${fmt(m.base_total, 6)} | canTrade: ${m.canTrade ?? "—"}${stale}`;
+  }
 
   document.getElementById("running-status").innerHTML = `
     <p>Running: <strong>${s.running ? "OUI" : "NON"}</strong></p>
     <p>Symbol: <strong>${s.symbol}</strong></p>
-    <p>Mark: <strong>${fmt(s.mark_price, 2)}</strong></p>
+    <p>Mark: <strong>${markText}</strong>${markSuffix}</p>
     <p>Cycle: ${s.cycle_id ?? "—"}</p>
     <p>Daily PnL: <span class="${pnlClass(s.guards?.daily_pnl)}">${fmt(s.guards?.daily_pnl)}</span></p>
     <p>Guards: hard_stop=${s.guards?.hard_stop} breaker=${s.guards?.circuit_breaker} panic=${s.guards?.panic}</p>
@@ -392,20 +411,53 @@ function renderRunning(s) {
 
   const low = Number(g.range_low);
   const high = Number(g.range_high);
-  const mark = Number(s.mark_price);
+  const markNum = Number(mark);
   const marker = document.getElementById("grid-marker");
-  if (low && high && mark && high > low) {
-    const pct = Math.min(100, Math.max(0, ((mark - low) / (high - low)) * 100));
+  if (low && high && markNum && high > low) {
+    const pct = Math.min(100, Math.max(0, ((markNum - low) / (high - low)) * 100));
     marker.style.left = `${pct}%`;
+  }
+
+  const ex = s.exchange_orders || {};
+  const syncById = {};
+  for (const row of ex.levels_vs_openOrders || []) {
+    if (row.order_id != null) syncById[String(row.order_id)] = row;
+  }
+  let levelsNote = document.getElementById("levels-sync-note");
+  if (!levelsNote) {
+    const card = document.querySelector("#levels-table")?.closest(".card");
+    if (card) {
+      levelsNote = document.createElement("p");
+      levelsNote.id = "levels-sync-note";
+      levelsNote.className = "chart-msg";
+      card.insertBefore(levelsNote, card.querySelector("table"));
+    }
+  }
+  if (levelsNote) {
+    if (ex.openOrders_error) {
+      levelsNote.innerHTML = `<span class="neg">openOrders indisponible: ${String(ex.openOrders_error).slice(0, 160)}</span>`;
+    } else {
+      const mm = (ex.mismatches || []).length;
+      levelsNote.textContent =
+        `Exchange openOrders=${ex.openOrders_count ?? 0} | écarts DB↔exchange=${mm}`;
+      if (mm) levelsNote.classList.add("neg");
+      else levelsNote.classList.remove("neg");
+    }
   }
 
   const tbody = document.querySelector("#levels-table tbody");
   tbody.innerHTML = (g.levels || [])
     .map((lv) => {
       const incomplete = lv.status === "grid_level_incomplete";
-      const statusCell = incomplete
+      const sync = lv.order_id != null ? syncById[String(lv.order_id)] : null;
+      let statusCell = incomplete
         ? `<span class="badge-missing" title="${lv.incomplete_since || ""}">non placé</span>`
         : lv.status;
+      if (sync && lv.status === "open" && !sync.in_openOrders) {
+        statusCell = `<span class="badge-missing" title="absent de openOrders">open (désync)</span>`;
+      } else if (sync && sync.in_openOrders && lv.status !== "open") {
+        statusCell = `${lv.status} <span class="neg">(encore openOrders)</span>`;
+      }
       return `<tr class="${incomplete ? "row-incomplete" : ""}">
       <td>${lv.index}</td><td>${lv.side}</td><td>${lv.price}</td>
       <td>${lv.quantity}</td><td>${statusCell}</td><td>${lv.order_id ?? "—"}</td>
@@ -433,11 +485,43 @@ async function loadHistory() {
     .join("");
 }
 
+async function loadFees() {
+  const f = await api("/api/fees");
+  document.getElementById("fees-summary").innerHTML = `
+    <h2>Frais réels</h2>
+    <p>BNB fee config: <strong>${f.bnb_fee_discount_config}</strong></p>
+    <p>BNB libre: <strong>${f.bnb_free ?? "—"}</strong>${f.bnb_error ? ` <span class="neg">(${String(f.bnb_error).slice(0, 80)})</span>` : ""}</p>
+    <p>Total fees listés (USDT): <strong>${fmt(f.total_fees_usdt_listed, 6)}</strong></p>
+    <p class="chart-msg">${f.note || ""}</p>
+  `;
+  document.querySelector("#fees-table tbody").innerHTML = (f.rows || [])
+    .map(
+      (r) => `<tr>
+      <td>${r.id}</td><td>${r.trade_id ?? "—"}</td><td>${r.order_id ?? "—"}</td>
+      <td>${r.commission_asset}</td><td>${fmt(r.commission, 8)}</td>
+      <td>${fmt(r.commission_usdt, 6)}</td><td>${r.cycle_id ?? "—"}</td>
+      <td>${r.created_at ?? "—"}</td>
+    </tr>`
+    )
+    .join("") || `<tr><td colspan="8">aucune commission enregistrée</td></tr>`;
+  document.querySelector("#fees-cycles-table tbody").innerHTML = (f.by_cycle || [])
+    .map(
+      (c) => `<tr>
+      <td>${c.cycle_id}</td>
+      <td class="${pnlClass(c.gross_pnl)}">${fmt(c.gross_pnl)}</td>
+      <td class="${pnlClass(c.net_pnl)}">${fmt(c.net_pnl)}</td>
+      <td>${fmt(c.fees_real_usdt, 6)}</td>
+      <td>${c.close_reason ?? "—"}</td>
+    </tr>`
+    )
+    .join("") || `<tr><td colspan="5">aucun cycle clôturé</td></tr>`;
+}
+
 async function loadPnl() {
   const p = await api("/api/pnl");
   document.getElementById("pnl-kpis").innerHTML = `
     <h2>Indicateurs</h2>
-    <p>Cycles: ${p.cycles_total} (W ${p.cycles_won} / L ${p.cycles_lost})</p>
+    <p>Cycles clôturés : ${p.cycles_total} (W ${p.cycles_won} / L ${p.cycles_lost})</p>
     <p>Win rate: ${(p.win_rate * 100).toFixed(1)}%</p>
     <p>Gain moyen: <span class="pos">${fmt(p.avg_win)}</span></p>
     <p>Perte moyenne: <span class="neg">${fmt(p.avg_loss)}</span></p>

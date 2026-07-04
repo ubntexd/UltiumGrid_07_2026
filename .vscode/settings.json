@@ -1,0 +1,17 @@
+{
+  "remote.autoForwardPorts": true,
+  "remote.autoForwardPortsSource": "hybrid",
+  "remote.forwardOnOpen": true,
+  "remote.portsAttributes": {
+    "8080": {
+      "label": "UltiumGrid UI",
+      "onAutoForward": "openBrowser",
+      "protocol": "http"
+    },
+    "8000": {
+      "label": "UltiumGrid API",
+      "onAutoForward": "silent",
+      "protocol": "http"
+    }
+  }
+}
