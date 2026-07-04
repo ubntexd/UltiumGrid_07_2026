@@ -9,7 +9,7 @@ from typing import Any, Callable
 
 from sqlalchemy.orm import Session
 
-from ultiumgrid.connector.binance_futures import BinanceFuturesClient
+from ultiumgrid.connector.binance_spot import BinanceSpotClient
 from ultiumgrid.db.models import AlertEvent, utcnow
 from ultiumgrid.engine.config import StrategyConfig
 
@@ -29,7 +29,7 @@ class GuardState:
 class SafetyGuards:
     def __init__(
         self,
-        client: BinanceFuturesClient,
+        client: BinanceSpotClient,
         session: Session,
         cfg: StrategyConfig,
         on_alert: Callable[[str, str, str, dict | None], None] | None = None,
@@ -96,35 +96,50 @@ class SafetyGuards:
         return False
 
     def panic_close(self, bag_manager, grid_engine) -> dict[str, Any]:
-        """Clôture immédiate de la position RÉELLE (lecture positionRisk juste avant)."""
+        """Vend la quantité base RÉELLE (lecture balances juste avant)."""
         self.state.panic = True
         self.on_alert("critical", "panic_close", "Panic close demandé", None)
         symbol = grid_engine.cfg.symbol
-        # Lecture fraîche — ignore l'état théorique / paliers incomplets en DB
+        filters = self.client.get_symbol_filters(symbol)
         try:
-            positions_before = self.client.position_risk(symbol)
+            real_before = self.client.balance_total(filters.base_asset)
+            free_before = self.client.balance_free(filters.base_asset)
         except Exception as exc:
-            positions_before = []
-            logger.error("panic positionRisk failed: %s", exc)
-        real_before = sum(float(p.get("positionAmt", 0)) for p in positions_before)
-        grid_result = grid_engine.close_cycle()
+            real_before = 0.0
+            free_before = 0.0
+            logger.error("panic account balances failed: %s", exc)
+        # Annuler ordres puis vendre tout le free base
+        grid_engine.cancel_all_grid_orders()
+        sold = []
+        if free_before >= float(filters.min_qty):
+            try:
+                sold.append(
+                    self.client.place_order(
+                        symbol=symbol,
+                        side="SELL",
+                        order_type="MARKET",
+                        quantity=free_before,
+                        purpose="panic_close",
+                    )
+                )
+            except Exception as exc:
+                logger.error("panic sell failed: %s", exc)
         bags_closed = []
         for bag in list(bag_manager.open_bags()):
-            try:
-                bags_closed.append(bag_manager.sell_bag(bag.id, order_type="MARKET"))
-            except Exception as exc:
-                logger.error("panic sell bag %s: %s", bag.id, exc)
+            bag.status = "closed"
+            bag.closed_at = utcnow()
+            bags_closed.append({"bag_id": bag.id, "note": "closed_via_panic_full_sell"})
+        bag_manager.session.commit()
+        grid_engine.state.active = False
+        grid_engine.state.position_qty = 0.0
         try:
-            positions_after = self.client.position_risk(symbol)
-            real_after = sum(float(p.get("positionAmt", 0)) for p in positions_after)
+            real_after = self.client.balance_total(filters.base_asset)
         except Exception:
-            positions_after = []
             real_after = None
         return {
-            "grid": grid_result,
+            "sold_orders": sold,
             "bags": bags_closed,
-            "position_before": real_before,
-            "position_after": real_after,
-            "positions_before_raw": positions_before,
+            "base_before": real_before,
+            "base_after": real_after,
             "at": utcnow().isoformat(),
         }

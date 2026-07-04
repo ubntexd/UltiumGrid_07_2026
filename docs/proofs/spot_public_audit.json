@@ -1,0 +1,72 @@
+{
+  "ts": "2026-07-04T10:24:50.104309+00:00",
+  "base": "https://testnet.binance.vision",
+  "calls": [
+    {
+      "path": "/api/v3/ping",
+      "params": null,
+      "status": 200,
+      "body": "{}"
+    },
+    {
+      "path": "/api/v3/time",
+      "params": null,
+      "status": 200,
+      "body": "{\"serverTime\":1783160690252}"
+    },
+    {
+      "path": "/api/v3/ticker/price",
+      "params": {
+        "symbol": "BTCUSDT"
+      },
+      "status": 200,
+      "body": "{\"symbol\":\"BTCUSDT\",\"price\":\"62492.78000000\"}"
+    },
+    {
+      "path": "/api/v3/ticker/price",
+      "params": {
+        "symbol": "ETHUSDT"
+      },
+      "status": 200,
+      "body": "{\"symbol\":\"ETHUSDT\",\"price\":\"1759.08000000\"}"
+    },
+    {
+      "path": "/api/v3/exchangeInfo",
+      "status": 200,
+      "BTCUSDT": {
+        "status": "TRADING",
+        "baseAsset": "BTC",
+        "quoteAsset": "USDT",
+        "PRICE_FILTER": {
+          "filterType": "PRICE_FILTER",
+          "minPrice": "0.01000000",
+          "maxPrice": "1000000.00000000",
+          "tickSize": "0.01000000"
+        },
+        "LOT_SIZE": {
+          "filterType": "LOT_SIZE",
+          "minQty": "0.00001000",
+          "maxQty": "9000.00000000",
+          "stepSize": "0.00001000"
+        },
+        "NOTIONAL": {
+          "filterType": "NOTIONAL",
+          "minNotional": "5.00000000",
+          "applyMinToMarket": true,
+          "maxNotional": "9000000.00000000",
+          "applyMaxToMarket": false,
+          "avgPriceMins": 5
+        }
+      }
+    },
+    {
+      "path": "/api/v3/depth",
+      "status": 200,
+      "body": "{\"lastUpdateId\":16635410,\"bids\":[[\"62493.37000000\",\"12.36486000\"],[\"62493.36000000\",\"0.00108000\"],[\"62492.82000000\",\"0.00623000\"],[\"62492.28000000\",\"0.01600000\"],[\"62492.27000000\",\"1.09668000\"]],\"asks\":[[\"62493.38000000\",\"0.59243000\"],[\"62493.39000000\",\"0.00252000\"],[\"62493.42000000\",\"0.00072000\"],["
+    }
+  ],
+  "futures_keys_on_spot_account": {
+    "status": 401,
+    "body": "{\"code\":-2015,\"msg\":\"Invalid API-key, IP, or permissions for action.\"}"
+  }
+}

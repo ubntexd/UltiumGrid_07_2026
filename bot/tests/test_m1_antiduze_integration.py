@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "bot"))
 load_dotenv(ROOT / ".env")
 
-from ultiumgrid.connector.binance_futures import BinanceFuturesClient  # noqa: E402
+from ultiumgrid.connector.binance_spot import BinanceSpotClient  # noqa: E402
 from ultiumgrid.db.models import OrderAttempt, make_session_factory  # noqa: E402
 
 PROOFS = ROOT / "docs" / "proofs"
@@ -34,17 +34,19 @@ DB_URL = f"sqlite:///{ROOT / 'data' / 'test_antiduze.db'}"
 
 
 def _client_with_db_log():
-    key = os.getenv("BINANCE_FUTURES_TESTNET_API_KEY", "").strip()
-    secret = os.getenv("BINANCE_FUTURES_TESTNET_API_SECRET", "").strip()
-    assert key and secret
+    from ultiumgrid.bot_runner import build_client_from_env
+
+    try:
+        client = build_client_from_env()
+        client.account()
+    except Exception:
+        pytest.skip("Clés Spot Testnet manquantes ou invalides (testnet.binance.vision)")
     Path(ROOT / "data").mkdir(exist_ok=True)
     db_path = ROOT / "data" / "test_antiduze.db"
     if db_path.exists():
         db_path.unlink()
     SessionLocal, engine = make_session_factory(DB_URL)
     session = SessionLocal()
-
-    client = BinanceFuturesClient(api_key=key, api_secret=secret)
 
     def persist(entry: dict) -> None:
         row = OrderAttempt(
@@ -138,7 +140,7 @@ def test_antiduze_post_1007_real_binance():
         post_count = {"n": 0}
 
         def raw_1007(method, path, params=None, signed=False):
-            if method == "POST" and path == "/fapi/v1/order":
+            if method == "POST" and path == "/api/v3/order":
                 post_count["n"] += 1
                 body = {
                     "code": -1007,
@@ -178,7 +180,7 @@ def test_antiduze_post_1007_real_binance():
 
         # Cleanup
         client._raw_request = real_raw  # type: ignore
-        client.new_client_order_id = BinanceFuturesClient.new_client_order_id  # type: ignore
+        client.new_client_order_id = BinanceSpotClient.new_client_order_id  # type: ignore
         cancelled = client.cancel_order(SYMBOL, order_id)
         proof["steps"].append({"action": "CANCEL", "raw": cancelled})
 
@@ -237,7 +239,7 @@ def test_antiduze_post_1007_real_binance():
     # (situation réelle quand le matching engine a accepté l'ordre mais le client a timeout).
     # openOrders est un appel RÉEL ; on y injecte l'entrée fantôme pour reproduire ce cas
     # sans pouvoir s'appuyer sur un POST réussi (testnet en -1007 permanent).
-    dupe_cid = BinanceFuturesClient.new_client_order_id()
+    dupe_cid = BinanceSpotClient.new_client_order_id()
     phantom_order = {
         "orderId": 900001,
         "clientOrderId": dupe_cid,
@@ -263,7 +265,7 @@ def test_antiduze_post_1007_real_binance():
         return list(live) + [phantom_order]
 
     def raw_timeout(method, path, params=None, signed=False):
-        if method == "POST" and path == "/fapi/v1/order":
+        if method == "POST" and path == "/api/v3/order":
             body = {
                 "code": -1007,
                 "msg": "Timeout waiting for response from backend server. Send status unknown; execution status unknown.",

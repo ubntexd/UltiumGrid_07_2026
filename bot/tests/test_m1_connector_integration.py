@@ -1,4 +1,4 @@
-"""Tests d'intégration Module 1 — frappent réellement Binance Futures Testnet.
+"""Tests d'intégration Module 1 — Binance Spot Testnet.
 
 Label: integration (pas de mock).
 Preuves écrites dans docs/proofs/m1_*.json
@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "bot"))
 load_dotenv(ROOT / ".env")
 
-from ultiumgrid.connector.binance_futures import BinanceFuturesClient  # noqa: E402
+from ultiumgrid.connector.binance_spot import BinanceSpotClient  # noqa: E402
 
 PROOFS = ROOT / "docs" / "proofs"
 PROOFS.mkdir(parents=True, exist_ok=True)
@@ -28,11 +28,10 @@ PROOFS.mkdir(parents=True, exist_ok=True)
 SYMBOL = "BTCUSDT"
 
 
-def _client() -> BinanceFuturesClient:
-    key = os.getenv("BINANCE_FUTURES_TESTNET_API_KEY", "").strip()
-    secret = os.getenv("BINANCE_FUTURES_TESTNET_API_SECRET", "").strip()
-    assert key and secret, "Clés API manquantes dans .env"
-    return BinanceFuturesClient(api_key=key, api_secret=secret)
+def _client() -> BinanceSpotClient:
+    from ultiumgrid.bot_runner import build_client_from_env
+
+    return build_client_from_env()
 
 
 def _write_proof(name: str, payload: dict) -> None:
@@ -42,31 +41,35 @@ def _write_proof(name: str, payload: dict) -> None:
 
 
 @pytest.mark.integration
-def test_account_and_funding():
+def test_account_and_balances():
     client = _client()
     ping = client.ping()
     account = client.account()
-    funding = client.funding_rate(SYMBOL)
     filters = client.get_symbol_filters(SYMBOL)
+    balances = [
+        b
+        for b in account.get("balances", [])
+        if float(b.get("free", 0)) + float(b.get("locked", 0)) != 0
+    ]
     proof = {
+        "rest_base": client.rest_base,
         "ping": ping,
         "canTrade": account.get("canTrade"),
-        "availableBalance": account.get("availableBalance"),
-        "totalWalletBalance": account.get("totalWalletBalance"),
-        "funding": funding,
+        "balances_nonzero": balances[:10],
+        "quote_free": client.quote_asset_free(SYMBOL),
+        "base_total": client.base_asset_qty(SYMBOL),
         "filters": {
             "tickSize": str(filters.tick_size),
             "stepSize": str(filters.step_size),
             "minQty": str(filters.min_qty),
             "minNotional": str(filters.min_notional),
-            "pricePrecision": filters.price_precision,
-            "quantityPrecision": filters.quantity_precision,
+            "baseAsset": filters.base_asset,
+            "quoteAsset": filters.quote_asset,
         },
     }
-    _write_proof("m1_account_funding.json", proof)
+    _write_proof("m1_account_balances_spot.json", proof)
     assert ping == {}
     assert account["canTrade"] is True
-    assert funding["symbol"] == SYMBOL
     assert filters.tick_size > 0
     assert filters.step_size > 0
 
@@ -141,8 +144,9 @@ def test_place_verify_cancel_limit_order():
 
 @pytest.mark.integration
 def test_websocket_mark_price_and_reconnect():
-    """Reçoit des prix WS, force une coupure, vérifie la reprise automatique."""
-    client = _client()
+    """Reçoit des prix WS Spot (bookTicker public), kill, reprise."""
+    # Flux public : pas besoin de clés valides
+    client = BinanceSpotClient(api_key="public", api_secret="public")
     prices: list[dict] = []
     reconnect_seen = {"count": 0}
     stop = asyncio.Event()
@@ -161,8 +165,8 @@ def test_websocket_mark_price_and_reconnect():
 
     async def run_with_kill():
         # Première connexion : collecter 2 messages puis tuer le socket
-        stream = f"{SYMBOL.lower()}@markPrice@1s"
-        url = f"{client.ws_base}/ws/{stream}"
+        stream = f"{SYMBOL.lower()}@bookTicker"
+        url = f"{client.ws_base}/{stream}"
         import websockets
 
         async with websockets.connect(url, ping_interval=20) as ws:

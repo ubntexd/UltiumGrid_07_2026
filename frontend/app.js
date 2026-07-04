@@ -5,7 +5,6 @@ const API = window.location.origin.includes("3000")
 const CONFIG_FIELDS = [
   ["symbol", "Symbole"],
   ["capital_usdt", "Capital USDT"],
-  ["leverage", "Levier"],
   ["num_levels", "Paliers"],
   ["step_pct", "Pas %"],
   ["cycle_trigger_usd", "Seuil cycle USD"],
@@ -17,7 +16,7 @@ const CONFIG_FIELDS = [
   ["rearm_delay_min", "Réarmement min"],
   ["hard_stop_pct", "Stop dur %"],
   ["daily_circuit_breaker_usd", "Circuit breaker USD"],
-  ["bags_margin_threshold_pct", "Seuil marge sacs %"],
+  ["bags_capital_threshold_pct", "Seuil capital sacs %"],
 ];
 
 function pnlClass(v) {
@@ -77,9 +76,10 @@ document.getElementById("btn-panic").onclick = async () => {
 
 function renderRunning(s) {
   const g = s.grid || {};
-  const m = s.margin || {};
+  const m = s.capital || s.margin || {};
   document.getElementById("margin-banner").textContent =
-    `Marge dispo: ${fmt(m.availableBalance)} | Wallet: ${fmt(m.totalWalletBalance)} | uPnL: ${fmt(m.totalUnrealizedProfit)} | canTrade: ${m.canTrade ?? "—"}`;
+    `Capital ${m.quote_asset || "USDT"} libre: ${fmt(m.quote_free ?? m.availableBalance)} | ` +
+    `${m.base_asset || "BASE"} total: ${fmt(m.base_total, 6)} | canTrade: ${m.canTrade ?? "—"}`;
 
   document.getElementById("running-status").innerHTML = `
     <p>Running: <strong>${s.running ? "OUI" : "NON"}</strong></p>
@@ -98,7 +98,6 @@ function renderRunning(s) {
     <p>Position qty: ${fmt(g.position_qty, 4)} @ ${fmt(g.entry_avg)}</p>
     <p>Grid Profit: <span class="${pnlClass(g.grid_profit)}">${fmt(g.grid_profit)}</span></p>
     <p>Floating: <span class="${pnlClass(g.floating_profit)}">${fmt(g.floating_profit)}</span></p>
-    <p>Funding: <span class="${pnlClass(g.funding_pnl)}">${fmt(g.funding_pnl)}</span></p>
     <p>Gross: <span class="${pnlClass(g.gross_pnl)}">${fmt(g.gross_pnl)}</span></p>
     <p>Paliers incomplets: <strong class="${incompleteCount ? "neg" : ""}">${incompleteCount}</strong></p>
   `;
@@ -297,7 +296,6 @@ async function loadMarket() {
         <h2>${d.symbol}</h2>
         <p>Price: ${fmt(d.price)}</p>
         <p>tickSize=${d.filters.tickSize} stepSize=${d.filters.stepSize} minNotional=${d.filters.minNotional}</p>
-        <p>Funding: ${d.funding.lastFundingRate} next=${d.funding.nextFundingTime}</p>
         <p>Vol stdev 1h: ${fmt(d.volatility_stdev_1h, 6)} ATR14: ${fmt(d.atr_14_1h, 4)}</p>
         <pre>bids=${JSON.stringify(d.orderbook.bids)}
 asks=${JSON.stringify(d.orderbook.asks)}</pre>

@@ -11,7 +11,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from ultiumgrid.connector.binance_futures import BinanceFuturesClient
+from ultiumgrid.connector.binance_spot import BinanceSpotClient
 from ultiumgrid.db.models import Bag, utcnow
 from ultiumgrid.engine.config import StrategyConfig
 
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class BagManager:
-    def __init__(self, client: BinanceFuturesClient, session: Session, cfg: StrategyConfig):
+    def __init__(self, client: BinanceSpotClient, session: Session, cfg: StrategyConfig):
         self.client = client
         self.session = session
         self.cfg = cfg
@@ -75,9 +75,7 @@ class BagManager:
             "side": side,
             "order_type": order_type.upper(),
             "quantity": bag.quantity,
-            "position_side": "LONG" if self.client.is_hedge_mode() else None,
             "purpose": "bag_sell",
-            "reduce_only": True,
         }
         if order_type.upper() == "LIMIT":
             if limit_price is None:
@@ -94,10 +92,10 @@ class BagManager:
         return {"bag": bag, "order": order}
 
     def reconcile(self, grid_position_qty: float, symbol: str | None = None) -> dict[str, Any]:
-        """position Binance = sacs + grille active — quantités RÉELLES uniquement."""
+        """solde base réel = sacs + grille active — quantités RÉELLES uniquement."""
         symbol = symbol or self.cfg.symbol
         try:
-            positions = self.client.position_risk(symbol)
+            binance_qty = self.client.base_asset_qty(symbol)
         except Exception as exc:
             result = {
                 "symbol": symbol,
@@ -110,7 +108,6 @@ class BagManager:
             logger.warning("reconciliation_unavailable: %s", result)
             return result
 
-        binance_qty = sum(float(p.get("positionAmt", 0)) for p in positions)
         bags_qty = self.bags_qty(symbol)
         expected = bags_qty + grid_position_qty
         delta = binance_qty - expected
@@ -131,11 +128,15 @@ class BagManager:
             logger.warning("Reconciliation mismatch: %s", result)
         return result
 
-    def bags_margin_ratio(self, available_balance: float, mark_price: float) -> float:
-        notional = self.bags_qty() * mark_price / max(self.cfg.leverage, 1)
-        if available_balance <= 0:
+    def bags_capital_ratio(self, available_quote: float, mark_price: float) -> float:
+        """Capital immobilisé en sacs (valeur quote) / capital quote disponible, en %."""
+        notional = self.bags_qty() * mark_price
+        if available_quote <= 0:
             return 100.0
-        return (notional / available_balance) * 100.0
+        return (notional / available_quote) * 100.0
 
-    def should_reduce_grid(self, available_balance: float, mark_price: float) -> bool:
-        return self.bags_margin_ratio(available_balance, mark_price) >= self.cfg.bags_margin_threshold_pct
+    def should_reduce_grid(self, available_quote: float, mark_price: float) -> bool:
+        return (
+            self.bags_capital_ratio(available_quote, mark_price)
+            >= self.cfg.bags_capital_threshold_pct
+        )

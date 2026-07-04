@@ -7,9 +7,8 @@ Formules documentées pour reproductibilité :
   pour i = 0..num_levels-1 (i < mid = BUY, i >= mid = SELL)
 
 - Grid Profit = somme des PnL réalisés des paires buy/sell de la grille active
-- Floating Profit = (mark_price - entry_avg) * position_qty  (position RÉELLE uniquement)
-- Funding PnL = cumul des funding payments observés sur la période du cycle
-- Gross PnL = Grid Profit + Floating Profit + Funding PnL
+- Floating Profit = (mark_price - entry_avg) * position_qty  (solde base RÉEL uniquement)
+- Gross PnL = Grid Profit + Floating Profit  (pas de funding en Spot)
 - Déclenchement cycle si Gross PnL >= cycle_trigger_usd
 
 Les paliers `grid_level_incomplete` ne sont JAMAIS comptés comme placés
@@ -24,8 +23,8 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any, Callable
 
-from ultiumgrid.connector.binance_futures import (
-    BinanceFuturesClient,
+from ultiumgrid.connector.binance_spot import (
+    BinanceSpotClient,
     RetryExhaustedError,
     SymbolFilters,
 )
@@ -53,15 +52,14 @@ class GridState:
     levels: list[GridLevel] = field(default_factory=list)
     grid_profit: float = 0.0
     floating_profit: float = 0.0
-    funding_pnl: float = 0.0
-    position_qty: float = 0.0  # position RÉELLE grille (fills), jamais théorique
+    position_qty: float = 0.0  # qty base RÉELLE grille (fills), jamais théorique
     entry_avg: float = 0.0
     active: bool = False
     deepest_buy_index: int = -1
 
     @property
     def gross_pnl(self) -> float:
-        return self.grid_profit + self.floating_profit + self.funding_pnl
+        return self.grid_profit + self.floating_profit
 
     def incomplete_indices(self) -> list[int]:
         return [lv.index for lv in self.levels if lv.status == "grid_level_incomplete"]
@@ -91,7 +89,8 @@ def compute_levels(
 
 
 def qty_per_level(cfg: StrategyConfig, center_price: Decimal, filters: SymbolFilters) -> Decimal:
-    notional = Decimal(str(cfg.capital_usdt)) * Decimal(str(cfg.leverage))
+    """Spot pur : capital USDT réparti sur les paliers BUY (pas de levier)."""
+    notional = Decimal(str(cfg.capital_usdt))
     buy_levels = max(cfg.num_levels // 2, 1)
     per = notional / Decimal(buy_levels) / center_price
     qty = filters.round_qty(per)
@@ -105,7 +104,7 @@ def qty_per_level(cfg: StrategyConfig, center_price: Decimal, filters: SymbolFil
 class GridEngine:
     def __init__(
         self,
-        client: BinanceFuturesClient,
+        client: BinanceSpotClient,
         cfg: StrategyConfig,
         on_level_incomplete: Callable[[GridLevel, RetryExhaustedError], None] | None = None,
     ):
@@ -120,10 +119,6 @@ class GridEngine:
         if center_price is None:
             center_price = Decimal(self.client.ticker_price(symbol)["price"])
         center_price = filters.round_price(center_price)
-        try:
-            self.client.set_leverage(symbol, self.cfg.leverage)
-        except Exception as exc:
-            logger.warning("set_leverage failed: %s", exc)
 
         qty = qty_per_level(self.cfg, center_price, filters)
         levels = compute_levels(center_price, self.cfg, filters, qty)
@@ -261,45 +256,38 @@ class GridEngine:
         return self.state.gross_pnl >= self.cfg.cycle_trigger_usd
 
     def real_position_qty(self) -> float:
-        """Lecture fraîche positionRisk — source de vérité Binance."""
-        positions = self.client.position_risk(self.cfg.symbol)
-        total = 0.0
-        for pos in positions:
-            total += float(pos.get("positionAmt", 0))
-        return total
+        """Solde réel de l'actif de base (GET /api/v3/account balances) — source de vérité Spot."""
+        return self.client.base_asset_qty(self.cfg.symbol)
 
     def close_cycle(self) -> dict[str, Any]:
-        """Ferme la position RÉELLE lue juste avant l'action (pas de reconstruction théorique)."""
+        """Vend la quantité base RÉELLE lue juste avant l'action (pas de reconstruction théorique)."""
         self.cancel_all_grid_orders()
         symbol = self.cfg.symbol
-        positions = self.client.position_risk(symbol)
+        # Quantité grille = solde base total - sacs (appelant doit avoir synchronisé)
+        # Ici on vend uniquement la qty grille trackée, plafonnée au solde libre réel
+        filters = self.client.get_symbol_filters(symbol)
+        free_base = self.client.balance_free(filters.base_asset)
+        amt = min(abs(self.state.position_qty), free_base)
         closed = []
-        for pos in positions:
-            amt = float(pos.get("positionAmt", 0))
-            if amt == 0:
-                continue
-            side = "SELL" if amt > 0 else "BUY"
-            ps = pos.get("positionSide") or ("LONG" if amt > 0 else "SHORT")
+        if amt >= float(filters.min_qty):
             try:
                 order = self.client.place_order(
                     symbol=symbol,
-                    side=side,
+                    side="SELL",
                     order_type="MARKET",
-                    quantity=abs(amt),
-                    position_side=ps if self.client.is_hedge_mode() else None,
+                    quantity=amt,
                     purpose="cycle_close",
-                    reduce_only=True,
                 )
                 closed.append(order)
             except Exception as exc:
-                logger.error("close position failed: %s", exc)
+                logger.error("close cycle sell failed: %s", exc)
         result = {
             "grid_profit": self.state.grid_profit,
             "floating_profit": self.state.floating_profit,
-            "funding_pnl": self.state.funding_pnl,
             "gross_pnl": self.state.gross_pnl,
             "closed_orders": closed,
-            "real_position_before_close": sum(float(p.get("positionAmt", 0)) for p in positions),
+            "real_base_before_close": free_base,
+            "sold_qty": amt,
         }
         self.state.active = False
         self.state.position_qty = 0.0

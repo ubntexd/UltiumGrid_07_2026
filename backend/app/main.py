@@ -34,9 +34,20 @@ DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{ROOT / 'data' / 'ultiumgri
 Path(ROOT / "data").mkdir(exist_ok=True)
 
 SessionLocal, engine = make_session_factory(DATABASE_URL)
-client = build_client_from_env()
+try:
+    client = build_client_from_env()
+except Exception as _client_err:
+    client = None  # type: ignore
+    print(f"WARNING: Spot client not ready: {_client_err}")
 
 _ws_clients: list[WebSocket] = []
+
+
+def _client():
+    global client
+    if client is None:
+        client = build_client_from_env()
+    return client
 
 
 def get_session():
@@ -58,18 +69,22 @@ def build_status() -> dict[str, Any]:
         ]
         mark = None
         try:
-            mark = float(client.ticker_price(cfg.symbol)["price"])
+            mark = float(_client().ticker_price(cfg.symbol)["price"])
         except Exception:
             pass
         account = {}
         try:
-            acc = client.account()
+            c = _client()
+            filters = c.get_symbol_filters(cfg.symbol)
             account = {
-                "availableBalance": acc.get("availableBalance"),
-                "totalWalletBalance": acc.get("totalWalletBalance"),
-                "totalUnrealizedProfit": acc.get("totalUnrealizedProfit"),
-                "totalInitialMargin": acc.get("totalInitialMargin"),
-                "canTrade": acc.get("canTrade"),
+                "quote_free": c.balance_free(filters.quote_asset),
+                "base_total": c.balance_total(filters.base_asset),
+                "base_free": c.balance_free(filters.base_asset),
+                "quote_asset": filters.quote_asset,
+                "base_asset": filters.base_asset,
+                "canTrade": c.account().get("canTrade"),
+                "availableBalance": c.balance_free(filters.quote_asset),
+                "totalWalletBalance": c.balance_free(filters.quote_asset),
             }
         except Exception as exc:
             account = {"error": str(exc)}
@@ -92,10 +107,7 @@ def build_status() -> dict[str, Any]:
                 "entry_avg": g.get("entry_avg"),
                 "grid_profit": g.get("grid_profit"),
                 "floating_profit": g.get("floating_profit"),
-                "funding_pnl": g.get("funding_pnl"),
-                "gross_pnl": (g.get("grid_profit") or 0)
-                + (g.get("floating_profit") or 0)
-                + (g.get("funding_pnl") or 0),
+                "gross_pnl": (g.get("grid_profit") or 0) + (g.get("floating_profit") or 0),
                 "levels": levels,
                 "incomplete_levels": incomplete,
                 "incomplete_count": len(incomplete),
@@ -111,6 +123,7 @@ def build_status() -> dict[str, Any]:
                 }
                 for b in bags
             ],
+            "capital": account,
             "margin": account,
             "guards": {
                 "daily_pnl": guards.get("daily_pnl"),
@@ -415,7 +428,7 @@ def simulate_config(body: SimulateRequest):
 
 @app.get("/api/market")
 def market():
-    tickers = client.ticker_24hr()
+    tickers = _client().ticker_24hr()
     if isinstance(tickers, dict):
         tickers = [tickers]
     out = []
@@ -436,11 +449,11 @@ def market():
 @app.get("/api/market/{symbol}")
 def market_symbol(symbol: str):
     symbol = symbol.upper()
-    filters = client.get_symbol_filters(symbol)
-    ticker = client.ticker_price(symbol)
-    funding = client.funding_rate(symbol)
-    depth = client.depth(symbol, limit=10)
-    kl = client.klines(symbol, interval="1h", limit=24)
+    c = _client()
+    filters = c.get_symbol_filters(symbol)
+    ticker = c.ticker_price(symbol)
+    depth = c.depth(symbol, limit=10)
+    kl = c.klines(symbol, interval="1h", limit=24)
     closes = [float(k[4]) for k in kl]
     returns = []
     for i in range(1, len(closes)):
@@ -464,8 +477,9 @@ def market_symbol(symbol: str):
             "stepSize": str(filters.step_size),
             "minQty": str(filters.min_qty),
             "minNotional": str(filters.min_notional),
+            "baseAsset": filters.base_asset,
+            "quoteAsset": filters.quote_asset,
         },
-        "funding": funding,
         "orderbook": {"bids": depth.get("bids", [])[:5], "asks": depth.get("asks", [])[:5]},
         "volatility_stdev_1h": vol,
         "atr_14_1h": atr,
@@ -473,14 +487,26 @@ def market_symbol(symbol: str):
 
 
 @app.get("/api/margin")
-def margin():
-    acc = client.account()
+@app.get("/api/capital")
+def capital():
+    """Capital disponible Spot (quote free) — pas de marge/levier."""
+    c = _client()
+    # symbole actif depuis bot_state
+    session = get_session()
+    try:
+        state = read_main_state(session)
+        symbol = (state.get("config") or {}).get("symbol") or "BTCUSDT"
+    finally:
+        session.close()
+    filters = c.get_symbol_filters(symbol)
     return {
-        "availableBalance": acc.get("availableBalance"),
-        "totalWalletBalance": acc.get("totalWalletBalance"),
-        "totalInitialMargin": acc.get("totalInitialMargin"),
-        "totalUnrealizedProfit": acc.get("totalUnrealizedProfit"),
-        "canTrade": acc.get("canTrade"),
+        "quote_free": c.balance_free(filters.quote_asset),
+        "base_total": c.balance_total(filters.base_asset),
+        "base_free": c.balance_free(filters.base_asset),
+        "quote_asset": filters.quote_asset,
+        "base_asset": filters.base_asset,
+        "canTrade": c.account().get("canTrade"),
+        "availableBalance": c.balance_free(filters.quote_asset),
     }
 
 

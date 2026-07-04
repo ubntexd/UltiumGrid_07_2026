@@ -12,8 +12,8 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from ultiumgrid.bags.manager import BagManager
-from ultiumgrid.connector.binance_futures import BinanceFuturesClient
-from ultiumgrid.connector.binance_futures import RetryExhaustedError
+from ultiumgrid.connector.binance_spot import BinanceSpotClient
+from ultiumgrid.connector.binance_spot import RetryExhaustedError
 from ultiumgrid.db.models import (
     AlertEvent,
     BotState,
@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 
 class BotRunner:
-    def __init__(self, client: BinanceFuturesClient, session: Session, cfg: StrategyConfig | None = None):
+    def __init__(self, client: BinanceSpotClient, session: Session, cfg: StrategyConfig | None = None):
         self.client = client
         self.session = session
         self.cfg = cfg or self._load_active_config()
@@ -131,7 +131,6 @@ class BotRunner:
                 "entry_avg": self.engine.state.entry_avg,
                 "grid_profit": self.engine.state.grid_profit,
                 "floating_profit": self.engine.state.floating_profit,
-                "funding_pnl": self.engine.state.funding_pnl,
                 "levels": self.engine.levels_as_dict(),
                 "active": self.engine.state.active,
                 "deepest_buy_index": self.engine.state.deepest_buy_index,
@@ -176,7 +175,6 @@ class BotRunner:
         self.engine.state.entry_avg = float(g.get("entry_avg") or 0)
         self.engine.state.grid_profit = float(g.get("grid_profit") or 0)
         self.engine.state.floating_profit = float(g.get("floating_profit") or 0)
-        self.engine.state.funding_pnl = float(g.get("funding_pnl") or 0)
         self.engine.state.active = bool(g.get("active"))
         self.engine.state.deepest_buy_index = int(g.get("deepest_buy_index") or -1)
         levels = []
@@ -411,7 +409,7 @@ class BotRunner:
         cycle.status = "closed"
         cycle.grid_profit = result["grid_profit"]
         cycle.floating_profit = result["floating_profit"]
-        cycle.funding_pnl = result["funding_pnl"]
+        cycle.funding_pnl = 0.0  # Spot : pas de funding
         cycle.gross_pnl = result["gross_pnl"]
         cycle.net_pnl = result["gross_pnl"]  # frais non séparés ici
         cycle.closed_at = utcnow()
@@ -483,11 +481,14 @@ class BotRunner:
             pass
         account = {}
         try:
-            acc = self.client.account()
+            filters = self.client.get_symbol_filters(self.cfg.symbol)
             account = {
-                "availableBalance": acc.get("availableBalance"),
-                "totalWalletBalance": acc.get("totalWalletBalance"),
-                "totalUnrealizedProfit": acc.get("totalUnrealizedProfit"),
+                "quote_free": self.client.balance_free(filters.quote_asset),
+                "base_total": self.client.balance_total(filters.base_asset),
+                "base_free": self.client.balance_free(filters.base_asset),
+                "quote_asset": filters.quote_asset,
+                "base_asset": filters.base_asset,
+                "canTrade": self.client.account().get("canTrade"),
             }
         except Exception as exc:
             account = {"error": str(exc)}
@@ -512,7 +513,6 @@ class BotRunner:
                 "entry_avg": self.engine.state.entry_avg,
                 "grid_profit": self.engine.state.grid_profit,
                 "floating_profit": self.engine.state.floating_profit,
-                "funding_pnl": self.engine.state.funding_pnl,
                 "gross_pnl": self.engine.state.gross_pnl,
                 "levels": levels,
                 "incomplete_levels": incomplete,
@@ -529,7 +529,8 @@ class BotRunner:
                 }
                 for b in self.bags.open_bags()
             ],
-            "margin": account,
+            "capital": account,
+            "margin": account,  # alias rétrocompat UI
             "guards": {
                 "daily_pnl": self.guards.state.daily_pnl,
                 "hard_stop": self.guards.state.hard_stop_triggered,
@@ -541,11 +542,21 @@ class BotRunner:
         }
 
 
-def build_client_from_env() -> BinanceFuturesClient:
-    return BinanceFuturesClient(
-        api_key=os.environ["BINANCE_FUTURES_TESTNET_API_KEY"],
-        api_secret=os.environ["BINANCE_FUTURES_TESTNET_API_SECRET"],
-    )
+def build_client_from_env() -> BinanceSpotClient:
+    # Accepte BINANCE_SPOT_* ou anciennes variables Futures (migration)
+    key = (
+        os.getenv("BINANCE_SPOT_TESTNET_API_KEY")
+        or os.getenv("BINANCE_FUTURES_TESTNET_API_KEY")
+        or ""
+    ).strip()
+    secret = (
+        os.getenv("BINANCE_SPOT_TESTNET_API_SECRET")
+        or os.getenv("BINANCE_FUTURES_TESTNET_API_SECRET")
+        or ""
+    ).strip()
+    if not key or not secret:
+        raise KeyError("BINANCE_SPOT_TESTNET_API_KEY / _SECRET manquants dans .env")
+    return BinanceSpotClient(api_key=key, api_secret=secret)
 
 
 def main_loop(database_url: str, poll_seconds: float = 5.0) -> None:

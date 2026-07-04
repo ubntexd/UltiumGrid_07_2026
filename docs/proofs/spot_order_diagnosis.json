@@ -1,0 +1,17 @@
+{
+  "DEFAULT_REST": "https://testnet.binance.vision",
+  "DEFAULT_WS": "wss://testnet.binance.vision/ws",
+  "client.rest_base": "https://testnet.binance.vision",
+  "client.ws_base": "wss://testnet.binance.vision/ws",
+  "steps": [
+    {
+      "step": "ping",
+      "status": 200,
+      "raw": "{}"
+    },
+    {
+      "step": "account",
+      "error": "401 {\"code\":-2015,\"msg\":\"Invalid API-key, IP, or permissions for action.\"}"
+    }
+  ]
+}

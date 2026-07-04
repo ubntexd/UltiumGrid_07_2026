@@ -1,4 +1,4 @@
-"""Paramètres de stratégie avec validation des bornes."""
+"""Paramètres de stratégie Spot (sans levier) avec validation des bornes."""
 
 from __future__ import annotations
 
@@ -9,10 +9,9 @@ from typing import Any
 @dataclass
 class StrategyConfig:
     symbol: str = "BTCUSDT"
-    capital_usdt: float = 1000.0
-    leverage: int = 5
+    capital_usdt: float = 5000.0
     num_levels: int = 20
-    step_pct: float = 0.25  # 0.25 %
+    step_pct: float = 0.25
     cycle_trigger_usd: float = 15.0
     cut_level_1: int = 10
     cut_pct_1: float = 50.0
@@ -22,11 +21,10 @@ class StrategyConfig:
     rearm_delay_min: int = 20
     hard_stop_pct: float = -8.0
     daily_circuit_breaker_usd: float = -40.0
-    bags_margin_threshold_pct: float = 40.0
+    bags_capital_threshold_pct: float = 40.0  # capital immobilisé en sacs
+    bnb_fee_discount: bool = False
 
-    # Bornes (spec §7)
     BOUNDS = {
-        "leverage": (1, 20),
         "step_pct": (0.05, 2.0),
         "num_levels": (4, 40),
         "capital_usdt": (50.0, 1_000_000.0),
@@ -39,7 +37,7 @@ class StrategyConfig:
         "rearm_delay_min": (5, 120),
         "hard_stop_pct": (-50.0, -1.0),
         "daily_circuit_breaker_usd": (-10_000.0, -1.0),
-        "bags_margin_threshold_pct": (5.0, 95.0),
+        "bags_capital_threshold_pct": (5.0, 95.0),
     }
 
     def validate(self) -> list[str]:
@@ -60,5 +58,9 @@ class StrategyConfig:
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "StrategyConfig":
         known = {f.name for f in fields(cls)}
+        # ignorer leverage hérité futures
         filtered = {k: v for k, v in data.items() if k in known}
+        # alias ancien nom
+        if "bags_margin_threshold_pct" in data and "bags_capital_threshold_pct" not in filtered:
+            filtered["bags_capital_threshold_pct"] = data["bags_margin_threshold_pct"]
         return cls(**filtered)

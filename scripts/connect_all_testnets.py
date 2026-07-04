@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 SCRIPTS = [
-    "connect_binance_futures_testnet.py",
+    "connect_binance_spot_testnet.py",
     "connect_hyperliquid_testnet.py",
 ]
 

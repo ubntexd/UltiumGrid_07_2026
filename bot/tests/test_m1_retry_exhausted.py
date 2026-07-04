@@ -24,8 +24,8 @@ sys.path.insert(0, str(ROOT / "bot"))
 load_dotenv(ROOT / ".env")
 
 from ultiumgrid.bot_runner import BotRunner  # noqa: E402
-from ultiumgrid.connector.binance_futures import (  # noqa: E402
-    BinanceFuturesClient,
+from ultiumgrid.connector.binance_spot import (  # noqa: E402
+    BinanceSpotClient,
     RetryExhaustedError,
     SymbolFilters,
 )
@@ -40,10 +40,12 @@ PROOFS.mkdir(parents=True, exist_ok=True)
 
 @pytest.mark.unit
 def test_retry_exhausted_raises_and_logs():
-    client = BinanceFuturesClient(api_key="k", api_secret="s")
+    client = BinanceSpotClient(api_key="k", api_secret="s")
     client._hedge_mode = False
     client._filters_cache["BTCUSDT"] = SymbolFilters(
         symbol="BTCUSDT",
+        base_asset="BTC",
+        quote_asset="USDT",
         tick_size=Decimal("0.1"),
         step_size=Decimal("0.001"),
         min_qty=Decimal("0.001"),
@@ -62,7 +64,7 @@ def test_retry_exhausted_raises_and_logs():
     client._raw_request = fake_raw  # type: ignore
     client.find_order_by_client_order_id = lambda s, c: (None, {"source": None})  # type: ignore
 
-    import ultiumgrid.connector.binance_futures as mod
+    import ultiumgrid.connector.binance_spot as mod
 
     original = mod.BACKOFF_BASE_S
     mod.BACKOFF_BASE_S = 0.001
@@ -116,9 +118,7 @@ def test_retry_exhausted_forced_full_chain():
     Prouve : retry_exhausted en DB, grid_level_incomplete, alerte critique,
     incomplete dans status API, PnL/range ignorent le palier manquant.
     """
-    key = os.getenv("BINANCE_FUTURES_TESTNET_API_KEY", "").strip()
-    secret = os.getenv("BINANCE_FUTURES_TESTNET_API_SECRET", "").strip()
-    assert key and secret
+    from ultiumgrid.bot_runner import build_client_from_env
 
     db_path = ROOT / "data" / "test_retry_exhausted.db"
     db_path.parent.mkdir(exist_ok=True)
@@ -127,26 +127,29 @@ def test_retry_exhausted_forced_full_chain():
     SessionLocal, engine_db = make_session_factory(f"sqlite:///{db_path}")
     session = SessionLocal()
 
-    client = BinanceFuturesClient(api_key=key, api_secret=secret)
+    try:
+        client = build_client_from_env()
+        client.account()
+    except Exception:
+        pytest.skip("Clés Spot Testnet manquantes ou invalides")
     real_raw = client._raw_request
     real_find = client.find_order_by_client_order_id
 
     def forced_timeout_post(method, path, params=None, signed=False):
-        if method == "POST" and path == "/fapi/v1/order":
+        if method == "POST" and path == "/api/v3/order":
             body = {
                 "code": -1007,
                 "msg": "Timeout waiting for response from backend server. Send status unknown; execution status unknown.",
             }
             return 408, body, json.dumps(body)
         # leverage etc. : laisser passer ou ignorer
-        if method == "POST" and path == "/fapi/v1/leverage":
             return 200, {"leverage": 5}, '{"leverage":5}'
         return real_raw(method, path, params, signed)
 
     client._raw_request = forced_timeout_post  # type: ignore
     # find reste RÉEL (openOrders / allOrders / get)
 
-    import ultiumgrid.connector.binance_futures as mod
+    import ultiumgrid.connector.binance_spot as mod
 
     original_backoff = mod.BACKOFF_BASE_S
     mod.BACKOFF_BASE_S = 0.01

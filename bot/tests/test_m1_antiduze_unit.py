@@ -11,16 +11,18 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "bot"))
 
-from ultiumgrid.connector.binance_futures import BinanceFuturesClient, SymbolFilters  # noqa: E402
+from ultiumgrid.connector.binance_spot import BinanceSpotClient, SymbolFilters  # noqa: E402
 from decimal import Decimal
 
 
 @pytest.mark.unit
 def test_1007_duplicate_avoided_does_not_resend():
-    client = BinanceFuturesClient(api_key="k", api_secret="s")
+    client = BinanceSpotClient(api_key="k", api_secret="s")
     client._hedge_mode = False
     client._filters_cache["BTCUSDT"] = SymbolFilters(
         symbol="BTCUSDT",
+        base_asset="BTC",
+        quote_asset="USDT",
         tick_size=Decimal("0.1"),
         step_size=Decimal("0.001"),
         min_qty=Decimal("0.001"),
@@ -38,7 +40,7 @@ def test_1007_duplicate_avoided_does_not_resend():
     post_calls = {"n": 0}
 
     def fake_raw(method, path, params=None, signed=False):
-        if method == "POST" and path == "/fapi/v1/order":
+        if method == "POST" and path == "/api/v3/order":
             post_calls["n"] += 1
             return 408, {"code": -1007, "msg": "Timeout waiting for response from backend server."}, '{"code":-1007}'
         raise AssertionError(f"unexpected {method} {path}")
@@ -66,10 +68,12 @@ def test_1007_duplicate_avoided_does_not_resend():
 
 @pytest.mark.unit
 def test_1007_not_found_retries_with_new_client_ids():
-    client = BinanceFuturesClient(api_key="k", api_secret="s")
+    client = BinanceSpotClient(api_key="k", api_secret="s")
     client._hedge_mode = False
     client._filters_cache["BTCUSDT"] = SymbolFilters(
         symbol="BTCUSDT",
+        base_asset="BTC",
+        quote_asset="USDT",
         tick_size=Decimal("0.1"),
         step_size=Decimal("0.001"),
         min_qty=Decimal("0.001"),
@@ -90,7 +94,7 @@ def test_1007_not_found_retries_with_new_client_ids():
     client.find_order_by_client_order_id = lambda s, c: (None, {"source": None, "client_order_id": c})  # type: ignore
 
     # accélérer backoff
-    import ultiumgrid.connector.binance_futures as mod
+    import ultiumgrid.connector.binance_spot as mod
 
     original = mod.BACKOFF_BASE_S
     mod.BACKOFF_BASE_S = 0.01
@@ -117,10 +121,12 @@ def test_1007_not_found_retries_with_new_client_ids():
 
 @pytest.mark.unit
 def test_1008_on_priority_close_is_anomaly():
-    client = BinanceFuturesClient(api_key="k", api_secret="s")
+    client = BinanceSpotClient(api_key="k", api_secret="s")
     client._hedge_mode = False
     client._filters_cache["BTCUSDT"] = SymbolFilters(
         symbol="BTCUSDT",
+        base_asset="BTC",
+        quote_asset="USDT",
         tick_size=Decimal("0.1"),
         step_size=Decimal("0.001"),
         min_qty=Decimal("0.001"),
@@ -134,7 +140,7 @@ def test_1008_on_priority_close_is_anomaly():
         return 503, {"code": -1008, "msg": "throttled"}, '{"code":-1008}'
 
     client._raw_request = fake_raw  # type: ignore
-    import ultiumgrid.connector.binance_futures as mod
+    import ultiumgrid.connector.binance_spot as mod
 
     original = mod.BACKOFF_BASE_S
     mod.BACKOFF_BASE_S = 0.01

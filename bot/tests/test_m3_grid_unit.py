@@ -9,7 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "bot"))
 
-from ultiumgrid.connector.binance_futures import SymbolFilters  # noqa: E402
+from ultiumgrid.connector.binance_spot import SymbolFilters  # noqa: E402
 from ultiumgrid.engine.config import StrategyConfig  # noqa: E402
 from ultiumgrid.engine.grid import compute_levels, qty_per_level  # noqa: E402
 
@@ -17,6 +17,8 @@ from ultiumgrid.engine.grid import compute_levels, qty_per_level  # noqa: E402
 def _filters() -> SymbolFilters:
     return SymbolFilters(
         symbol="BTCUSDT",
+        base_asset="BTC",
+        quote_asset="USDT",
         tick_size=Decimal("0.10"),
         step_size=Decimal("0.0001"),
         min_qty=Decimal("0.0001"),
@@ -46,7 +48,7 @@ def test_compute_20_levels_arithmetic():
 
 
 def test_config_bounds_reject():
-    cfg = StrategyConfig(leverage=50, step_pct=5.0)
+    cfg = StrategyConfig(step_pct=5.0, capital_usdt=1.0)
     errors = cfg.validate()
-    assert any("leverage" in e for e in errors)
     assert any("step_pct" in e for e in errors)
+    assert any("capital_usdt" in e for e in errors)
