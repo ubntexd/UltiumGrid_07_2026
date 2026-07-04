@@ -55,6 +55,44 @@ function switchTab(name) {
   if (name === "bags") loadBags();
   if (name === "config") loadConfig();
   if (name === "market") loadMarket();
+  if (name === "supervision") loadSupervision();
+}
+
+async function loadSupervision() {
+  const d = await api("/api/supervision");
+  const hb = d.states?.heartbeat?.value || {};
+  const recon = d.states?.reconciliation?.value || {};
+  const ex = d.states?.exchange?.value || {};
+  document.getElementById("sup-heartbeat").innerHTML = `
+    <h2>Heartbeat bot</h2>
+    <p>HTTP ok: <strong>${hb.http_ok}</strong></p>
+    <p>Âge heartbeat bot: ${hb.bot_heartbeat_age_s != null ? fmt(hb.bot_heartbeat_age_s, 1) + "s" : "—"}</p>
+    <p>Dernier check: ${hb.checked_at || "—"}</p>
+    <pre>${JSON.stringify(hb.bot_heartbeat || {}, null, 2)}</pre>
+  `;
+  document.getElementById("sup-recon").innerHTML = `
+    <h2>Réconciliation indépendante</h2>
+    <p>Δ USDT: <strong class="${(recon.delta_usdt || 0) > 1 ? "neg" : "pos"}">${fmt(recon.delta_usdt, 4)}</strong></p>
+    <p>Binance qty: ${fmt(recon.binance_qty, 6)} | attendu: ${fmt(recon.expected, 6)}</p>
+    <pre>${JSON.stringify(recon, null, 2)}</pre>
+  `;
+  document.getElementById("sup-exchange").innerHTML = `
+    <h2>Exchange</h2>
+    <p>Latence: ${fmt(ex.latency_ms, 1)} ms | status=${ex.status}</p>
+  `;
+  const alerts = d.alerts || [];
+  document.querySelector("#sup-alerts tbody").innerHTML = alerts
+    .map(
+      (a) => `<tr>
+      <td>${a.id}</td><td>${a.severity}</td><td>${a.kind}</td>
+      <td>${a.message}</td><td>${a.status}</td><td>${a.created_at || "—"}</td>
+    </tr>`
+    )
+    .join("") || `<tr><td colspan="6">Aucune alerte</td></tr>`;
+  const lat = (d.metrics || []).filter((m) => m.kind === "exchange_latency_ms").slice(0, 30);
+  document.getElementById("sup-latency").textContent = lat
+    .map((m) => `${m.created_at}  ${fmt(m.value, 1)} ms`)
+    .join("\n") || "Pas encore de métriques";
 }
 
 document.querySelectorAll(".tabs button").forEach((b) => {

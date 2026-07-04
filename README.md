@@ -25,8 +25,11 @@ Les clés Futures Demo **ne fonctionnent pas** sur Spot (`-2015` prouvé).
 docker compose up --build -d
 ```
 
-- UI : http://localhost:8080/  
-- API : http://localhost:8000/health  
+Services : `db`, `bot`, `backend`, `frontend`, `supervisor` (watchdog indépendant).
+
+- UI : http://localhost:8080/ (onglet Supervision inclus)  
+- API : http://localhost:8000/  
+- Health : http://localhost:8000/health (heartbeat bot inclus)health  
 
 ## Diagnostic ordres
 

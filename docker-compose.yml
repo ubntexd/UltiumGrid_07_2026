@@ -59,6 +59,31 @@ services:
     networks:
       - ultiumnet
 
+  supervisor:
+    build:
+      context: .
+      dockerfile: supervisor/Dockerfile
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg2://ultium:ultium@db:5432/ultiumgrid
+      SUPERVISOR_BOT_HEALTH_URL: http://backend:8000/health
+      SUPERVISOR_HEARTBEAT_TIMEOUT_S: "90"
+      SUPERVISOR_RECON_THRESHOLD_USDT: "1.0"
+      SUPERVISOR_MARKET_ANOMALY_PCT: "0.5"
+      SUPERVISOR_POLL_S: "15"
+      SUPERVISOR_EMERGENCY_ACTION: "false"
+    depends_on:
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_started
+      bot:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - ultiumnet
+
 volumes:
   pgdata:
 

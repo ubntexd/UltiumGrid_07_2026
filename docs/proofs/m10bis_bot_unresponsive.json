@@ -1,0 +1,10 @@
+{
+  "alerts": [
+    {
+      "kind": "bot_unresponsive",
+      "message": "Bot non responsive (http_ok=False, hb_age_s=120.022978)",
+      "severity": "alert"
+    }
+  ],
+  "heartbeat_state": "{\"http_ok\": false, \"http\": {\"error\": \"HTTPConnectionPool(host='127.0.0.1', port=9): Max retries exceeded with url: /health (Caused by NewConnectionError(\\\"HTTPConnection(host='127.0.0.1', port=9): Failed to establish a new connection: [Errno 111] Connection refused\\\"))\"}, \"bot_heartbeat\": {\"ts\": \"2026-07-04T12:25:04.028086+00:00\", \"running\": true}, \"bot_heartbeat_age_s\": 120.022978, \"checked_at\": \"2026-07-04T12:27:04.051071+00:00\"}"
+}

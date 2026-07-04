@@ -570,8 +570,27 @@ def main_loop(database_url: str, poll_seconds: float = 5.0) -> None:
     bot = BotRunner(client, session)
     bot.restore_state()
     logger.info("Bot started, running=%s", bot.running)
+
+    def _write_heartbeat() -> None:
+        from ultiumgrid.db.models import BotState, utcnow
+
+        row = session.query(BotState).filter(BotState.key == "heartbeat").first()
+        payload = {
+            "ts": utcnow().isoformat(),
+            "running": bot.running,
+            "cycle_id": bot.cycle_id,
+            "pid": os.getpid(),
+        }
+        if not row:
+            session.add(BotState(key="heartbeat", value_json=payload))
+        else:
+            row.value_json = payload
+            row.updated_at = utcnow()
+        session.commit()
+
     while True:
         try:
+            _write_heartbeat()
             for cmd in pop_commands(session):
                 name = cmd.get("name")
                 payload = cmd.get("payload") or {}

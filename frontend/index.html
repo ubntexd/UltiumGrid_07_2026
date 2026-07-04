@@ -24,6 +24,7 @@
     <button data-tab="bags">Bags</button>
     <button data-tab="config">Config</button>
     <button data-tab="market">Market</button>
+    <button data-tab="supervision">Supervision</button>
   </nav>
 
   <main>
@@ -93,6 +94,22 @@
         <table id="market-table"><thead><tr><th>Symbol</th><th>Price</th><th>24h %</th><th>Volume</th></tr></thead><tbody></tbody></table>
       </div>
       <div class="card" id="market-detail"></div>
+    </section>
+
+    <section id="tab-supervision" class="tab">
+      <div class="grid-2">
+        <div class="card" id="sup-heartbeat"></div>
+        <div class="card" id="sup-recon"></div>
+      </div>
+      <div class="card" id="sup-exchange"></div>
+      <div class="card">
+        <h2>Alertes superviseur</h2>
+        <table id="sup-alerts"><thead><tr><th>ID</th><th>Sévérité</th><th>Kind</th><th>Message</th><th>Statut</th><th>Créée</th></tr></thead><tbody></tbody></table>
+      </div>
+      <div class="card">
+        <h2>Latence Exchange (ms)</h2>
+        <pre id="sup-latency"></pre>
+      </div>
     </section>
   </main>
 

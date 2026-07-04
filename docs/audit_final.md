@@ -24,7 +24,9 @@ Environnement : `https://demo-api.binance.com` / `wss://demo-stream.binance.com/
 | Viabilité économique formules | `test_viability_formula_manual` + API viability |
 | Reprise crash sans doublon ordres | `m9_crash_recovery.json` |
 | Audit UI valeurs = sources | `m8_audit_ui.json` |
-| Docker compose 4 services | `docker compose ps` Up |
+| Docker compose 5 services (+ supervisor) | `docker compose ps` Up |
+| Superviseur heartbeat / recon / exchange | `m10bis_normal_cycle.json`, `m10bis_bot_unresponsive.json`, `m10bis_recon_mismatch.json` |
+| Onglet UI Supervision | `/api/supervision` + tab DOM |
 
 ## Écarts assumés
 
@@ -42,6 +44,8 @@ Environnement : `https://demo-api.binance.com` / `wss://demo-stream.binance.com/
 | Futures Demo écriture | Abandonné (migration Spot) — `spec_v1_futures_deprecated.md` |
 | Latence réseau extrême | Non testé |
 | Frais BNB réels avec solde BNB > 0 | Compte demo sans BNB ; rejet BNB discount prouvé si solde 0 |
+| Superviseur sur plusieurs heures sans fausse alerte | Cycle normal prouvé (échantillons latence) ; pas de run multi-heures dans cette session |
+| emergency_action panic auto | Désactivé par défaut (Q6) — non testé volontairement |
 
 ## Verdict
 

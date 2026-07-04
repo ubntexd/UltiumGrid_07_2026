@@ -1,0 +1,18 @@
+{
+  "alerts": [
+    {
+      "kind": "reconciliation_mismatch_watchdog",
+      "message": "\u00c9cart r\u00e9conciliation ind\u00e9pendante 62570.2968 USDT > 1.0",
+      "payload": {
+        "symbol": "BTCUSDT",
+        "binance_qty": 9.64e-06,
+        "grid_qty": 1.0,
+        "bags_qty": 0.0,
+        "expected": 1.0,
+        "delta": -0.99999036,
+        "delta_usdt": 62570.296816524,
+        "threshold_usdt": 1.0
+      }
+    }
+  ]
+}

@@ -14,8 +14,9 @@
 | Module 7ter — Marché | **terminée** | `/api/market` live, sélecteur symbol |
 | Module 8 — UI audit | **terminée** | `m8_audit_ui.json` |
 | Module 9 — Reprise crash | **terminée** | `m9_crash_recovery.json` |
+| Module 10bis — Superviseur | **terminée** | container séparé, preuves `m10bis_*.json` |
 | Module 10 — Audit final | **terminée** | `audit_final.md` |
-| Docker | **terminée** | `docker compose up --build` |
+| Docker (5 services) | **terminée** | bot, backend, frontend, supervisor, db |
 
 ## Lancer
 

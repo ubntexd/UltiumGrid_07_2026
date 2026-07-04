@@ -191,7 +191,28 @@ class SimulateRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"ok": True}
+    """Heartbeat agrégé backend + dernier signal bot (bot_state.heartbeat)."""
+    from ultiumgrid.db.models import BotState
+    from datetime import datetime, timezone
+
+    session = get_session()
+    try:
+        row = session.query(BotState).filter(BotState.key == "heartbeat").first()
+        hb = row.value_json if row else None
+        age = None
+        if row and row.updated_at:
+            updated = row.updated_at
+            if updated.tzinfo is None:
+                updated = updated.replace(tzinfo=timezone.utc)
+            age = (datetime.now(timezone.utc) - updated).total_seconds()
+        return {
+            "ok": True,
+            "service": "backend",
+            "bot_heartbeat": hb,
+            "bot_heartbeat_age_s": age,
+        }
+    finally:
+        session.close()
 
 
 @app.get("/api/running")
@@ -542,6 +563,55 @@ def market_symbol(symbol: str):
         "volatility_stdev_1h": vol,
         "atr_14_1h": atr,
     }
+
+
+@app.get("/api/supervision")
+def supervision_dashboard():
+    """Lecture seule des tables superviseur (écritures uniquement par le container supervisor)."""
+    from sqlalchemy import text as sql_text
+
+    session = get_session()
+    try:
+        # tables créées par le superviseur au démarrage
+        alerts = []
+        metrics = []
+        states = {}
+        try:
+            rows = session.execute(
+                sql_text(
+                    "SELECT id, severity, kind, message, payload_json, status, created_at, resolved_at "
+                    "FROM supervisor_alerts ORDER BY id DESC LIMIT 100"
+                )
+            ).mappings().all()
+            alerts = [dict(r) for r in rows]
+            for a in alerts:
+                if a.get("created_at"):
+                    a["created_at"] = a["created_at"].isoformat()
+                if a.get("resolved_at"):
+                    a["resolved_at"] = a["resolved_at"].isoformat()
+            mrows = session.execute(
+                sql_text(
+                    "SELECT kind, value, payload_json, created_at FROM supervisor_metrics "
+                    "ORDER BY id DESC LIMIT 200"
+                )
+            ).mappings().all()
+            metrics = [dict(r) for r in mrows]
+            for m in metrics:
+                if m.get("created_at"):
+                    m["created_at"] = m["created_at"].isoformat()
+            srows = session.execute(
+                sql_text("SELECT key, value_json, updated_at FROM supervisor_state")
+            ).mappings().all()
+            for s in srows:
+                states[s["key"]] = {
+                    "value": s["value_json"],
+                    "updated_at": s["updated_at"].isoformat() if s["updated_at"] else None,
+                }
+        except Exception as exc:
+            return {"ok": False, "error": str(exc), "alerts": [], "metrics": [], "states": {}}
+        return {"ok": True, "alerts": alerts, "metrics": metrics, "states": states}
+    finally:
+        session.close()
 
 
 @app.get("/api/margin")

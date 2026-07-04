@@ -34,5 +34,11 @@
 
 ## Q5 — Hyperliquid Testnet
 
-- **Constat :** variables `HL_TESTNET_*` vides ; hors scope du prompt principal (Binance Futures).
+- **Constat :** variables `HL_TESTNET_*` vides ; hors scope du prompt principal.
 - **Décision par défaut :** ignorer Hyperliquid jusqu’à demande explicite et clés fournies.
+
+## Q6 — Superviseur emergency_action (Module 10bis)
+
+- **Constat :** le prompt laisse le panic automatique à la discrétion de l’utilisateur.
+- **Décision par défaut :** `SUPERVISOR_EMERGENCY_ACTION=false` — le superviseur **alerte uniquement**, n’appelle jamais panic close tout seul.
+- **Pourquoi :** action destructive ; un faux positif pourrait liquider la grille sans consentement.
