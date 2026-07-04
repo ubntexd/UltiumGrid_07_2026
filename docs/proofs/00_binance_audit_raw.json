@@ -1,0 +1,120 @@
+{
+  "audit_timestamp_utc": "2026-07-04T08:25:45.206758+00:00",
+  "vps_public_ip": "176.97.70.254",
+  "calls": [
+    {
+      "method": "GET",
+      "path": "/fapi/v1/ping",
+      "params": null,
+      "signed": false,
+      "http_status": 200,
+      "raw_body": "{}"
+    },
+    {
+      "method": "GET",
+      "path": "/fapi/v1/time",
+      "params": null,
+      "signed": false,
+      "http_status": 200,
+      "raw_body": "{\"serverTime\":1783153545513}"
+    },
+    {
+      "method": "GET",
+      "path": "/fapi/v1/ticker/price",
+      "params": {
+        "symbol": "BTCUSDT"
+      },
+      "signed": false,
+      "http_status": 200,
+      "raw_body": "{\"price\":\"62504.20\",\"symbol\":\"BTCUSDT\",\"time\":1783153538126}"
+    },
+    {
+      "method": "GET",
+      "path": "/fapi/v1/premiumIndex",
+      "params": {
+        "symbol": "BTCUSDT"
+      },
+      "signed": false,
+      "http_status": 200,
+      "raw_body": "{\"symbol\":\"BTCUSDT\",\"markPrice\":\"62523.40000000\",\"indexPrice\":\"62563.42826087\",\"estimatedSettlePrice\":\"62545.54593478\",\"lastFundingRate\":\"0.00010000\",\"interestRate\":\"0.00010000\",\"nextFundingTime\":1783180800000,\"time\":1783153545001}"
+    },
+    {
+      "method": "GET",
+      "path": "/fapi/v2/account",
+      "params": null,
+      "signed": true,
+      "http_status": 401,
+      "raw_body": "{\"code\":-2015,\"msg\":\"Invalid API-key, IP, or permissions for action\"}"
+    },
+    {
+      "method": "POST",
+      "path": "/fapi/v1/listenKey",
+      "params": null,
+      "signed": false,
+      "http_status": 401,
+      "raw_body": "{\"code\":-2015,\"msg\":\"Invalid API-key, IP, or permissions for action\"}"
+    },
+    {
+      "method": "POST",
+      "path": "/fapi/v1/listenKey",
+      "params": null,
+      "signed": false,
+      "api_key_header_only": true,
+      "http_status": 401,
+      "raw_body": "{\"code\":-2015,\"msg\":\"Invalid API-key, IP, or permissions for action\"}"
+    },
+    {
+      "method": "GET",
+      "path": "/fapi/v1/exchangeInfo",
+      "params": null,
+      "signed": false,
+      "http_status": 200,
+      "raw_body_excerpt": {
+        "symbols_count": 723,
+        "BTCUSDT": {
+          "status": "TRADING",
+          "pricePrecision": 2,
+          "quantityPrecision": 4,
+          "filters": [
+            {
+              "minPrice": "261.10",
+              "filterType": "PRICE_FILTER",
+              "tickSize": "0.10",
+              "maxPrice": "809484"
+            },
+            {
+              "stepSize": "0.0001",
+              "minQty": "0.0001",
+              "maxQty": "1000",
+              "filterType": "LOT_SIZE"
+            },
+            {
+              "filterType": "MARKET_LOT_SIZE",
+              "minQty": "0.0001",
+              "stepSize": "0.0001",
+              "maxQty": "120"
+            },
+            {
+              "filterType": "MAX_NUM_ORDERS",
+              "limit": 10000
+            },
+            {
+              "notional": "50",
+              "filterType": "MIN_NOTIONAL"
+            },
+            {
+              "multiplierDown": "0.9500",
+              "multiplierDecimal": "4",
+              "filterType": "PERCENT_PRICE",
+              "multiplierUp": "1.0500"
+            },
+            {
+              "positionControlSide": "NONE",
+              "filterType": "POSITION_RISK_CONTROL"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
