@@ -124,8 +124,16 @@ class GridEngine:
         levels = compute_levels(center_price, self.cfg, filters, qty)
         self.state = GridState(symbol=symbol, center_price=center_price, levels=levels, active=True)
 
+        # Spot : au démarrage on n'a souvent que du quote (USDT).
+        # On place uniquement les BUY ; les SELL sont placés après fill d'un BUY.
+        free_base = self.client.balance_free(filters.base_asset)
         for level in levels:
+            if level.side == "SELL" and free_base < float(level.quantity):
+                level.status = "pending"  # attend un fill BUY
+                continue
             self._place_level_order(level)
+            if level.side == "SELL" and level.status == "open":
+                free_base -= float(level.quantity)
         return self.state
 
     def _place_level_order(self, level: GridLevel) -> None:

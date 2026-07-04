@@ -36,10 +36,10 @@
       "ok": true,
       "order": {
         "symbol": "BTCUSDT",
-        "orderId": 45923652708,
+        "orderId": 45924419159,
         "orderListId": -1,
-        "clientOrderId": "uge5823fd5057a443498a5985e113b621b",
-        "transactTime": 1783165931572,
+        "clientOrderId": "ugdfa57f2d075442fb99200d40dfced8f3",
+        "transactTime": 1783166213493,
         "price": "40000.00000000",
         "origQty": "0.00100000",
         "executedQty": "0.00000000",
@@ -49,7 +49,7 @@
         "timeInForce": "GTC",
         "type": "LIMIT",
         "side": "BUY",
-        "workingTime": 1783165931572,
+        "workingTime": 1783166213493,
         "fills": [],
         "selfTradePreventionMode": "EXPIRE_MAKER"
       }

@@ -1,0 +1,38 @@
+{
+  "bag_id": 1,
+  "sell_qty": 0.00017,
+  "base_before": 0.00017982,
+  "base_after": 9.82e-06,
+  "delta_base": 0.00016999999999999999,
+  "order": {
+    "symbol": "BTCUSDT",
+    "orderId": 45924801632,
+    "orderListId": -1,
+    "clientOrderId": "ug2e7cbf2066954d75aee45eb7831bd031",
+    "transactTime": 1783166354347,
+    "price": "0.00000000",
+    "origQty": "0.00017000",
+    "executedQty": "0.00017000",
+    "origQuoteOrderQty": "0.00000000",
+    "cummulativeQuoteQty": "10.62499830",
+    "status": "FILLED",
+    "timeInForce": "GTC",
+    "type": "MARKET",
+    "side": "SELL",
+    "workingTime": 1783166354347,
+    "fills": [
+      {
+        "price": "62499.99000000",
+        "qty": "0.00017000",
+        "commission": "0.01062500",
+        "commissionAsset": "USDT",
+        "tradeId": 254232168
+      }
+    ],
+    "selfTradePreventionMode": "EXPIRE_MAKER"
+  },
+  "sql": {
+    "status": "closed",
+    "realized_pnl": -1.7000000003463357e-06
+  }
+}

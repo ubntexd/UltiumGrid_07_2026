@@ -1,0 +1,109 @@
+{
+  "start": {
+    "ok": true,
+    "cycle_id": 1
+  },
+  "steps": [],
+  "levels": [
+    {
+      "index": 0,
+      "price": "62031.25000000",
+      "side": "BUY",
+      "quantity": "0.0008000",
+      "order_id": 45924798928,
+      "status": "open",
+      "incomplete_since": null
+    },
+    {
+      "index": 1,
+      "price": "62343.75000000",
+      "side": "BUY",
+      "quantity": "0.0008000",
+      "order_id": 45924798929,
+      "status": "open",
+      "incomplete_since": null
+    },
+    {
+      "index": 2,
+      "price": "62656.25000000",
+      "side": "SELL",
+      "quantity": "0.0008000",
+      "order_id": null,
+      "status": "pending",
+      "incomplete_since": null
+    },
+    {
+      "index": 3,
+      "price": "62968.75000000",
+      "side": "SELL",
+      "quantity": "0.0008000",
+      "order_id": null,
+      "status": "pending",
+      "incomplete_since": null
+    }
+  ],
+  "open_count": 2,
+  "incomplete_count": 0,
+  "binance_open_orders": [
+    {
+      "symbol": "BTCUSDT",
+      "orderId": 45924798928,
+      "orderListId": -1,
+      "clientOrderId": "ug6cf6ea471f6c4b6f91857e78801b9778",
+      "price": "62031.25000000",
+      "origQty": "0.00080000",
+      "executedQty": "0.00000000",
+      "cummulativeQuoteQty": "0.00000000",
+      "status": "NEW",
+      "timeInForce": "GTC",
+      "type": "LIMIT",
+      "side": "BUY",
+      "stopPrice": "0.00000000",
+      "icebergQty": "0.00000000",
+      "time": 1783166353882,
+      "updateTime": 1783166353882,
+      "isWorking": true,
+      "workingTime": 1783166353882,
+      "origQuoteOrderQty": "0.00000000",
+      "selfTradePreventionMode": "EXPIRE_MAKER"
+    },
+    {
+      "symbol": "BTCUSDT",
+      "orderId": 45924798929,
+      "orderListId": -1,
+      "clientOrderId": "ugfe7523e0f8394d4f98b444c8c17957f3",
+      "price": "62343.75000000",
+      "origQty": "0.00080000",
+      "executedQty": "0.00000000",
+      "cummulativeQuoteQty": "0.00000000",
+      "status": "NEW",
+      "timeInForce": "GTC",
+      "type": "LIMIT",
+      "side": "BUY",
+      "stopPrice": "0.00000000",
+      "icebergQty": "0.00000000",
+      "time": 1783166353908,
+      "updateTime": 1783166353908,
+      "isWorking": true,
+      "workingTime": 1783166353908,
+      "origQuoteOrderQty": "0.00000000",
+      "selfTradePreventionMode": "EXPIRE_MAKER"
+    }
+  ],
+  "db_cycles": [
+    {
+      "id": 1,
+      "status": "open",
+      "center_price": 62500.0,
+      "symbol": "BTCUSDT"
+    }
+  ],
+  "sql_direct": {
+    "status": "open",
+    "center_price": 62500.0
+  },
+  "bot_state_running": true,
+  "bot_state_levels": 4,
+  "open_after_cancel": [],
+  "remaining_our_orders": []
+}

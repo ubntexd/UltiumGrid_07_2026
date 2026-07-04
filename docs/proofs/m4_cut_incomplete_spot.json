@@ -1,0 +1,56 @@
+{
+  "base_before": 0.0,
+  "bought": {
+    "symbol": "BTCUSDT",
+    "orderId": 45924801630,
+    "orderListId": -1,
+    "clientOrderId": "ug2fa2fa65c02140cca973eb763c0115e1",
+    "transactTime": 1783166354140,
+    "price": "0.00000000",
+    "origQty": "0.00009000",
+    "executedQty": "0.00009000",
+    "origQuoteOrderQty": "0.00000000",
+    "cummulativeQuoteQty": "5.62500000",
+    "status": "FILLED",
+    "timeInForce": "GTC",
+    "type": "MARKET",
+    "side": "BUY",
+    "workingTime": 1783166354140,
+    "fills": [
+      {
+        "price": "62500.00000000",
+        "qty": "0.00009000",
+        "commission": "0.00000009",
+        "commissionAsset": "BTC",
+        "tradeId": 254232166
+      }
+    ],
+    "selfTradePreventionMode": "EXPIRE_MAKER"
+  },
+  "base_after_buy": 8.991e-05,
+  "cut": {
+    "level": 10,
+    "qty": 4.4955e-05,
+    "real_qty_available": 8.991e-05,
+    "theoretical_qty": 0.1,
+    "theoretical_cut": 0.05,
+    "gap_pct": 99.91009000000001,
+    "entry_price": 62500.0,
+    "pct": 50.0,
+    "at": "2026-07-04T11:59:14.157733+00:00",
+    "incomplete_levels": [
+      2
+    ],
+    "tag": "cut_with_incomplete_grid",
+    "alert_gap": true
+  },
+  "bag": {
+    "id": 1,
+    "quantity": 4.4955e-05,
+    "entry_price": 62500.0
+  },
+  "sql_bag": {
+    "quantity": 4.4955e-05,
+    "status": "open"
+  }
+}

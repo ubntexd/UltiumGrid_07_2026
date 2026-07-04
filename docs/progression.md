@@ -2,17 +2,25 @@
 
 | Étape | Statut | Preuve |
 |---|---|---|
-| Migration Futures → Spot | **terminée** (URL corrigée) | `docs/migration_futures_to_spot.md` |
-| Module 1 — Connecteur Spot | **terminé** | place/cancel réel OK, 10 tests M1 passés |
-| Module 2 — DB | **terminé** | `m2_database_sql.json` |
-| Modules 3–10 | en cours | logique adaptée Spot |
+| Migration Futures → Spot | **terminée** | `docs/migration_futures_to_spot.md` |
+| URL `demo-api.binance.com` | **terminée** | `docs/proofs/spot_url_fix.json` |
+| Module 1 — Connecteur Spot | **terminée** | place/cancel, 10 tests M1 |
+| Module 2 — DB | **terminée** | `m2_database_sql.json` |
+| Module 3 — Grille | **terminée** | `m3_grid_integration.json` (BUY placés, SELL pending sans BTC, croisement Binance↔DB) |
+| Module 4 — Coupe | **terminée** | `m4_cut_incomplete_spot.json` (qty réelle + incomplete) |
+| Module 5 — Sacs | **terminée** | `m5_bag_sell_spot.json` (vente marché, SQL closed) |
+| Module 6 — Panic | **terminée** | `m6_panic_spot.json` (vente réelle + annulation ordres) |
+| Module 7 — API | **terminée** (lecture + start/stop live Docker) | `/api/running`, `/api/capital`, start → 10 BUY |
+| Module 7bis–10 | partiel | config/UI présents ; audit UI détaillé à compléter |
 
-## Correction URL (2026-07-04)
+## Preuves clés Spot
 
-Bug : le code pointait vers `https://testnet.binance.vision` alors que les clés `demo.binance.com` fonctionnent sur **`https://demo-api.binance.com`**.
+- Place/cancel : `docs/proofs/m1_place_cancel_order.json`
+- Grille 4 niveaux : `docs/proofs/m3_grid_integration.json`
+- Coupe + sac + panic : `m4_*.json`, `m5_*.json`, `m6_*.json`
+- Docker live : start bot → 10 ordres BUY success (logs bot), capital USDT libre lu via API
 
-Preuve :
-- `testnet.binance.vision` + clés demo → `-2015`
-- `demo-api.binance.com` + mêmes clés → account 200, **place/cancel ordre 200**
+## Comportement Spot noté
 
-Preuves : `docs/proofs/spot_url_fix.json`, `docs/proofs/m1_place_cancel_order.json`, `docs/proofs/spot_order_diagnosis.json`
+- Au démarrage sans BTC : seuls les **BUY** sont placés ; les **SELL** restent `pending` jusqu’à fill.
+- `GET /api/v3/order` peut renvoyer `-2013` sur demo alors que `openOrders` liste l’ordre — vérif via `openOrders`.
