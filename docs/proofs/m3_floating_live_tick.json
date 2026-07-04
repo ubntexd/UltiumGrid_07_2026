@@ -1,0 +1,42 @@
+{
+  "timestamp_utc": "2026-07-04T15:34:14.863846+00:00",
+  "WARNING": "Position BTC acquise par BUY MARKET artificiel (purpose=test_floating_pnl) \u2014 pas un fill de grille organique.",
+  "formula": "floating_profit = (mark_price - entry_avg) * position_qty ; recalcul\u00e9 \u00e0 chaque bookTicker WS",
+  "artificial_buy": {
+    "orderId": 45960210941,
+    "qty": "0.00010000",
+    "avg": 62874.52,
+    "purpose": "test_floating_pnl"
+  },
+  "t1": {
+    "ts": "2026-07-04T15:34:12.844006+00:00",
+    "mark": 62874.515,
+    "floating": 0.044668654849891465,
+    "gross": 0.044668654849891465,
+    "position_qty": 0.00010934,
+    "entry_avg": 62465.98514038877,
+    "mark_source": "ws",
+    "expected_floating": 0.044668654849891465
+  },
+  "t2": {
+    "ts": "2026-07-04T15:34:14.851674+00:00",
+    "mark": 62887.995,
+    "floating": 0.04614255804989181,
+    "gross": 0.04614255804989181,
+    "position_qty": 0.00010934,
+    "entry_avg": 62465.98514038877,
+    "mark_source": "ws",
+    "expected_floating": 0.04614255804989181
+  },
+  "no_fills_between": true,
+  "position_and_entry_stable": true,
+  "mark_changed": true,
+  "floating_changed": true,
+  "gross_changed": true,
+  "delta_mark": 13.480000000003201,
+  "delta_floating": 0.0014739032000003482,
+  "expected_delta_floating": 0.00147390320000035,
+  "floating_matches_formula_t1": true,
+  "floating_matches_formula_t2": true,
+  "conforme": true
+}

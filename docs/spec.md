@@ -21,6 +21,7 @@
 - Capital défaut **5 000 USDT** (Spot pur, sans levier).
 - Placement initial, replacement après fill.
 - PnL : **Grid Profit + Floating Profit** (pas de funding).
+- **Floating Profit recalculé à chaque tick WebSocket** (`bookTicker`) : `(mark - entry_avg) * position_qty`. Le broadcast UI peut rester à 5 s, mais la valeur envoyée utilise toujours le **dernier prix WS**.
 - Déclenchement cycle à **+15 USD brut**.
 - Objectif UI : **+10 USD net** / cycle.
 

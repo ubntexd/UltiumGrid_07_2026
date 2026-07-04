@@ -507,3 +507,32 @@ Méthode : `POST /api/panic` (équivalent bouton UI).
 ### Verdict §9
 
 **Conforme.** La jambe vente marché du panic close est prouvée en exécution réelle (`sold_orders` non vide, fill MARKET, solde BTC ramené au dust).
+
+---
+
+## 10. Floating PnL live (tick WebSocket, sans fill)
+
+Exigence prompt Module 3 : le Floating/Gross doit bouger à chaque micro-mouvement de prix, comme sur Binance, **même sans fill**.
+
+### Implémentation
+
+- Thread bot `ultium-ws-price` : `bookTicker` → `update_floating(mark)` → `bot_state.live_pnl` (throttle 100 ms).
+- `build_status` : `mark_source=ws` si `live_pnl` &lt; 3 s ; **recalcule toujours** `floating = (mark - entry_avg) * position_qty` (jamais le cache du dernier fill).
+
+### Preuve `docs/proofs/m3_floating_live_tick.json`
+
+> Position acquise par BUY MARKET artificiel (`purpose=test_floating_pnl`) pour avoir `position_qty` et `entry_avg` non nuls — **pas un fill de grille**.
+
+| | T1 | T2 (~2 s plus tard) |
+|---|---|---|
+| mark (WS) | 62874.515 | **62887.995** |
+| floating | 0.04466865 | **0.04614256** |
+| gross | = floating | = floating |
+| position_qty | 0.00010934 | 0.00010934 (stable) |
+| entry_avg | 62465.985 | 62465.985 (stable) |
+| openOrders | 0 | 0 |
+| fills entre T1/T2 | **aucun** (`allOrders` ids identiques) |
+
+Δmark = **+13.48** → Δfloating attendu = 13.48 × 0.00010934 = **+0.0014739** = Δfloating observé.
+
+**Conforme.**

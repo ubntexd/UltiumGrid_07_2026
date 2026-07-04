@@ -5,7 +5,7 @@
 | Migration Futures → Spot | **terminée** | `migration_futures_to_spot.md` |
 | Module 1 — Connecteur | **terminée** | place/cancel, WS, anti-doublon |
 | Module 2 — DB | **terminée** | SQL direct |
-| Module 3 — Grille | **terminée** | `m3_grid_integration.json` + §2bis unit `test_m3_idle_recenter_unit.py` |
+| Module 3 — Grille | **terminée** | `m3_grid_integration.json` + §2bis unit + floating live WS `m3_floating_live_tick.json` |
 | Module 3bis — Recentrage hors fourchette | **terminée (unit)** | idle_recenter + stuck_sell code ; unit idle ; stuck_sell **non vérifié** en integration live |
 | Module 4 — Coupe | **terminée** | `m4_cut_incomplete_spot.json` |
 | Module 5 — Sacs | **terminée** | `m5_bag_sell_spot.json` |

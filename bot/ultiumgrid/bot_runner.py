@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
@@ -53,6 +54,10 @@ class BotRunner:
         self._out_of_range_since: datetime | None = None
         self._last_fill_at: datetime | None = None
         self._stuck_sell_since: dict[int, datetime] = {}
+        self._live_mark: float | None = None
+        self._last_live_persist: float = 0.0
+        self._ws_stop = False
+        self._session_factory = None  # set by main_loop for thread-safe WS writes
 
     def _persist_order_attempt(self, entry: dict) -> None:
         row = OrderAttempt(
@@ -418,7 +423,12 @@ class BotRunner:
             self.engine.state.position_qty = real_pos - bags_q
         except Exception as exc:
             logger.warning("real_position_qty unavailable: %s", exc)
+        self._bootstrap_entry_avg_if_needed()
+        # Prefer live WS mark when fresher than REST
+        if self._live_mark:
+            mark = self._live_mark
         self.engine.update_floating(mark)
+        self._persist_live_pnl(mark)
 
         # Sync fills via open orders delta
         self._sync_fills()
@@ -908,6 +918,117 @@ class BotRunner:
         }
 
 
+    def _bootstrap_entry_avg_if_needed(self) -> None:
+        """Si solde réel sans entry_avg (ex. position hors grille), inférer depuis myTrades."""
+        if self.engine.state.position_qty <= 0 or self.engine.state.entry_avg:
+            return
+        try:
+            trades = self.client.my_trades(self.cfg.symbol, limit=30)
+            buys = [t for t in trades if t.get("isBuyer")]
+            if not buys:
+                return
+            # moyenne pondérée des achats récents
+            qty = sum(float(t.get("qty") or 0) for t in buys)
+            cost = sum(float(t.get("qty") or 0) * float(t.get("price") or 0) for t in buys)
+            if qty > 0:
+                self.engine.state.entry_avg = cost / qty
+                logger.info("bootstrapped entry_avg=%.4f from myTrades", self.engine.state.entry_avg)
+        except Exception as exc:
+            logger.warning("bootstrap entry_avg failed: %s", exc)
+
+    def _persist_live_pnl(self, mark: float) -> None:
+        """Écrit le PnL flottant recalculé (source WS ou tick) pour l'API/UI."""
+        now = time.time()
+        if now - self._last_live_persist < 0.1:
+            return
+        self._last_live_persist = now
+        payload = {
+            "mark": mark,
+            "floating_profit": self.engine.state.floating_profit,
+            "grid_profit": self.engine.state.grid_profit,
+            "gross_pnl": self.engine.state.gross_pnl,
+            "position_qty": self.engine.state.position_qty,
+            "entry_avg": self.engine.state.entry_avg,
+            "ts": utcnow().isoformat(),
+            "source": "ws" if self._live_mark == mark else "rest",
+        }
+        # Session dédiée : le thread WS ne partage pas self.session
+        factory = self._session_factory
+        if factory is None:
+            return
+        s = factory()
+        try:
+            row = s.query(BotState).filter(BotState.key == "live_pnl").first()
+            if not row:
+                s.add(BotState(key="live_pnl", value_json=payload))
+            else:
+                row.value_json = payload
+                row.updated_at = utcnow()
+            main = s.query(BotState).filter(BotState.key == "main").first()
+            if main and isinstance(main.value_json, dict):
+                data = dict(main.value_json)
+                grid = dict(data.get("grid") or {})
+                grid["floating_profit"] = payload["floating_profit"]
+                grid["grid_profit"] = payload["grid_profit"]
+                grid["position_qty"] = payload["position_qty"]
+                grid["entry_avg"] = payload["entry_avg"]
+                data["grid"] = grid
+                main.value_json = data
+                main.updated_at = utcnow()
+            s.commit()
+        except Exception:
+            s.rollback()
+            logger.exception("persist live_pnl failed")
+        finally:
+            s.close()
+
+    def on_ws_price(self, data: dict) -> None:
+        """Appelé à chaque bookTicker — recalcule le floating immédiatement."""
+        try:
+            mark = float(data.get("p") or 0)
+            if mark <= 0:
+                return
+            self._live_mark = mark
+            self.client._last_ticker[self.cfg.symbol] = mark
+            if self.engine.state.position_qty > 0 and not self.engine.state.entry_avg:
+                self._bootstrap_entry_avg_if_needed()
+            self.engine.update_floating(mark)
+            self._persist_live_pnl(mark)
+        except Exception:
+            logger.exception("on_ws_price failed")
+
+    def start_price_stream(self) -> None:
+        """Thread daemon : WS bookTicker → floating à chaque tick."""
+        import threading
+
+        def _run() -> None:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            stop = asyncio.Event()
+
+            async def _guard() -> None:
+                while not self._ws_stop:
+                    await asyncio.sleep(0.5)
+                stop.set()
+
+            async def _main() -> None:
+                await asyncio.gather(
+                    self.client.stream_mark_price(self.cfg.symbol, self.on_ws_price, stop_event=stop),
+                    _guard(),
+                )
+
+            try:
+                loop.run_until_complete(_main())
+            except Exception:
+                logger.exception("price stream stopped")
+            finally:
+                loop.close()
+
+        t = threading.Thread(target=_run, name="ultium-ws-price", daemon=True)
+        t.start()
+        logger.info("WS price stream thread started for %s", self.cfg.symbol)
+
+
 def build_client_from_env() -> BinanceSpotClient:
     # Accepte BINANCE_SPOT_* ou anciennes variables Futures (migration)
     key = (
@@ -934,7 +1055,9 @@ def main_loop(database_url: str, poll_seconds: float = 5.0) -> None:
     session = SessionLocal()
     client = build_client_from_env()
     bot = BotRunner(client, session)
+    bot._session_factory = SessionLocal
     bot.restore_state()
+    bot.start_price_stream()
     logger.info("Bot started, running=%s", bot.running)
 
     def _write_heartbeat() -> None:
@@ -982,9 +1105,17 @@ def main_loop(database_url: str, poll_seconds: float = 5.0) -> None:
             if bot.running:
                 bot.tick()
             else:
-                # Toujours enregistrer un tick de prix réel pour les courbes UI
+                # Même hors trading : synchroniser position + floating (WS complète entre les polls)
                 try:
                     mark = float(client.ticker_price(bot.cfg.symbol)["price"])
+                    if bot._live_mark:
+                        mark = bot._live_mark
+                    real_pos = bot.engine.real_position_qty()
+                    bags_q = bot.bags.bags_qty()
+                    bot.engine.state.position_qty = max(0.0, real_pos - bags_q)
+                    bot._bootstrap_entry_avg_if_needed()
+                    bot.engine.update_floating(mark)
+                    bot._persist_live_pnl(mark)
                     from ultiumgrid.db.models import PriceTick
 
                     session.add(

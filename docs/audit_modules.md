@@ -35,6 +35,7 @@ Référence : `docs/spec.md`.
 | 20 niveaux arithmétiques pas 0,25–0,26 % | conforme (unit) | `test_compute_20_levels_arithmetic` |
 | Placement initial / replacement fills | conforme (integration antérieure) | `m3_grid_integration.json` |
 | PnL Grid+Floating (pas funding) | conforme | formules dans `engine/grid.py` |
+| Floating recalculé à chaque tick WS (sans fill) | conforme | `m3_floating_live_tick.json` — Δmark=+13.48 → Δfloat=+0.00147, `mark_source=ws`, openOrders inchangés |
 | Trigger +15 fermeture/recentrage | code présent | **non vérifié** live cycle complet |
 | §2bis idle_recenter_no_fill | conforme (**unit**) | `test_m3_idle_recenter_unit.py` |
 | §2bis forced_sell_stuck_level | code présent | **non vérifié** integration live |

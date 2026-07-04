@@ -23,6 +23,7 @@ from ultiumgrid.bot_runner import build_client_from_env  # noqa: E402
 from ultiumgrid.control import push_command, read_main_state  # noqa: E402
 from ultiumgrid.db.models import (  # noqa: E402
     Bag,
+    BotState,
     Configuration,
     Cycle,
     FeePaid,
@@ -74,12 +75,28 @@ def build_status() -> dict[str, Any]:
         mark = None
         mark_stale = False
         mark_error = None
-        try:
-            mark = float(c.ticker_price(cfg.symbol)["price"])
-        except Exception as exc:
-            mark_error = str(exc)
-            mark = c.last_ticker_price(cfg.symbol)
-            mark_stale = mark is not None
+        mark_source = "rest"
+        # Prefer live WS mark from bot (recalculé à chaque bookTicker)
+        live_row = session.query(BotState).filter(BotState.key == "live_pnl").first()
+        live = (live_row.value_json if live_row else None) or {}
+        live_age = None
+        if live_row and live_row.updated_at:
+            from datetime import datetime, timezone
+
+            updated = live_row.updated_at
+            if updated.tzinfo is None:
+                updated = updated.replace(tzinfo=timezone.utc)
+            live_age = (datetime.now(timezone.utc) - updated).total_seconds()
+        if live.get("mark") is not None and live_age is not None and live_age < 3.0:
+            mark = float(live["mark"])
+            mark_source = "ws"
+        else:
+            try:
+                mark = float(c.ticker_price(cfg.symbol)["price"])
+            except Exception as exc:
+                mark_error = str(exc)
+                mark = c.last_ticker_price(cfg.symbol)
+                mark_stale = mark is not None
         account = c.capital_snapshot(cfg.symbol)
         bags = (
             session.query(Bag)
@@ -87,6 +104,15 @@ def build_status() -> dict[str, Any]:
             .all()
         )
         guards = state.get("guards") or {}
+        # Floating TOUJOURS recalculé avec le dernier mark (pas le cache du dernier fill)
+        pos = float(live.get("position_qty") if live.get("position_qty") is not None else (g.get("position_qty") or 0))
+        entry = float(live.get("entry_avg") if live.get("entry_avg") is not None else (g.get("entry_avg") or 0))
+        grid_profit = float(g.get("grid_profit") or 0)
+        if mark is not None and pos and entry:
+            floating_profit = (mark - entry) * pos
+        else:
+            floating_profit = 0.0
+        gross_pnl = grid_profit + floating_profit
         # openOrders (cache client via account TTL pattern — un seul appel si pas en cache)
         open_orders: list[dict[str, Any]] = []
         open_orders_error = None
@@ -136,16 +162,17 @@ def build_status() -> dict[str, Any]:
             "mark_price": mark,
             "mark_stale": mark_stale,
             "mark_error": mark_error,
+            "mark_source": mark_source,
             "grid": {
                 "active": g.get("active"),
                 "center_price": float(g["center_price"]) if g.get("center_price") else None,
                 "range_low": min(placed_prices) if placed_prices else None,
                 "range_high": max(placed_prices) if placed_prices else None,
-                "position_qty": g.get("position_qty"),
-                "entry_avg": g.get("entry_avg"),
-                "grid_profit": g.get("grid_profit"),
-                "floating_profit": g.get("floating_profit"),
-                "gross_pnl": (g.get("grid_profit") or 0) + (g.get("floating_profit") or 0),
+                "position_qty": pos,
+                "entry_avg": entry,
+                "grid_profit": grid_profit,
+                "floating_profit": floating_profit,
+                "gross_pnl": gross_pnl,
                 "levels": levels,
                 "incomplete_levels": incomplete,
                 "incomplete_count": len(incomplete),
