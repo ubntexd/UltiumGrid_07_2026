@@ -76,6 +76,27 @@ th, td { border-bottom: 1px solid var(--border); padding: 0.4rem; text-align: le
   font-weight: 700;
 }
 .row-incomplete { background: rgba(214, 69, 69, 0.12); }
+.live-price {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  min-width: 10rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 8px;
+  background: #18233a;
+  border: 1px solid var(--border);
+}
+.flash-up { animation: flashUp 0.45s ease; }
+.flash-down { animation: flashDown 0.45s ease; }
+@keyframes flashUp {
+  0% { background: rgba(34, 197, 94, 0.55); }
+  100% { background: #18233a; }
+}
+@keyframes flashDown {
+  0% { background: rgba(239, 68, 68, 0.55); }
+  100% { background: #18233a; }
+}
+.chart-msg { color: var(--muted); font-size: 0.9rem; margin-bottom: 0.5rem; }
+canvas { max-width: 100%; }
 .range-bar {
   position: relative;
   height: 18px;

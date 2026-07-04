@@ -1,0 +1,47 @@
+{
+  "capture1_points": 2,
+  "capture2_points": 5,
+  "insufficient_t1": false,
+  "insufficient_t2": false,
+  "sample_t2": [
+    {
+      "id": 3,
+      "ts": "2026-07-04T12:36:55.774546+00:00",
+      "price": 62592.6,
+      "range_low": 62607.77,
+      "range_high": 64295.64
+    },
+    {
+      "id": 4,
+      "ts": "2026-07-04T12:37:00.827544+00:00",
+      "price": 62592.59,
+      "range_low": 62607.77,
+      "range_high": 64295.64
+    },
+    {
+      "id": 5,
+      "ts": "2026-07-04T12:37:05.879558+00:00",
+      "price": 62592.6,
+      "range_low": 62607.77,
+      "range_high": 64295.64
+    }
+  ],
+  "mark": 62592.59,
+  "binance_ticker": 62592.59,
+  "sql_last_ticks": [
+    "5|62592.6",
+    "4|62592.59",
+    "3|62592.6",
+    "2|62592.59",
+    "1|62597.99"
+  ],
+  "api_contains_sql_ids": true,
+  "pnl_chart": {
+    "insufficient": false,
+    "points": 50,
+    "formula": "cumulative_pnl = closed_cycles_pnl + grid_pnl + bags_pnl"
+  },
+  "ui_has_live_price": true,
+  "ui_has_price_chart": true,
+  "ui_has_chartjs": true
+}

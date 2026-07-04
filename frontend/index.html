@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>UltiumGrid</title>
+  <title>UltiumGrid Spot</title>
   <link rel="stylesheet" href="/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <header class="top">
     <div class="brand">UltiumGrid</div>
-    <div id="margin-banner" class="margin-banner">Marge : —</div>
+    <div id="live-price" class="live-price">—</div>
+    <div id="margin-banner" class="margin-banner">Capital : —</div>
     <div class="controls">
       <button id="btn-start" class="ok">Start</button>
       <button id="btn-stop">Stop</button>
@@ -41,12 +43,22 @@
         </div>
       </div>
       <div class="card">
+        <h2>Prix + fourchette de grille</h2>
+        <div id="price-chart-msg" class="chart-msg"></div>
+        <canvas id="price-chart" height="120"></canvas>
+      </div>
+      <div class="card">
         <h2>Niveaux</h2>
         <table id="levels-table"><thead><tr><th>#</th><th>Side</th><th>Price</th><th>Qty</th><th>Status</th><th>Order</th></tr></thead><tbody></tbody></table>
       </div>
     </section>
 
     <section id="tab-history" class="tab">
+      <div class="card">
+        <h2>Histogramme des cycles</h2>
+        <div id="cycles-chart-msg" class="chart-msg"></div>
+        <canvas id="cycles-chart" height="100"></canvas>
+      </div>
       <div class="card">
         <table id="history-table"><thead><tr><th>ID</th><th>Symbol</th><th>Status</th><th>Gross</th><th>Net</th><th>Opened</th><th>Closed</th><th>Reason</th></tr></thead><tbody></tbody></table>
       </div>
@@ -57,7 +69,8 @@
         <div class="card" id="pnl-kpis"></div>
         <div class="card">
           <h2>PnL cumulé vs théorique (+10/cycle)</h2>
-          <canvas id="pnl-chart" width="600" height="240"></canvas>
+          <div id="pnl-chart-msg" class="chart-msg"></div>
+          <canvas id="pnl-chart" height="140"></canvas>
         </div>
       </div>
     </section>
@@ -103,12 +116,13 @@
       </div>
       <div class="card" id="sup-exchange"></div>
       <div class="card">
-        <h2>Alertes superviseur</h2>
-        <table id="sup-alerts"><thead><tr><th>ID</th><th>Sévérité</th><th>Kind</th><th>Message</th><th>Statut</th><th>Créée</th></tr></thead><tbody></tbody></table>
+        <h2>Latence Exchange (ms)</h2>
+        <canvas id="latency-chart" height="100"></canvas>
+        <pre id="sup-latency"></pre>
       </div>
       <div class="card">
-        <h2>Latence Exchange (ms)</h2>
-        <pre id="sup-latency"></pre>
+        <h2>Alertes superviseur</h2>
+        <table id="sup-alerts"><thead><tr><th>ID</th><th>Sévérité</th><th>Kind</th><th>Message</th><th>Statut</th><th>Créée</th></tr></thead><tbody></tbody></table>
       </div>
     </section>
   </main>

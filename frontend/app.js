@@ -33,6 +33,207 @@ function fmt(v, d = 2) {
   return n.toFixed(d);
 }
 
+/** Flash visuel sur changement de valeur (vert hausse / rouge baisse). */
+function flashEl(el, delta) {
+  if (!el) return;
+  el.classList.remove("flash-up", "flash-down");
+  void el.offsetWidth;
+  el.classList.add(delta >= 0 ? "flash-up" : "flash-down");
+}
+
+let _lastMark = null;
+let _lastGross = null;
+const charts = { price: null, pnl: null, cycles: null, latency: null };
+
+function ensureChart(key, canvasId, config) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas || typeof Chart === "undefined") return null;
+  if (charts[key]) {
+    charts[key].destroy();
+  }
+  charts[key] = new Chart(canvas, config);
+  return charts[key];
+}
+
+function insufficientMsg(elId, msg) {
+  const el = document.getElementById(elId);
+  if (el) el.textContent = msg || "données insuffisantes pour l'instant";
+}
+
+async function refreshCharts(status) {
+  const symbol = status?.symbol || "BTCUSDT";
+  // Prix + range
+  try {
+    const data = await api(`/api/charts/price?symbol=${symbol}&limit=120`);
+    const msg = document.getElementById("price-chart-msg");
+    if (data.insufficient_data) {
+      insufficientMsg("price-chart-msg", data.message);
+      if (charts.price) {
+        charts.price.destroy();
+        charts.price = null;
+      }
+    } else {
+      if (msg) msg.textContent = "";
+      const labels = data.points.map((p) => p.ts?.slice(11, 19) || p.id);
+      const prices = data.points.map((p) => p.price);
+      const low = data.range_low;
+      const high = data.range_high;
+      ensureChart("price", "price-chart", {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: "Prix",
+              data: prices,
+              borderColor: "#3b82f6",
+              pointRadius: 2,
+              tension: 0.1,
+              rawPoints: data.points,
+            },
+            ...(low != null
+              ? [
+                  {
+                    label: "Range bas",
+                    data: prices.map(() => low),
+                    borderColor: "#22c55e",
+                    borderDash: [4, 4],
+                    pointRadius: 0,
+                  },
+                ]
+              : []),
+            ...(high != null
+              ? [
+                  {
+                    label: "Range haut",
+                    data: prices.map(() => high),
+                    borderColor: "#ef4444",
+                    borderDash: [4, 4],
+                    pointRadius: 0,
+                  },
+                ]
+              : []),
+          ],
+        },
+        options: {
+          animation: false,
+          plugins: {
+            tooltip: {
+              callbacks: {
+                afterBody(items) {
+                  const i = items[0]?.dataIndex;
+                  const pt = data.points[i];
+                  return pt ? `id=${pt.id} price=${pt.price} ts=${pt.ts}` : "";
+                },
+              },
+            },
+          },
+          scales: { x: { display: true }, y: { display: true } },
+        },
+      });
+    }
+  } catch (e) {
+    insufficientMsg("price-chart-msg", "erreur chargement courbe prix");
+  }
+
+  // PnL
+  try {
+    const data = await api(`/api/charts/pnl?symbol=${symbol}&limit=120`);
+    if (data.insufficient_data) {
+      insufficientMsg("pnl-chart-msg", data.message);
+      if (charts.pnl) {
+        charts.pnl.destroy();
+        charts.pnl = null;
+      }
+    } else {
+      const msg = document.getElementById("pnl-chart-msg");
+      if (msg) msg.textContent = data.formula || "";
+      ensureChart("pnl", "pnl-chart", {
+        type: "line",
+        data: {
+          labels: data.points.map((p) => p.ts?.slice(11, 19) || p.id),
+          datasets: [
+            {
+              label: "PnL cumulé",
+              data: data.points.map((p) => p.cumulative_pnl),
+              borderColor: "#3b82f6",
+              pointRadius: 2,
+              rawPoints: data.points,
+            },
+          ],
+        },
+        options: {
+          animation: false,
+          plugins: {
+            tooltip: {
+              callbacks: {
+                afterBody(items) {
+                  const i = items[0]?.dataIndex;
+                  const pt = data.points[i];
+                  return pt
+                    ? `id=${pt.id} cum=${pt.cumulative_pnl} grid=${pt.grid_pnl} bags=${pt.bags_pnl} closed=${pt.closed_cycles_pnl}`
+                    : "";
+                },
+              },
+            },
+          },
+        },
+      });
+    }
+  } catch (e) {
+    /* ignore */
+  }
+
+  // Cycles histogram
+  try {
+    const data = await api(`/api/charts/cycles?symbol=${symbol}&limit=40`);
+    if (data.insufficient_data) {
+      insufficientMsg("cycles-chart-msg", data.message);
+      if (charts.cycles) {
+        charts.cycles.destroy();
+        charts.cycles = null;
+      }
+    } else {
+      const msg = document.getElementById("cycles-chart-msg");
+      if (msg) msg.textContent = "";
+      ensureChart("cycles", "cycles-chart", {
+        type: "bar",
+        data: {
+          labels: data.bars.map((b) => `#${b.id}`),
+          datasets: [
+            {
+              label: "Net PnL cycle",
+              data: data.bars.map((b) => b.net_pnl),
+              backgroundColor: data.bars.map((b) =>
+                b.net_pnl >= 0 ? "rgba(34,197,94,0.7)" : "rgba(239,68,68,0.7)"
+              ),
+              rawBars: data.bars,
+            },
+          ],
+        },
+        options: {
+          animation: false,
+          plugins: {
+            tooltip: {
+              callbacks: {
+                afterBody(items) {
+                  const i = items[0]?.dataIndex;
+                  const b = data.bars[i];
+                  return b
+                    ? `id=${b.id} net=${b.net_pnl} gross=${b.gross_pnl} reason=${b.close_reason}`
+                    : "";
+                },
+              },
+            },
+          },
+        },
+      });
+    }
+  } catch (e) {
+    /* ignore */
+  }
+}
+
 async function api(path, opts = {}) {
   const res = await fetch(`${API}${path}`, {
     headers: { "Content-Type": "application/json", ...(opts.headers || {}) },
@@ -89,10 +290,44 @@ async function loadSupervision() {
     </tr>`
     )
     .join("") || `<tr><td colspan="6">Aucune alerte</td></tr>`;
-  const lat = (d.metrics || []).filter((m) => m.kind === "exchange_latency_ms").slice(0, 30);
+  const lat = (d.metrics || [])
+    .filter((m) => m.kind === "exchange_latency_ms")
+    .slice(0, 40)
+    .reverse();
   document.getElementById("sup-latency").textContent = lat
     .map((m) => `${m.created_at}  ${fmt(m.value, 1)} ms`)
     .join("\n") || "Pas encore de métriques";
+  if (lat.length >= 2) {
+    ensureChart("latency", "latency-chart", {
+      type: "line",
+      data: {
+        labels: lat.map((m) => (m.created_at || "").slice(11, 19)),
+        datasets: [
+          {
+            label: "Latence ms",
+            data: lat.map((m) => m.value),
+            borderColor: "#f59e0b",
+            pointRadius: 2,
+            rawPoints: lat,
+          },
+        ],
+      },
+      options: {
+        animation: false,
+        plugins: {
+          tooltip: {
+            callbacks: {
+              afterBody(items) {
+                const i = items[0]?.dataIndex;
+                const p = lat[i];
+                return p ? `value=${p.value} ts=${p.created_at}` : "";
+              },
+            },
+          },
+        },
+      },
+    });
+  }
 }
 
 document.querySelectorAll(".tabs button").forEach((b) => {
@@ -116,6 +351,14 @@ document.getElementById("btn-panic").onclick = async () => {
 function renderRunning(s) {
   const g = s.grid || {};
   const m = s.capital || s.margin || {};
+  const live = document.getElementById("live-price");
+  const mark = s.mark_price;
+  if (live && mark != null) {
+    const prev = _lastMark;
+    live.textContent = `${s.symbol || ""} ${fmt(mark, 2)}`;
+    if (prev != null && mark !== prev) flashEl(live, mark - prev);
+    _lastMark = mark;
+  }
   document.getElementById("margin-banner").textContent =
     `Capital ${m.quote_asset || "USDT"} libre: ${fmt(m.quote_free ?? m.availableBalance)} | ` +
     `${m.base_asset || "BASE"} total: ${fmt(m.base_total, 6)} | canTrade: ${m.canTrade ?? "—"}`;
@@ -137,9 +380,15 @@ function renderRunning(s) {
     <p>Position qty: ${fmt(g.position_qty, 4)} @ ${fmt(g.entry_avg)}</p>
     <p>Grid Profit: <span class="${pnlClass(g.grid_profit)}">${fmt(g.grid_profit)}</span></p>
     <p>Floating: <span class="${pnlClass(g.floating_profit)}">${fmt(g.floating_profit)}</span></p>
-    <p>Gross: <span class="${pnlClass(g.gross_pnl)}">${fmt(g.gross_pnl)}</span></p>
+    <p>Gross: <span id="gross-pnl-val" class="${pnlClass(g.gross_pnl)}">${fmt(g.gross_pnl)}</span></p>
     <p>Paliers incomplets: <strong class="${incompleteCount ? "neg" : ""}">${incompleteCount}</strong></p>
   `;
+  const grossEl = document.getElementById("gross-pnl-val");
+  if (grossEl && _lastGross != null && g.gross_pnl !== _lastGross) {
+    flashEl(grossEl, (g.gross_pnl || 0) - _lastGross);
+  }
+  _lastGross = g.gross_pnl;
+  refreshCharts(s);
 
   const low = Number(g.range_low);
   const high = Number(g.range_high);

@@ -21,6 +21,7 @@ from ultiumgrid.db.models import (
     Cycle,
     OrderAttempt,
     PnlSnapshot,
+    PriceTick,
     Trade,
     utcnow,
 )
@@ -433,7 +434,20 @@ class BotRunner:
             closed_cycles_pnl=closed_pnl,
             cumulative_pnl=closed_pnl + self.engine.state.gross_pnl + bags_pnl,
         )
+        levels = self.engine.levels_as_dict()
+        placed = [
+            float(lv["price"])
+            for lv in levels
+            if lv.get("status") in ("open", "pending", "filled")
+        ]
+        tick = PriceTick(
+            symbol=self.cfg.symbol,
+            price=mark,
+            range_low=min(placed) if placed else None,
+            range_high=max(placed) if placed else None,
+        )
         self.session.add(snap)
+        self.session.add(tick)
         self.session.commit()
 
     def request_config_change(self, new_cfg: StrategyConfig, mode: str) -> dict[str, Any]:
@@ -615,6 +629,17 @@ def main_loop(database_url: str, poll_seconds: float = 5.0) -> None:
             if bot.running:
                 bot.tick()
             else:
+                # Toujours enregistrer un tick de prix réel pour les courbes UI
+                try:
+                    mark = float(client.ticker_price(bot.cfg.symbol)["price"])
+                    from ultiumgrid.db.models import PriceTick
+
+                    session.add(
+                        PriceTick(symbol=bot.cfg.symbol, price=mark, range_low=None, range_high=None)
+                    )
+                    session.commit()
+                except Exception:
+                    pass
                 bot.save_state()
         except Exception:
             logger.exception("tick failed")

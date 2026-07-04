@@ -119,6 +119,19 @@ class PnlSnapshot(Base):
     cumulative_pnl: Mapped[float] = mapped_column(Float, default=0.0)
 
 
+class PriceTick(Base):
+    """Historique de prix réel (alimente la courbe UI — jamais interpolé)."""
+
+    __tablename__ = "price_ticks"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    symbol: Mapped[str] = mapped_column(String(32), index=True)
+    price: Mapped[float] = mapped_column(Float)
+    range_low: Mapped[float | None] = mapped_column(Float, nullable=True)
+    range_high: Mapped[float | None] = mapped_column(Float, nullable=True)
+    ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+
+
 class AlertEvent(Base):
     __tablename__ = "alert_events"
 

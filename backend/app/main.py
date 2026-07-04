@@ -26,6 +26,7 @@ from ultiumgrid.db.models import (  # noqa: E402
     Configuration,
     Cycle,
     PnlSnapshot,
+    PriceTick,
     make_session_factory,
 )
 from ultiumgrid.engine.config import StrategyConfig  # noqa: E402
@@ -563,6 +564,133 @@ def market_symbol(symbol: str):
         "volatility_stdev_1h": vol,
         "atr_14_1h": atr,
     }
+
+
+@app.get("/api/charts/price")
+def chart_price(symbol: str | None = None, limit: int = 200):
+    """Points de prix réels (price_ticks) — jamais interpolés."""
+    session = get_session()
+    try:
+        status = build_status()
+        symbol = symbol or status["symbol"]
+        rows = (
+            session.query(PriceTick)
+            .filter(PriceTick.symbol == symbol)
+            .order_by(PriceTick.id.desc())
+            .limit(min(limit, 2000))
+            .all()
+        )
+        rows = list(reversed(rows))
+        if len(rows) < 2:
+            return {
+                "symbol": symbol,
+                "insufficient_data": True,
+                "message": "données insuffisantes pour l'instant",
+                "points": [],
+                "range_low": status["grid"].get("range_low"),
+                "range_high": status["grid"].get("range_high"),
+                "mark": status.get("mark_price"),
+            }
+        return {
+            "symbol": symbol,
+            "insufficient_data": False,
+            "points": [
+                {
+                    "id": r.id,
+                    "ts": r.ts.isoformat() if r.ts else None,
+                    "price": r.price,
+                    "range_low": r.range_low,
+                    "range_high": r.range_high,
+                }
+                for r in rows
+            ],
+            "range_low": status["grid"].get("range_low"),
+            "range_high": status["grid"].get("range_high"),
+            "mark": status.get("mark_price"),
+        }
+    finally:
+        session.close()
+
+
+@app.get("/api/charts/pnl")
+def chart_pnl(symbol: str | None = None, limit: int = 200):
+    session = get_session()
+    try:
+        status = build_status()
+        symbol = symbol or status["symbol"]
+        rows = (
+            session.query(PnlSnapshot)
+            .filter(PnlSnapshot.symbol == symbol)
+            .order_by(PnlSnapshot.id.desc())
+            .limit(min(limit, 2000))
+            .all()
+        )
+        rows = list(reversed(rows))
+        if len(rows) < 2:
+            return {
+                "symbol": symbol,
+                "insufficient_data": True,
+                "message": "données insuffisantes pour l'instant",
+                "points": [],
+                "formula": "cumulative_pnl = closed_cycles_pnl + grid_pnl + bags_pnl",
+            }
+        return {
+            "symbol": symbol,
+            "insufficient_data": False,
+            "points": [
+                {
+                    "id": r.id,
+                    "ts": r.ts.isoformat() if r.ts else None,
+                    "cumulative_pnl": r.cumulative_pnl,
+                    "grid_pnl": r.grid_pnl,
+                    "bags_pnl": r.bags_pnl,
+                    "closed_cycles_pnl": r.closed_cycles_pnl,
+                }
+                for r in rows
+            ],
+            "formula": "cumulative_pnl = closed_cycles_pnl + grid_pnl + bags_pnl",
+        }
+    finally:
+        session.close()
+
+
+@app.get("/api/charts/cycles")
+def chart_cycles(symbol: str | None = None, limit: int = 50):
+    session = get_session()
+    try:
+        status = build_status()
+        symbol = symbol or status["symbol"]
+        rows = (
+            session.query(Cycle)
+            .filter(Cycle.symbol == symbol, Cycle.status == "closed")
+            .order_by(Cycle.id.desc())
+            .limit(limit)
+            .all()
+        )
+        rows = list(reversed(rows))
+        if not rows:
+            return {
+                "symbol": symbol,
+                "insufficient_data": True,
+                "message": "données insuffisantes pour l'instant",
+                "bars": [],
+            }
+        return {
+            "symbol": symbol,
+            "insufficient_data": False,
+            "bars": [
+                {
+                    "id": c.id,
+                    "net_pnl": c.net_pnl,
+                    "gross_pnl": c.gross_pnl,
+                    "close_reason": c.close_reason,
+                    "closed_at": c.closed_at.isoformat() if c.closed_at else None,
+                }
+                for c in rows
+            ],
+        }
+    finally:
+        session.close()
 
 
 @app.get("/api/supervision")

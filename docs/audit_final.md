@@ -24,6 +24,8 @@ Environnement : `https://demo-api.binance.com` / `wss://demo-stream.binance.com/
 | Viabilité économique formules | `test_viability_formula_manual` + API viability |
 | Reprise crash sans doublon ordres | `m9_crash_recovery.json` |
 | Audit UI valeurs = sources | `m8_audit_ui.json` |
+| Courbes prix/PnL/cycles/latence (points = DB) | `m8_charts.json` |
+| Prix permanent header + flash WS | DOM `#live-price`, Chart.js |
 | Docker compose 5 services (+ supervisor) | `docker compose ps` Up |
 | Superviseur heartbeat / recon / exchange | `m10bis_normal_cycle.json`, `m10bis_bot_unresponsive.json`, `m10bis_recon_mismatch.json` |
 | Onglet UI Supervision | `/api/supervision` + tab DOM |
