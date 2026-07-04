@@ -1,0 +1,84 @@
+{
+  "ticker": {
+    "symbol": "BTCUSDT",
+    "price": "62498.68000000"
+  },
+  "limit_price": "49998.94000000",
+  "qty": "0.00011000",
+  "steps": [
+    {
+      "action": "PLACE",
+      "raw": {
+        "symbol": "BTCUSDT",
+        "orderId": 45924076537,
+        "orderListId": -1,
+        "clientOrderId": "ug0d4e0537d01b44bf9b7b8bc4c5bfffa3",
+        "transactTime": 1783166087494,
+        "price": "49998.94000000",
+        "origQty": "0.00011000",
+        "executedQty": "0.00000000",
+        "origQuoteOrderQty": "0.00000000",
+        "cummulativeQuoteQty": "0.00000000",
+        "status": "NEW",
+        "timeInForce": "GTC",
+        "type": "LIMIT",
+        "side": "BUY",
+        "workingTime": 1783166087494,
+        "fills": [],
+        "selfTradePreventionMode": "EXPIRE_MAKER"
+      }
+    },
+    {
+      "action": "OPEN_ORDERS_AFTER_PLACE",
+      "raw": [
+        {
+          "symbol": "BTCUSDT",
+          "orderId": 45924076537,
+          "orderListId": -1,
+          "clientOrderId": "ug0d4e0537d01b44bf9b7b8bc4c5bfffa3",
+          "price": "49998.94000000",
+          "origQty": "0.00011000",
+          "executedQty": "0.00000000",
+          "cummulativeQuoteQty": "0.00000000",
+          "status": "NEW",
+          "timeInForce": "GTC",
+          "type": "LIMIT",
+          "side": "BUY",
+          "stopPrice": "0.00000000",
+          "icebergQty": "0.00000000",
+          "time": 1783166087494,
+          "updateTime": 1783166087494,
+          "isWorking": true,
+          "workingTime": 1783166087494,
+          "origQuoteOrderQty": "0.00000000",
+          "selfTradePreventionMode": "EXPIRE_MAKER"
+        }
+      ]
+    },
+    {
+      "action": "CANCEL",
+      "raw": {
+        "symbol": "BTCUSDT",
+        "origClientOrderId": "ug0d4e0537d01b44bf9b7b8bc4c5bfffa3",
+        "orderId": 45924076537,
+        "orderListId": -1,
+        "clientOrderId": "aUUQDyewgzVgrDE369g7Rc",
+        "transactTime": 1783166087507,
+        "price": "49998.94000000",
+        "origQty": "0.00011000",
+        "executedQty": "0.00000000",
+        "origQuoteOrderQty": "0.00000000",
+        "cummulativeQuoteQty": "0.00000000",
+        "status": "CANCELED",
+        "timeInForce": "GTC",
+        "type": "LIMIT",
+        "side": "BUY",
+        "selfTradePreventionMode": "EXPIRE_MAKER"
+      }
+    },
+    {
+      "action": "OPEN_ORDERS_AFTER_CANCEL",
+      "raw": []
+    }
+  ]
+}

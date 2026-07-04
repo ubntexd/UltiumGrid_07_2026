@@ -28,9 +28,11 @@ from websockets.exceptions import ConnectionClosed
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_REST = "https://testnet.binance.vision"
-# Stream market data (prouvé 2026-07-04) — pas testnet.binance.vision/ws (404)
-DEFAULT_WS = "wss://stream.testnet.binance.vision/ws"
+# Spot Demo Mode (clés demo.binance.com) — prouvé place/cancel 2026-07-04
+# Docs: https://developers.binance.com/docs/binance-spot-api-docs/demo-mode/general-info
+# Note: testnet.binance.vision rejette ces clés (-2015) ; ce n'est PAS le même environnement.
+DEFAULT_REST = "https://demo-api.binance.com"
+DEFAULT_WS = "wss://demo-stream.binance.com/ws"
 
 BACKOFF_BASE_S = 0.2
 MAX_ORDER_ATTEMPTS = 5

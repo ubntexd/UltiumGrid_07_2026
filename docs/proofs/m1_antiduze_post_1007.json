@@ -1,48 +1,151 @@
 {
   "steps": [
     {
-      "action": "PLACE_RAISED",
-      "error": "retry_exhausted symbol=BTCUSDT level=None price=43751.50 qty=0.0013 attempts=3",
-      "attempt_log": [
+      "action": "PLACE_RESULT",
+      "order": {
+        "symbol": "BTCUSDT",
+        "orderId": 45924127978,
+        "orderListId": -1,
+        "clientOrderId": "ugb3abcf91446b4685a0f9660234e4f77e",
+        "transactTime": 1783166106158,
+        "price": "43749.07000000",
+        "origQty": "0.00013000",
+        "executedQty": "0.00000000",
+        "origQuoteOrderQty": "0.00000000",
+        "cummulativeQuoteQty": "0.00000000",
+        "status": "NEW",
+        "timeInForce": "GTC",
+        "type": "LIMIT",
+        "side": "BUY",
+        "workingTime": 1783166106158,
+        "fills": [],
+        "selfTradePreventionMode": "EXPIRE_MAKER"
+      }
+    },
+    {
+      "action": "VERIFY_REAL_FIND",
+      "client_order_id": "ugb3abcf91446b4685a0f9660234e4f77e",
+      "found": {
+        "symbol": "BTCUSDT",
+        "orderId": 45924127978,
+        "orderListId": -1,
+        "clientOrderId": "ugb3abcf91446b4685a0f9660234e4f77e",
+        "price": "43749.07000000",
+        "origQty": "0.00013000",
+        "executedQty": "0.00000000",
+        "cummulativeQuoteQty": "0.00000000",
+        "status": "NEW",
+        "timeInForce": "GTC",
+        "type": "LIMIT",
+        "side": "BUY",
+        "stopPrice": "0.00000000",
+        "icebergQty": "0.00000000",
+        "time": 1783166106158,
+        "updateTime": 1783166106158,
+        "isWorking": true,
+        "workingTime": 1783166106158,
+        "origQuoteOrderQty": "0.00000000",
+        "selfTradePreventionMode": "EXPIRE_MAKER"
+      },
+      "trace": {
+        "client_order_id": "ugb3abcf91446b4685a0f9660234e4f77e",
+        "symbol": "BTCUSDT",
+        "open_orders_match": {
+          "symbol": "BTCUSDT",
+          "orderId": 45924127978,
+          "orderListId": -1,
+          "clientOrderId": "ugb3abcf91446b4685a0f9660234e4f77e",
+          "price": "43749.07000000",
+          "origQty": "0.00013000",
+          "executedQty": "0.00000000",
+          "cummulativeQuoteQty": "0.00000000",
+          "status": "NEW",
+          "timeInForce": "GTC",
+          "type": "LIMIT",
+          "side": "BUY",
+          "stopPrice": "0.00000000",
+          "icebergQty": "0.00000000",
+          "time": 1783166106158,
+          "updateTime": 1783166106158,
+          "isWorking": true,
+          "workingTime": 1783166106158,
+          "origQuoteOrderQty": "0.00000000",
+          "selfTradePreventionMode": "EXPIRE_MAKER"
+        },
+        "all_orders_match": null,
+        "get_order_match": null,
+        "source": "openOrders"
+      }
+    },
+    {
+      "action": "SIMULATED_1007_RECOVERY",
+      "recovered_order": {
+        "symbol": "BTCUSDT",
+        "orderId": 45924127978,
+        "orderListId": -1,
+        "clientOrderId": "ugb3abcf91446b4685a0f9660234e4f77e",
+        "price": "43749.07000000",
+        "origQty": "0.00013000",
+        "executedQty": "0.00000000",
+        "cummulativeQuoteQty": "0.00000000",
+        "status": "NEW",
+        "timeInForce": "GTC",
+        "type": "LIMIT",
+        "side": "BUY",
+        "stopPrice": "0.00000000",
+        "icebergQty": "0.00000000",
+        "time": 1783166106158,
+        "updateTime": 1783166106158,
+        "isWorking": true,
+        "workingTime": 1783166106158,
+        "origQuoteOrderQty": "0.00000000",
+        "selfTradePreventionMode": "EXPIRE_MAKER"
+      },
+      "post_count": 1,
+      "attempt_log_tail": [
         {
           "symbol": "BTCUSDT",
           "side": "BUY",
           "order_type": "LIMIT",
           "purpose": "normal",
-          "client_order_id": "uge0159e7aba89460bbc02615aa6e61f57",
+          "client_order_id": "ugb3abcf91446b4685a0f9660234e4f77e",
           "attempt_no": 1,
-          "outcome": "timeout_not_found",
-          "http_status": 408,
-          "binance_code": -1007,
-          "binance_msg": "Timeout waiting for response from backend server. Send status unknown; execution status unknown.",
-          "order_id": null,
+          "outcome": "success",
+          "http_status": 200,
+          "binance_code": null,
+          "binance_msg": null,
+          "order_id": "45924127978",
           "request_json": {
             "symbol": "BTCUSDT",
             "side": "BUY",
             "type": "LIMIT",
-            "quantity": "0.0013",
-            "price": "43751.50",
+            "quantity": "0.00013000",
+            "price": "43749.07000000",
             "timeInForce": "GTC",
-            "positionSide": "LONG",
-            "newClientOrderId": "uge0159e7aba89460bbc02615aa6e61f57"
+            "newClientOrderId": "ugb3abcf91446b4685a0f9660234e4f77e"
           },
           "response_json": {
-            "code": -1007,
-            "msg": "Timeout waiting for response from backend server. Send status unknown; execution status unknown."
-          },
-          "verify_json": {
-            "client_order_id": "uge0159e7aba89460bbc02615aa6e61f57",
             "symbol": "BTCUSDT",
-            "open_orders_match": null,
-            "all_orders_match": null,
-            "get_order_match": null,
-            "open_orders_count": 0,
-            "all_orders_scanned": 0,
-            "get_order_error": "400 {\"code\":-2013,\"msg\":\"Order does not exist.\"}",
-            "source": null
+            "orderId": 45924127978,
+            "orderListId": -1,
+            "clientOrderId": "ugb3abcf91446b4685a0f9660234e4f77e",
+            "transactTime": 1783166106158,
+            "price": "43749.07000000",
+            "origQty": "0.00013000",
+            "executedQty": "0.00000000",
+            "origQuoteOrderQty": "0.00000000",
+            "cummulativeQuoteQty": "0.00000000",
+            "status": "NEW",
+            "timeInForce": "GTC",
+            "type": "LIMIT",
+            "side": "BUY",
+            "workingTime": 1783166106158,
+            "fills": [],
+            "selfTradePreventionMode": "EXPIRE_MAKER"
           },
+          "verify_json": null,
           "used_client_ids": [
-            "uge0159e7aba89460bbc02615aa6e61f57"
+            "ugb3abcf91446b4685a0f9660234e4f77e"
           ],
           "grid_level": null
         },
@@ -51,188 +154,127 @@
           "side": "BUY",
           "order_type": "LIMIT",
           "purpose": "normal",
-          "client_order_id": "ug3d9f7d3f00bc4438919496c7328dd185",
-          "attempt_no": 2,
-          "outcome": "timeout_not_found",
+          "client_order_id": "ugb3abcf91446b4685a0f9660234e4f77e",
+          "attempt_no": 1,
+          "outcome": "duplicate_avoided",
           "http_status": 408,
           "binance_code": -1007,
           "binance_msg": "Timeout waiting for response from backend server. Send status unknown; execution status unknown.",
-          "order_id": null,
+          "order_id": "45924127978",
           "request_json": {
             "symbol": "BTCUSDT",
             "side": "BUY",
             "type": "LIMIT",
-            "quantity": "0.0013",
-            "price": "43751.50",
+            "quantity": "0.00013000",
+            "price": "43749.07000000",
             "timeInForce": "GTC",
-            "positionSide": "LONG",
-            "newClientOrderId": "ug3d9f7d3f00bc4438919496c7328dd185"
+            "newClientOrderId": "ugb3abcf91446b4685a0f9660234e4f77e"
           },
           "response_json": {
             "code": -1007,
             "msg": "Timeout waiting for response from backend server. Send status unknown; execution status unknown."
           },
           "verify_json": {
-            "client_order_id": "ug3d9f7d3f00bc4438919496c7328dd185",
+            "client_order_id": "ugb3abcf91446b4685a0f9660234e4f77e",
             "symbol": "BTCUSDT",
-            "open_orders_match": null,
+            "open_orders_match": {
+              "symbol": "BTCUSDT",
+              "orderId": 45924127978,
+              "orderListId": -1,
+              "clientOrderId": "ugb3abcf91446b4685a0f9660234e4f77e",
+              "price": "43749.07000000",
+              "origQty": "0.00013000",
+              "executedQty": "0.00000000",
+              "cummulativeQuoteQty": "0.00000000",
+              "status": "NEW",
+              "timeInForce": "GTC",
+              "type": "LIMIT",
+              "side": "BUY",
+              "stopPrice": "0.00000000",
+              "icebergQty": "0.00000000",
+              "time": 1783166106158,
+              "updateTime": 1783166106158,
+              "isWorking": true,
+              "workingTime": 1783166106158,
+              "origQuoteOrderQty": "0.00000000",
+              "selfTradePreventionMode": "EXPIRE_MAKER"
+            },
             "all_orders_match": null,
             "get_order_match": null,
-            "open_orders_count": 0,
-            "all_orders_scanned": 0,
-            "get_order_error": "400 {\"code\":-2013,\"msg\":\"Order does not exist.\"}",
-            "source": null
+            "source": "openOrders"
           },
           "used_client_ids": [
-            "uge0159e7aba89460bbc02615aa6e61f57",
-            "ug3d9f7d3f00bc4438919496c7328dd185"
+            "ugb3abcf91446b4685a0f9660234e4f77e"
           ],
-          "grid_level": null
-        },
-        {
-          "symbol": "BTCUSDT",
-          "side": "BUY",
-          "order_type": "LIMIT",
-          "purpose": "normal",
-          "client_order_id": "ugc44c81e4ce8e4e53bd7cfe993e4d0629",
-          "attempt_no": 3,
-          "outcome": "timeout_not_found",
-          "http_status": 408,
-          "binance_code": -1007,
-          "binance_msg": "Timeout waiting for response from backend server. Send status unknown; execution status unknown.",
-          "order_id": null,
-          "request_json": {
-            "symbol": "BTCUSDT",
-            "side": "BUY",
-            "type": "LIMIT",
-            "quantity": "0.0013",
-            "price": "43751.50",
-            "timeInForce": "GTC",
-            "positionSide": "LONG",
-            "newClientOrderId": "ugc44c81e4ce8e4e53bd7cfe993e4d0629"
-          },
-          "response_json": {
-            "code": -1007,
-            "msg": "Timeout waiting for response from backend server. Send status unknown; execution status unknown."
-          },
-          "verify_json": {
-            "client_order_id": "ugc44c81e4ce8e4e53bd7cfe993e4d0629",
-            "symbol": "BTCUSDT",
-            "open_orders_match": null,
-            "all_orders_match": null,
-            "get_order_match": null,
-            "open_orders_count": 0,
-            "all_orders_scanned": 0,
-            "get_order_error": "400 {\"code\":-2013,\"msg\":\"Order does not exist.\"}",
-            "source": null
-          },
-          "used_client_ids": [
-            "uge0159e7aba89460bbc02615aa6e61f57",
-            "ug3d9f7d3f00bc4438919496c7328dd185",
-            "ugc44c81e4ce8e4e53bd7cfe993e4d0629"
-          ],
-          "grid_level": null
-        },
-        {
-          "symbol": "BTCUSDT",
-          "side": "BUY",
-          "order_type": "LIMIT",
-          "purpose": "normal",
-          "client_order_id": "ugc44c81e4ce8e4e53bd7cfe993e4d0629",
-          "attempt_no": 3,
-          "outcome": "retry_exhausted",
-          "http_status": null,
-          "binance_code": -1007,
-          "binance_msg": "Palier None non plac\u00e9 apr\u00e8s 3 tentatives",
-          "order_id": null,
-          "request_json": {
-            "symbol": "BTCUSDT",
-            "side": "BUY",
-            "price": "43751.50",
-            "quantity": "0.0013",
-            "grid_level": null,
-            "last_attempt_at": "2026-07-04T09:30:24.550228+00:00"
-          },
-          "response_json": null,
-          "verify_json": {
-            "used_client_ids": [
-              "uge0159e7aba89460bbc02615aa6e61f57",
-              "ug3d9f7d3f00bc4438919496c7328dd185",
-              "ugc44c81e4ce8e4e53bd7cfe993e4d0629"
-            ],
-            "timeout_not_found_count": 3
-          },
           "grid_level": null
         }
       ]
     },
     {
-      "action": "NATURAL_1007_VERIFY_TRACE",
-      "client_order_id": "uge0159e7aba89460bbc02615aa6e61f57",
-      "verify_json": {
-        "client_order_id": "uge0159e7aba89460bbc02615aa6e61f57",
-        "symbol": "BTCUSDT",
-        "open_orders_match": null,
-        "all_orders_match": null,
-        "get_order_match": null,
-        "open_orders_count": 0,
-        "all_orders_scanned": 0,
-        "get_order_error": "400 {\"code\":-2013,\"msg\":\"Order does not exist.\"}",
-        "source": null
-      }
+      "action": "OPEN_ORDERS_AFTER_RECOVERY",
+      "matches": [
+        {
+          "symbol": "BTCUSDT",
+          "orderId": 45924127978,
+          "orderListId": -1,
+          "clientOrderId": "ugb3abcf91446b4685a0f9660234e4f77e",
+          "price": "43749.07000000",
+          "origQty": "0.00013000",
+          "executedQty": "0.00000000",
+          "cummulativeQuoteQty": "0.00000000",
+          "status": "NEW",
+          "timeInForce": "GTC",
+          "type": "LIMIT",
+          "side": "BUY",
+          "stopPrice": "0.00000000",
+          "icebergQty": "0.00000000",
+          "time": 1783166106158,
+          "updateTime": 1783166106158,
+          "isWorking": true,
+          "workingTime": 1783166106158,
+          "origQuoteOrderQty": "0.00000000",
+          "selfTradePreventionMode": "EXPIRE_MAKER"
+        }
+      ]
     },
     {
-      "action": "NATURAL_1007_VERIFY_TRACE",
-      "client_order_id": "ug3d9f7d3f00bc4438919496c7328dd185",
-      "verify_json": {
-        "client_order_id": "ug3d9f7d3f00bc4438919496c7328dd185",
+      "action": "CANCEL",
+      "raw": {
         "symbol": "BTCUSDT",
-        "open_orders_match": null,
-        "all_orders_match": null,
-        "get_order_match": null,
-        "open_orders_count": 0,
-        "all_orders_scanned": 0,
-        "get_order_error": "400 {\"code\":-2013,\"msg\":\"Order does not exist.\"}",
-        "source": null
+        "origClientOrderId": "ugb3abcf91446b4685a0f9660234e4f77e",
+        "orderId": 45924127978,
+        "orderListId": -1,
+        "clientOrderId": "605IA6VaAGvf5DrLeLwrli",
+        "transactTime": 1783166106194,
+        "price": "43749.07000000",
+        "origQty": "0.00013000",
+        "executedQty": "0.00000000",
+        "origQuoteOrderQty": "0.00000000",
+        "cummulativeQuoteQty": "0.00000000",
+        "status": "CANCELED",
+        "timeInForce": "GTC",
+        "type": "LIMIT",
+        "side": "BUY",
+        "selfTradePreventionMode": "EXPIRE_MAKER"
       }
-    },
-    {
-      "action": "NATURAL_1007_VERIFY_TRACE",
-      "client_order_id": "ugc44c81e4ce8e4e53bd7cfe993e4d0629",
-      "verify_json": {
-        "client_order_id": "ugc44c81e4ce8e4e53bd7cfe993e4d0629",
-        "symbol": "BTCUSDT",
-        "open_orders_match": null,
-        "all_orders_match": null,
-        "get_order_match": null,
-        "open_orders_count": 0,
-        "all_orders_scanned": 0,
-        "get_order_error": "400 {\"code\":-2013,\"msg\":\"Order does not exist.\"}",
-        "source": null
-      }
-    },
-    {
-      "action": "NO_GHOST_ORDERS",
-      "open_orders": [],
-      "ghosts": []
     },
     {
       "action": "DUPLICATE_AVOIDED_DEMO",
       "note": "POST simul\u00e9 -1007 ; openOrders R\u00c9EL + entr\u00e9e inject\u00e9e repr\u00e9sentant l'ordre accept\u00e9 c\u00f4t\u00e9 matching engine. Le connecteur rattache l'ordre existant et n'effectue pas de second envoi.",
-      "client_order_id": "ug8f825a14c8ec4bad98fd2714d0011e8a",
+      "client_order_id": "ugf5f30369e54d4b068dde29ac145ac234",
       "recovered_order_id": 900001,
       "open_orders_calls": [
         {
           "live_raw": [],
           "injected": {
             "orderId": 900001,
-            "clientOrderId": "ug8f825a14c8ec4bad98fd2714d0011e8a",
+            "clientOrderId": "ugf5f30369e54d4b068dde29ac145ac234",
             "status": "NEW",
             "symbol": "BTCUSDT",
             "side": "BUY",
             "type": "LIMIT",
-            "price": "43751.50",
-            "origQty": "0.0013"
+            "price": "43749.07000000",
+            "origQty": "0.00013000"
           }
         }
       ],
@@ -241,7 +283,7 @@
         "side": "BUY",
         "order_type": "LIMIT",
         "purpose": "normal",
-        "client_order_id": "ug8f825a14c8ec4bad98fd2714d0011e8a",
+        "client_order_id": "ugf5f30369e54d4b068dde29ac145ac234",
         "attempt_no": 1,
         "outcome": "duplicate_avoided",
         "http_status": 408,
@@ -252,90 +294,64 @@
           "symbol": "BTCUSDT",
           "side": "BUY",
           "type": "LIMIT",
-          "quantity": "0.0013",
-          "price": "43751.50",
+          "quantity": "0.00013000",
+          "price": "43749.07000000",
           "timeInForce": "GTC",
-          "positionSide": "LONG",
-          "newClientOrderId": "ug8f825a14c8ec4bad98fd2714d0011e8a"
+          "newClientOrderId": "ugf5f30369e54d4b068dde29ac145ac234"
         },
         "response_json": {
           "code": -1007,
           "msg": "Timeout waiting for response from backend server. Send status unknown; execution status unknown."
         },
         "verify_json": {
-          "client_order_id": "ug8f825a14c8ec4bad98fd2714d0011e8a",
+          "client_order_id": "ugf5f30369e54d4b068dde29ac145ac234",
           "symbol": "BTCUSDT",
           "open_orders_match": {
             "orderId": 900001,
-            "clientOrderId": "ug8f825a14c8ec4bad98fd2714d0011e8a",
+            "clientOrderId": "ugf5f30369e54d4b068dde29ac145ac234",
             "status": "NEW",
             "symbol": "BTCUSDT",
             "side": "BUY",
             "type": "LIMIT",
-            "price": "43751.50",
-            "origQty": "0.0013"
+            "price": "43749.07000000",
+            "origQty": "0.00013000"
           },
           "all_orders_match": null,
           "get_order_match": null,
           "source": "openOrders"
         },
         "used_client_ids": [
-          "ug8f825a14c8ec4bad98fd2714d0011e8a"
-        ]
+          "ugf5f30369e54d4b068dde29ac145ac234"
+        ],
+        "grid_level": null
       },
       "all_orders_still_real": true
     }
   ],
-  "scenario": "natural_1007_timeout_not_found",
+  "scenario": "duplicate_avoided_after_successful_place",
   "ticker": {
-    "price": "62502.20",
     "symbol": "BTCUSDT",
-    "time": 1783157414497
+    "price": "62498.68000000"
   },
-  "limit_price": "43751.50",
-  "qty": "0.0013",
-  "outcomes": [
-    "timeout_not_found",
-    "timeout_not_found",
-    "timeout_not_found",
-    "retry_exhausted"
-  ],
-  "client_order_ids": [
-    "uge0159e7aba89460bbc02615aa6e61f57",
-    "ug3d9f7d3f00bc4438919496c7328dd185",
-    "ugc44c81e4ce8e4e53bd7cfe993e4d0629"
-  ],
+  "limit_price": "43749.07000000",
+  "qty": "0.00013000",
   "db_order_attempts": [
     [
-      "uge0159e7aba89460bbc02615aa6e61f57",
+      "ugb3abcf91446b4685a0f9660234e4f77e",
       1,
-      "timeout_not_found",
-      -1007,
-      null
+      "success",
+      null,
+      "45924127978"
     ],
     [
-      "ug3d9f7d3f00bc4438919496c7328dd185",
-      2,
-      "timeout_not_found",
+      "ugb3abcf91446b4685a0f9660234e4f77e",
+      1,
+      "duplicate_avoided",
       -1007,
-      null
+      "45924127978"
     ],
     [
-      "ugc44c81e4ce8e4e53bd7cfe993e4d0629",
-      3,
-      "timeout_not_found",
-      -1007,
-      null
-    ],
-    [
-      "ugc44c81e4ce8e4e53bd7cfe993e4d0629",
-      3,
-      "retry_exhausted",
-      -1007,
-      null
-    ],
-    [
-      "ug8f825a14c8ec4bad98fd2714d0011e8a",
+      "ugf5f30369e54d4b068dde29ac145ac234",
       1,
       "duplicate_avoided",
       -1007,

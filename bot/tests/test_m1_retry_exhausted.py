@@ -154,7 +154,7 @@ def test_retry_exhausted_forced_full_chain():
     original_backoff = mod.BACKOFF_BASE_S
     mod.BACKOFF_BASE_S = 0.01
 
-    bot = BotRunner(client, session, StrategyConfig(num_levels=4, capital_usdt=200, leverage=2))
+    bot = BotRunner(client, session, StrategyConfig(num_levels=4, capital_usdt=200))
     # Ouvrir une mini-grille (4 paliers) — tous vont échouer en retry_exhausted
     try:
         bot.engine.open_grid()

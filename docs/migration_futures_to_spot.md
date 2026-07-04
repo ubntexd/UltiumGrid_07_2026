@@ -8,8 +8,8 @@ Blocage persistant écriture ordres Futures Demo (`-1007` API + UI). Spot Testne
 
 | Concept | Futures (ancien) | Spot (nouveau) |
 |---|---|---|
-| REST | `demo-fapi.binance.com` / `testnet.binancefuture.com` | `https://testnet.binance.vision` |
-| WS | `wss://demo-fstream.binance.com` | `wss://stream.testnet.binance.vision/ws` (prouvé ; `testnet.binance.vision/ws` = 404) |
+| REST | `demo-fapi.binance.com` / `testnet.binancefuture.com` | `https://demo-api.binance.com` |
+| WS | `wss://demo-fstream.binance.com` | `wss://demo-stream.binance.com/ws` (prouvé ; `testnet.binance.vision/ws` = 404) |
 | Compte | `/fapi/v2/account` | `/api/v3/account` |
 | Ordre | `/fapi/v1/order` | `/api/v3/order` |
 | openOrders / allOrders | `/fapi/v1/*` | `/api/v3/*` |
@@ -49,11 +49,13 @@ Blocage persistant écriture ordres Futures Demo (`-1007` API + UI). Spot Testne
 
 Les clés Futures Demo **ne fonctionnent pas** sur `testnet.binance.vision` (preuve : HTTP 401 `-2015`).
 
-**Action requise :** générer des clés sur https://testnet.binance.vision → API Management, puis :
+**Action requise :** générer des clés sur https://demo-api.binance.com → API Management, puis :
 
 ```
 BINANCE_SPOT_TESTNET_API_KEY=...
 BINANCE_SPOT_TESTNET_API_SECRET=...
-BINANCE_SPOT_REST_BASE=https://testnet.binance.vision
-BINANCE_SPOT_WS_BASE=wss://stream.testnet.binance.vision/ws
+BINANCE_SPOT_REST_BASE=https://demo-api.binance.com
+BINANCE_SPOT_WS_BASE=wss://demo-stream.binance.com/ws
+BINANCE_SPOT_TESTNET_API_KEY=...
+BINANCE_SPOT_TESTNET_API_SECRET=...
 ```

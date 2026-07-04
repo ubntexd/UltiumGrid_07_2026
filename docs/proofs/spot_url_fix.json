@@ -1,0 +1,7 @@
+{
+  "bug": "mauvaise base URL testnet.binance.vision au lieu de demo-api.binance.com pour cl\u00e9s demo.binance.com",
+  "rest_base": "https://demo-api.binance.com",
+  "ws_base": "wss://demo-stream.binance.com/ws",
+  "account_canTrade": true,
+  "m1_tests": "10 passed"
+}

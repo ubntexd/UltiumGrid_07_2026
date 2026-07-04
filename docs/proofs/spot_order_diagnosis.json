@@ -1,8 +1,8 @@
 {
-  "DEFAULT_REST": "https://testnet.binance.vision",
-  "DEFAULT_WS": "wss://testnet.binance.vision/ws",
-  "client.rest_base": "https://testnet.binance.vision",
-  "client.ws_base": "wss://testnet.binance.vision/ws",
+  "DEFAULT_REST": "https://demo-api.binance.com",
+  "DEFAULT_WS": "wss://demo-stream.binance.com/ws",
+  "client.rest_base": "https://demo-api.binance.com",
+  "client.ws_base": "wss://demo-stream.binance.com/ws",
   "steps": [
     {
       "step": "ping",
@@ -11,7 +11,53 @@
     },
     {
       "step": "account",
-      "error": "401 {\"code\":-2015,\"msg\":\"Invalid API-key, IP, or permissions for action.\"}"
+      "status": 200,
+      "canTrade": true,
+      "balances_nonzero": [
+        {
+          "asset": "USDT",
+          "free": "5000.00000000",
+          "locked": "0.00000000"
+        },
+        {
+          "asset": "USDC",
+          "free": "5000.00000000",
+          "locked": "0.00000000"
+        }
+      ]
+    },
+    {
+      "step": "order_test",
+      "status": 200,
+      "raw": "{}"
+    },
+    {
+      "step": "order_real",
+      "ok": true,
+      "order": {
+        "symbol": "BTCUSDT",
+        "orderId": 45923652708,
+        "orderListId": -1,
+        "clientOrderId": "uge5823fd5057a443498a5985e113b621b",
+        "transactTime": 1783165931572,
+        "price": "40000.00000000",
+        "origQty": "0.00100000",
+        "executedQty": "0.00000000",
+        "origQuoteOrderQty": "0.00000000",
+        "cummulativeQuoteQty": "0.00000000",
+        "status": "NEW",
+        "timeInForce": "GTC",
+        "type": "LIMIT",
+        "side": "BUY",
+        "workingTime": 1783165931572,
+        "fills": [],
+        "selfTradePreventionMode": "EXPIRE_MAKER"
+      }
+    },
+    {
+      "step": "cancel",
+      "ok": true
     }
-  ]
+  ],
+  "diagnosis": "Placement Spot OK."
 }

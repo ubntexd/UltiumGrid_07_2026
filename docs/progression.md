@@ -1,44 +1,18 @@
-# Progression — UltiumGrid_07_2026 (Spot v2)
+# Progression — UltiumGrid_07_2026 (Spot Demo)
 
-Légende : `terminé` uniquement avec preuves.
-
-| Étape | Statut | Preuve / notes |
+| Étape | Statut | Preuve |
 |---|---|---|
-| Migration Futures → Spot | **en cours** | `docs/migration_futures_to_spot.md`, `docs/spec.md` v2 |
-| Audit public Spot | **terminé** | `docs/proofs/spot_public_audit.json` |
-| Clés Spot Testnet | **bloqué** | clés Futures → `-2015` sur `testnet.binance.vision` |
-| Module 1 Spot connecteur | **partiel** | code migré ; tests signés bloqués sans clés Spot |
-| Modules 2–10 | adaptés partiellement | logique Spot ; intégration trading en attente clés |
+| Migration Futures → Spot | **terminée** (URL corrigée) | `docs/migration_futures_to_spot.md` |
+| Module 1 — Connecteur Spot | **terminé** | place/cancel réel OK, 10 tests M1 passés |
+| Module 2 — DB | **terminé** | `m2_database_sql.json` |
+| Modules 3–10 | en cours | logique adaptée Spot |
 
-## Blocage actif B-SPOT-KEYS
+## Correction URL (2026-07-04)
 
-```
-GET https://testnet.binance.vision/api/v3/account
-→ HTTP 401 {"code":-2015,"msg":"Invalid API-key, IP, or permissions for action."}
-```
+Bug : le code pointait vers `https://testnet.binance.vision` alors que les clés `demo.binance.com` fonctionnent sur **`https://demo-api.binance.com`**.
 
-Les clés présentes (Futures Demo) ne sont **pas** valides sur Spot Testnet.
+Preuve :
+- `testnet.binance.vision` + clés demo → `-2015`
+- `demo-api.binance.com` + mêmes clés → account 200, **place/cancel ordre 200**
 
-**Action :** créer des clés sur https://testnet.binance.vision → API Management, puis dans `.env` :
-
-```
-BINANCE_SPOT_TESTNET_API_KEY=...
-BINANCE_SPOT_TESTNET_API_SECRET=...
-BINANCE_SPOT_REST_BASE=https://testnet.binance.vision
-BINANCE_SPOT_WS_BASE=wss://testnet.binance.vision/ws
-```
-
-Puis :
-
-```bash
-python scripts/diagnose_binance_orders.py
-pytest bot/tests/test_m1_connector_integration.py -v -s
-```
-
-## Preuves publiques Spot (OK)
-
-| Appel | Résultat |
-|---|---|
-| `GET /api/v3/ping` | 200 `{}` |
-| `GET /api/v3/ticker/price?symbol=BTCUSDT` | 200 prix réel |
-| `GET /api/v3/exchangeInfo` BTCUSDT | tickSize=0.01, stepSize=0.00001, minNotional=5 |
+Preuves : `docs/proofs/spot_url_fix.json`, `docs/proofs/m1_place_cancel_order.json`, `docs/proofs/spot_order_diagnosis.json`

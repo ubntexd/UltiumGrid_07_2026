@@ -6,7 +6,7 @@
 
 ## 1. Marché et connectivité
 
-- Exchange : Binance **Spot** Testnet (`https://testnet.binance.vision`, WS `wss://stream.testnet.binance.vision/ws`).
+- Exchange : Binance **Spot** Testnet (`https://demo-api.binance.com`, WS `wss://demo-stream.binance.com/ws`).
 - Connecteur : prix temps réel (WebSocket `bookTicker`), placement/annulation d’ordres, lecture soldes (`GET /api/v3/account` → `balances`).
 - **Pas de** levier, marge, `positionRisk`, funding, liquidation.
 - Filtres symbole via `GET /api/v3/exchangeInfo` (`tickSize`, `stepSize`, `minNotional`).
