@@ -33,19 +33,22 @@ Projet **non déclaré prêt** pour trading live testnet tant que B3 (écriture 
 | Simulation config = replay cycles, pas tick-à-tick | Documenté dans réponse API `method` |
 | Bot et backend découplés via `bot_state.commands` | Architecture nécessaire multi-conteneurs |
 
-## Non vérifié (blocage Binance écriture)
+## Non vérifié (blocage Binance Demo Futures — confirmé UI + API)
 
 | Exigence | Détail |
 |---|---|
-| Place / cancel ordre limite | `-1007` / `502` / `-1008` répétés |
+| Place / cancel ordre limite | `-1007` API ; **UI demo aussi incapable de passer un ordre Futures** (confirmé utilisateur 2026-07-04) |
 | Cycle grille complet +15 | dépend ordres |
 | Coupe live paliers 10/14 | dépend position réelle |
 | Vente sac live | dépend ordres |
 | Panic close live | dépend ordres |
 | Reprise crash avec ordres ouverts | dépend ordres |
-| set_leverage | même timeout `-1007` |
+| set_leverage / marginType | même timeout `-1007` |
 
-Réponses brutes typiques :
+Preuves API : `docs/proofs/m1_order_diagnosis.json` (`order/test`=200, `order`=-1007).  
+Cause : matching engine Demo Futures indisponible pour ce compte — **hors périmètre code**.
+
+Réponse brute typique :
 
 ```
 {"code":-1007,"msg":"Timeout waiting for response from backend server. Send status unknown; execution status unknown."}

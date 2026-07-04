@@ -54,14 +54,22 @@ Sources web convergentes (CCXT #26487, go-binance #765, bots demo 2025–2026) :
 - Les clés **ne sont pas interchangeables** entre ancien testnet et Demo Trading.
 - Un compte peut répondre en lecture sur `demo-fapi` avec d’anciennes clés, mais le **matching engine** reste en `-1007`.
 
-**Solution non négociable (action humaine) :**
+**Blocage confirmé côté Binance (2026-07-04) — pas le code :**
 
-1. Aller sur https://demo.binance.com (login GitHub recommandé, pas l’ancien `testnet.binancefuture.com`).
-2. API Management → Create API → copier Key + Secret.
-3. Mettre à jour `.env` (`BINANCE_FUTURES_TESTNET_API_KEY` / `_SECRET`).
-4. Relancer : `python scripts/diagnose_binance_orders.py` puis `pytest ...::test_place_verify_cancel_limit_order`.
+- Nouvelles clés demo installées (secret corrigé 64 car.) : `account` + `order/test` = HTTP 200.
+- `POST /order`, `/leverage`, `/marginType` = `-1007` permanent.
+- **Confirmation utilisateur :** impossible de passer un ordre Futures **même via l’UI** demo.binance.com.
 
-Le code utilise déjà `https://demo-fapi.binance.com`, POST en body form-urlencoded, anti-doublon post-`-1007`.
+Conséquence : modules dépendant d’ordres réels (grille live, coupe live, sacs live, panic live, reprise avec ordres) restent **non vérifiés** jusqu’à rétablissement du matching engine Demo Futures par Binance, ou bascule vers un autre environnement de test utilisable.
+
+Le code utilise déjà `https://demo-fapi.binance.com`, POST form-urlencoded, anti-doublon post-`-1007`, `retry_exhausted` / `grid_level_incomplete`.
+
+**Reprise automatique dès que les ordres repassent :**
+
+```bash
+python scripts/diagnose_binance_orders.py   # doit afficher order_real.ok = true
+pytest bot/tests/test_m1_connector_integration.py::test_place_verify_cancel_limit_order -v -s
+```
 
 ---
 
