@@ -17,6 +17,7 @@ const CONFIG_FIELDS = [
   ["hard_stop_pct", "Stop dur %"],
   ["daily_circuit_breaker_usd", "Circuit breaker USD"],
   ["bags_capital_threshold_pct", "Seuil capital sacs %"],
+  ["bnb_fee_discount", "Réduction frais BNB (0/1)"],
 ];
 
 function pnlClass(v) {
@@ -217,13 +218,41 @@ async function loadBags() {
   });
 }
 
+function renderViability(v) {
+  if (!v) return "";
+  const alert = v.alert_ratio_below_2x;
+  return `<div class="card" id="viability-box" style="border-color:${alert ? "var(--bad)" : "var(--ok)"}">
+    <h3>Viabilité économique</h3>
+    <p>Notionnel/palier: ${fmt(v.notional_per_level)}</p>
+    <p>Frais aller-retour: ${fmt(v.fees_per_roundtrip, 4)} (taux ${fmt(v.fee_rate * 100, 4)}% — ${v.fee_source})</p>
+    <p>Gain brut/grille: ${fmt(v.gross_per_grid, 4)}</p>
+    <p>Net/grille: <span class="${pnlClass(v.net_per_grid)}">${fmt(v.net_per_grid, 4)}</span></p>
+    <p>Ratio brut/frais: <strong class="${alert ? "neg" : "pos"}">${fmt(v.ratio_gross_to_fees, 2)}x</strong>
+      ${alert ? "⚠ sous 2x" : "OK"}</p>
+    <p>Grilles pour seuil cycle: ${v.grids_to_cycle ?? "∞ (net ≤ 0)"}</p>
+    <p>BNB discount: ${v.bnb_fee_discount} (solde BNB=${fmt(v.bnb_balance, 4)}, suffisant=${v.bnb_sufficient})</p>
+  </div>`;
+}
+
 async function loadConfig() {
   const data = await api("/api/config");
   const form = document.getElementById("config-form");
+  const symbols = data.symbols || [];
   form.innerHTML = CONFIG_FIELDS.map(([k, label]) => {
     const v = data.active?.[k] ?? "";
+    if (k === "symbol" && symbols.length) {
+      const opts = symbols
+        .map((s) => `<option value="${s}" ${s === v ? "selected" : ""}>${s}</option>`)
+        .join("");
+      return `<label>${label}<select name="${k}">${opts}</select></label>`;
+    }
+    if (k === "bnb_fee_discount") {
+      return `<label>${label}<input name="${k}" type="number" min="0" max="1" step="1" value="${v ? 1 : 0}" /></label>`;
+    }
     return `<label>${label}<input name="${k}" value="${v}" /></label>`;
   }).join("");
+  const viabEl = document.getElementById("viability-panel");
+  if (viabEl) viabEl.innerHTML = renderViability(data.viability);
   document.getElementById("config-history").innerHTML = (data.history || [])
     .map(
       (c) => `<div class="card" style="margin:0.4rem 0">
@@ -235,15 +264,21 @@ async function loadConfig() {
     .join("");
 }
 
-document.getElementById("btn-save-config").onclick = async () => {
+function readConfigParams() {
   const form = document.getElementById("config-form");
   const params = {};
   CONFIG_FIELDS.forEach(([k]) => {
     const input = form.elements[k];
     let v = input.value;
-    if (k !== "symbol") v = Number(v);
+    if (k === "bnb_fee_discount") v = Number(v) === 1;
+    else if (k !== "symbol") v = Number(v);
     params[k] = v;
   });
+  return params;
+}
+
+document.getElementById("btn-save-config").onclick = async () => {
+  const params = readConfigParams();
   const mode = document.getElementById("config-mode").value;
   try {
     const res = await api("/api/config", {
@@ -258,20 +293,15 @@ document.getElementById("btn-save-config").onclick = async () => {
 };
 
 document.getElementById("btn-simulate").onclick = async () => {
-  const form = document.getElementById("config-form");
-  const params = {};
-  CONFIG_FIELDS.forEach(([k]) => {
-    const input = form.elements[k];
-    let v = input.value;
-    if (k !== "symbol") v = Number(v);
-    params[k] = v;
-  });
+  const params = readConfigParams();
   try {
-    const res = await api("/api/config/simulate", {
-      method: "POST",
-      body: JSON.stringify({ params }),
-    });
-    document.getElementById("config-msg").textContent = JSON.stringify(res, null, 2);
+    const [sim, viab] = await Promise.all([
+      api("/api/config/simulate", { method: "POST", body: JSON.stringify({ params }) }),
+      api("/api/config/viability", { method: "POST", body: JSON.stringify({ params }) }),
+    ]);
+    document.getElementById("config-msg").textContent = JSON.stringify({ sim, viab }, null, 2);
+    const viabEl = document.getElementById("viability-panel");
+    if (viabEl) viabEl.innerHTML = renderViability(viab);
   } catch (e) {
     document.getElementById("config-msg").textContent = JSON.stringify(e, null, 2);
   }

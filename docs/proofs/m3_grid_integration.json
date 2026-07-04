@@ -7,36 +7,36 @@
   "levels": [
     {
       "index": 0,
-      "price": "62031.25000000",
+      "price": "62082.86000000",
       "side": "BUY",
-      "quantity": "0.0008000",
-      "order_id": 45924798928,
+      "quantity": "0.00079000",
+      "order_id": 45925821402,
       "status": "open",
       "incomplete_since": null
     },
     {
       "index": 1,
-      "price": "62343.75000000",
+      "price": "62395.62000000",
       "side": "BUY",
-      "quantity": "0.0008000",
-      "order_id": 45924798929,
+      "quantity": "0.00079000",
+      "order_id": 45925821403,
       "status": "open",
       "incomplete_since": null
     },
     {
       "index": 2,
-      "price": "62656.25000000",
+      "price": "62708.38000000",
       "side": "SELL",
-      "quantity": "0.0008000",
+      "quantity": "0.00079000",
       "order_id": null,
       "status": "pending",
       "incomplete_since": null
     },
     {
       "index": 3,
-      "price": "62968.75000000",
+      "price": "63021.14000000",
       "side": "SELL",
-      "quantity": "0.0008000",
+      "quantity": "0.00079000",
       "order_id": null,
       "status": "pending",
       "incomplete_since": null
@@ -47,11 +47,11 @@
   "binance_open_orders": [
     {
       "symbol": "BTCUSDT",
-      "orderId": 45924798928,
+      "orderId": 45925821402,
       "orderListId": -1,
-      "clientOrderId": "ug6cf6ea471f6c4b6f91857e78801b9778",
-      "price": "62031.25000000",
-      "origQty": "0.00080000",
+      "clientOrderId": "ug9909e7eab5ac4f2eb192b696b3436ca4",
+      "price": "62082.86000000",
+      "origQty": "0.00079000",
       "executedQty": "0.00000000",
       "cummulativeQuoteQty": "0.00000000",
       "status": "NEW",
@@ -60,20 +60,20 @@
       "side": "BUY",
       "stopPrice": "0.00000000",
       "icebergQty": "0.00000000",
-      "time": 1783166353882,
-      "updateTime": 1783166353882,
+      "time": 1783166726273,
+      "updateTime": 1783166726273,
       "isWorking": true,
-      "workingTime": 1783166353882,
+      "workingTime": 1783166726273,
       "origQuoteOrderQty": "0.00000000",
       "selfTradePreventionMode": "EXPIRE_MAKER"
     },
     {
       "symbol": "BTCUSDT",
-      "orderId": 45924798929,
+      "orderId": 45925821403,
       "orderListId": -1,
-      "clientOrderId": "ugfe7523e0f8394d4f98b444c8c17957f3",
-      "price": "62343.75000000",
-      "origQty": "0.00080000",
+      "clientOrderId": "ug8cfec72e2dc840318acffab4c22013bc",
+      "price": "62395.62000000",
+      "origQty": "0.00079000",
       "executedQty": "0.00000000",
       "cummulativeQuoteQty": "0.00000000",
       "status": "NEW",
@@ -82,10 +82,10 @@
       "side": "BUY",
       "stopPrice": "0.00000000",
       "icebergQty": "0.00000000",
-      "time": 1783166353908,
-      "updateTime": 1783166353908,
+      "time": 1783166726287,
+      "updateTime": 1783166726287,
       "isWorking": true,
-      "workingTime": 1783166353908,
+      "workingTime": 1783166726287,
       "origQuoteOrderQty": "0.00000000",
       "selfTradePreventionMode": "EXPIRE_MAKER"
     }
@@ -94,13 +94,13 @@
     {
       "id": 1,
       "status": "open",
-      "center_price": 62500.0,
+      "center_price": 62552.0,
       "symbol": "BTCUSDT"
     }
   ],
   "sql_direct": {
     "status": "open",
-    "center_price": 62500.0
+    "center_price": 62552.0
   },
   "bot_state_running": true,
   "bot_state_levels": 4,

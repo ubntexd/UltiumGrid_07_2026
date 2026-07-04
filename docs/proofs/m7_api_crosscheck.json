@@ -1,0 +1,18 @@
+{
+  "api_capital": {
+    "quote_free": 4999.35190534,
+    "base_total": 9.64e-06,
+    "base_free": 9.64e-06,
+    "quote_asset": "USDT",
+    "base_asset": "BTC",
+    "canTrade": true,
+    "availableBalance": 4999.35190534
+  },
+  "binance_quote_free": 4999.35190534,
+  "history_len": 2,
+  "pnl_cycles": 0,
+  "bags_len": 0,
+  "running_symbol": "BTCUSDT",
+  "mark": 62552.0,
+  "binance_ticker": 62552.0
+}

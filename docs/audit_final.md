@@ -1,67 +1,50 @@
-# Audit final de conformité globale
+# Audit final — UltiumGrid Spot Demo
 
 Date : 2026-07-04  
-Projet **non déclaré prêt** pour trading live testnet tant que B3 (écriture ordres Binance) n’est pas levé.
+Environnement : `https://demo-api.binance.com` / `wss://demo-stream.binance.com/ws`
 
 ## Conforme avec preuve
 
 | Exigence | Preuve |
 |---|---|
-| Connectivité publique Binance Testnet | `docs/proofs/00_binance_audit_raw.json` |
-| Auth compte Futures (`canTrade=true`, soldes) | `docs/proofs/01_binance_auth_new_keys.json` |
-| Funding + exchangeInfo filters BTC | `docs/proofs/m1_account_funding.json` |
-| WebSocket mark price + reprise après kill | `docs/proofs/m1_websocket_reconnect.json` |
-| Schéma DB + SQL direct | `docs/proofs/m2_database_sql.json` |
-| 20 niveaux grille (unit) | pytest `test_compute_20_levels_arithmetic` |
-| Coupe 10/14 + réarmement (unit) | pytest `test_cut_at_level_10_and_14` |
-| Stop dur / circuit breaker (unit) | pytest `test_hard_stop_and_circuit_breaker` |
-| Docker compose 4 services Up | `docs/proofs/docker_api_stack.json`, `docker compose ps` |
-| API Running/History/PnL/Bags/Config/Market/Margin | `docker_api_stack.json` |
-| Rejet config hors bornes | `leverage=99` → erreur |
-| Application config (levier 3, step 0.3, trigger 12) | SQL `configurations` id=3 active |
-| UI HTTP 200 + proxy | `frontend_http: 200` |
-| Prix BTC/ETH alignés Binance (session test) | comparaisons documentées audit_ui / progression |
-| Volume Docker `pgdata` | `docker-compose.yml` volumes |
+| Spot public ping/ticker/exchangeInfo | `spot_public_audit.json` (vision) + live demo-api |
+| URL correcte demo-api (clés demo) | `spot_url_fix.json` |
+| Place / cancel ordre limite | `m1_place_cancel_order.json` |
+| Account balances | `m1_account_balances_spot.json` |
+| WebSocket bookTicker + reconnect | `m1_websocket_reconnect.json` |
+| Anti-doublon unit + integration | tests M1 antiduze |
+| retry_exhausted / grid_level_incomplete | `m1_retry_exhausted.json` |
+| DB SQL direct | `m2_database_sql.json` |
+| Grille BUY-only, croisement Binance↔DB | `m3_grid_integration.json` |
+| Coupe qty réelle + incomplete | `m4_cut_incomplete_spot.json` |
+| Vente sac | `m5_bag_sell_spot.json` |
+| Panic close réel | `m6_panic_spot.json` |
+| API capital/running/pnl vs Binance | `m7_api_crosscheck.json` |
+| Config 3 params + reject bornes | `m7bis_config_spot.json` |
+| Viabilité économique formules | `test_viability_formula_manual` + API viability |
+| Reprise crash sans doublon ordres | `m9_crash_recovery.json` |
+| Audit UI valeurs = sources | `m8_audit_ui.json` |
+| Docker compose 4 services | `docker compose ps` Up |
 
 ## Écarts assumés
 
 | Écart | Justification |
 |---|---|
-| `docs/spec.md` dérivé du prompt (cahier des charges fichier absent) | Documenté dans `questions_ouvertes.md` Q1 |
-| Circuit breaker défaut −40 USD | Q3 — choix prudent |
-| Alertes = DB + logs, pas Telegram | Q4 — pas de credentials canal |
-| Simulation config = replay cycles, pas tick-à-tick | Documenté dans réponse API `method` |
-| Bot et backend découplés via `bot_state.commands` | Architecture nécessaire multi-conteneurs |
+| Spec dérivée du prompt Spot v2 (fichier cahier séparé absent) | `docs/spec.md` |
+| `GET /api/v3/order` parfois `-2013` sur demo alors que openOrders OK | Vérif via openOrders |
+| Dust BTC résiduel après panic (commissions) | Notional sous min après frais |
+| Cycle +15 live non déroulé jusqu’au trigger | Nécessite fills marché ; grille + logique prouvées |
 
-## Non vérifié (blocage Binance Demo Futures — confirmé UI + API)
+## Non vérifiable / hors scope
 
-| Exigence | Détail |
+| Point | Note |
 |---|---|
-| Place / cancel ordre limite | `-1007` API ; **UI demo aussi incapable de passer un ordre Futures** (confirmé utilisateur 2026-07-04) |
-| Cycle grille complet +15 | dépend ordres |
-| Coupe live paliers 10/14 | dépend position réelle |
-| Vente sac live | dépend ordres |
-| Panic close live | dépend ordres |
-| Reprise crash avec ordres ouverts | dépend ordres |
-| set_leverage / marginType | même timeout `-1007` |
-
-Preuves API : `docs/proofs/m1_order_diagnosis.json` (`order/test`=200, `order`=-1007).  
-Cause : matching engine Demo Futures indisponible pour ce compte — **hors périmètre code**.
-
-Réponse brute typique :
-
-```
-{"code":-1007,"msg":"Timeout waiting for response from backend server. Send status unknown; execution status unknown."}
-```
-
-## Non vérifiable spécifiquement en testnet
-
-- Comportement sous forte latence réseau production
-- Liquidation réelle / ADL
-- Funding payment exact sur longue durée (funding lu OK, cumul cycle non observé)
+| Futures Demo écriture | Abandonné (migration Spot) — `spec_v1_futures_deprecated.md` |
+| Latence réseau extrême | Non testé |
+| Frais BNB réels avec solde BNB > 0 | Compte demo sans BNB ; rejet BNB discount prouvé si solde 0 |
 
 ## Verdict
 
-**Infrastructure + lecture marché/compte + UI + config + logique unitaire : opérationnels avec preuves.**
+**Projet opérationnel en Spot Demo** pour connecteur, grille, risque, sacs, garde-fous, API, UI, config, reprise crash — avec preuves d’exécution jointes.
 
-**Trading automatisé end-to-end : non prêt** — en attente du rétablissement de l’API d’écriture Binance Futures Testnet.
+Ne pas utiliser en production mainnet sans nouvelles clés et revue de sécurité.

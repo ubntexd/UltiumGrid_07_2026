@@ -1,0 +1,18 @@
+{
+  "restored": true,
+  "order_ids_before": [
+    45925821400,
+    45925821401
+  ],
+  "order_ids_after_restore": [
+    45925821400,
+    45925821401
+  ],
+  "binance_ids": [
+    45925821400,
+    45925821401
+  ],
+  "no_duplicate": true,
+  "all_on_binance": true,
+  "no_orphan_extra": true
+}

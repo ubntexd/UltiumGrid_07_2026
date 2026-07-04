@@ -29,6 +29,7 @@ from ultiumgrid.db.models import (  # noqa: E402
     make_session_factory,
 )
 from ultiumgrid.engine.config import StrategyConfig  # noqa: E402
+from ultiumgrid.engine.viability import compute_viability  # noqa: E402
 
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{ROOT / 'data' / 'ultiumgrid.db'}")
 Path(ROOT / "data").mkdir(exist_ok=True)
@@ -345,14 +346,41 @@ def sell_bag(bag_id: int, body: SellBagRequest):
         session.close()
 
 
+def _viability_for(cfg: StrategyConfig) -> dict:
+    acc = None
+    bnb = 0.0
+    try:
+        c = _client()
+        acc = c.account()
+        bnb = c.balance_free("BNB")
+        # capital ne peut pas dépasser le quote libre
+        quote_free = c.quote_asset_free(cfg.symbol)
+    except Exception:
+        quote_free = None
+    viab = compute_viability(
+        capital_usdt=cfg.capital_usdt,
+        num_levels=cfg.num_levels,
+        step_pct=cfg.step_pct,
+        cycle_trigger_usd=cfg.cycle_trigger_usd,
+        bnb_fee_discount=cfg.bnb_fee_discount,
+        account=acc,
+        bnb_balance=bnb,
+    )
+    viab["quote_free"] = quote_free
+    return viab
+
+
 @app.get("/api/config")
 def get_config():
     session = get_session()
     try:
         status = build_status()
+        cfg = StrategyConfig.from_dict(status["config"])
         return {
             "active": status["config"],
             "bounds": StrategyConfig.BOUNDS,
+            "viability": _viability_for(cfg),
+            "symbols": _client().list_trading_symbols()[:80],
             "history": [
                 {
                     "id": c.id,
@@ -372,22 +400,52 @@ def get_config():
         session.close()
 
 
-@app.post("/api/config")
-def update_config(body: ConfigUpdate):
+@app.post("/api/config/viability")
+def config_viability(body: SimulateRequest):
     status = build_status()
     cfg = StrategyConfig.from_dict({**status["config"], **body.params})
     errors = cfg.validate()
     if errors:
         raise HTTPException(400, detail={"errors": errors})
+    return _viability_for(cfg)
+
+
+@app.post("/api/config")
+def update_config(body: ConfigUpdate):
+    status = build_status()
+    cfg = StrategyConfig.from_dict({**status["config"], **body.params})
+    errors = cfg.validate()
+    # capital <= quote libre
+    try:
+        quote_free = _client().quote_asset_free(cfg.symbol)
+        if cfg.capital_usdt > quote_free:
+            errors.append(f"capital_usdt={cfg.capital_usdt} > quote libre {quote_free}")
+    except Exception:
+        pass
+    # BNB discount nécessite solde BNB
+    if cfg.bnb_fee_discount:
+        try:
+            bnb = _client().balance_free("BNB")
+            if bnb <= 0:
+                errors.append("bnb_fee_discount activé mais solde BNB = 0")
+        except Exception as exc:
+            errors.append(f"impossible de vérifier BNB: {exc}")
+    if errors:
+        raise HTTPException(400, detail={"errors": errors})
     mode = body.mode if body.mode != "apply" else "close_now"
     session = get_session()
     try:
-        # Persister la config candidate
         row = Configuration(symbol=cfg.symbol, params_json=cfg.to_dict(), is_active=False)
         session.add(row)
         session.commit()
         push_command(session, "config", {"params": cfg.to_dict(), "mode": mode})
-        return {"ok": True, "queued": True, "mode": mode, "config": cfg.to_dict()}
+        return {
+            "ok": True,
+            "queued": True,
+            "mode": mode,
+            "config": cfg.to_dict(),
+            "viability": _viability_for(cfg),
+        }
     finally:
         session.close()
 

@@ -1,0 +1,85 @@
+{
+  "ui_http": 200,
+  "comparisons": [
+    {
+      "field": "mark_price",
+      "ui": 62556.44,
+      "source": "Binance ticker",
+      "source_val": 62556.45,
+      "match": true
+    },
+    {
+      "field": "capital.quote_free",
+      "ui": 4999.35190534,
+      "source": "Binance balances USDT",
+      "source_val": 4999.35190534,
+      "match": true
+    },
+    {
+      "field": "capital.base_total",
+      "ui": 9.64e-06,
+      "source": "Binance balances BTC",
+      "source_val": 9.64e-06,
+      "match": true
+    },
+    {
+      "field": "config.step_pct",
+      "ui": 0.3,
+      "source": "API config active",
+      "source_val": 0.3,
+      "match": true
+    },
+    {
+      "field": "config.num_levels",
+      "ui": 16,
+      "source": "API config",
+      "source_val": 16,
+      "match": true
+    },
+    {
+      "field": "viability present",
+      "ui": true,
+      "source": "spec 1bis",
+      "source_val": true,
+      "match": true
+    },
+    {
+      "field": "html has viability-panel",
+      "ui": true,
+      "source": "DOM",
+      "source_val": true,
+      "match": true
+    },
+    {
+      "field": "html has badge-missing",
+      "ui": true,
+      "source": "app.js",
+      "source_val": true,
+      "match": true
+    }
+  ],
+  "all_match": true,
+  "viability": {
+    "notional_per_level": 125.0,
+    "fee_rate": 0.001,
+    "fee_source": "account.commissionRates.taker",
+    "fees_per_roundtrip": 0.25,
+    "gross_per_grid": 0.375,
+    "net_per_grid": 0.125,
+    "ratio_gross_to_fees": 1.5,
+    "grids_to_cycle": 96,
+    "alert_ratio_below_2x": true,
+    "bnb_fee_discount": false,
+    "bnb_balance": 0.0,
+    "bnb_sufficient": true,
+    "formulas": {
+      "notional_per_level": "capital_usdt / (num_levels / 2)",
+      "fees_per_roundtrip": "notional_per_level * fee_rate * 2",
+      "gross_per_grid": "notional_per_level * (step_pct / 100)",
+      "net_per_grid": "gross_per_grid - fees_per_roundtrip",
+      "ratio": "gross_per_grid / fees_per_roundtrip",
+      "grids_to_cycle": "ceil(cycle_trigger_usd / net_per_grid)"
+    },
+    "quote_free": 4999.35190534
+  }
+}
