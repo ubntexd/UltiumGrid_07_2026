@@ -1,0 +1,42 @@
+{
+  "DEFAULT_REST": "https://demo-fapi.binance.com",
+  "DEFAULT_WS": "wss://demo-fstream.binance.com",
+  "client.rest_base": "https://demo-fapi.binance.com",
+  "client.ws_base": "wss://demo-fstream.binance.com",
+  "env_REST": "https://demo-fapi.binance.com",
+  "official_docs_REST": "https://demo-fapi.binance.com",
+  "key_source_required": "https://demo.binance.com \u2192 API Management (cl\u00e9s demo, pas l'ancien testnet)",
+  "steps": [
+    {
+      "step": "ping",
+      "status": 200,
+      "raw": "{}"
+    },
+    {
+      "step": "account",
+      "status": 200,
+      "canTrade": true,
+      "availableBalance": "5000.00000000"
+    },
+    {
+      "step": "order_test",
+      "status": 200,
+      "raw": "{\"orderId\":0,\"symbol\":\"\",\"status\":\"\",\"clientOrderId\":\"\",\"price\":\"\",\"origQty\":\"\",\"executedQty\":\"\",\"timeInForce\":\"\",\"type\":\"\",\"reduceOnly\":false,\"closePosition\":false,\"side\":\"\",\"stopPrice\":\"\",\"priceProtect\":false,\"origType\":\"\",\"updateTime\":0}"
+    },
+    {
+      "step": "order_real",
+      "ok": false,
+      "error": "retry_exhausted symbol=BTCUSDT level=None price=40000.00 qty=0.0020 attempts=2",
+      "outcomes": [
+        "timeout_not_found",
+        "timeout_not_found",
+        "retry_exhausted"
+      ],
+      "last_binance": {
+        "code": -1007,
+        "msg": "Timeout waiting for response from backend server. Send status unknown; execution status unknown."
+      }
+    }
+  ],
+  "diagnosis": "Requ\u00eate et signature VALIDES (order/test HTTP 200), mais le matching engine ne r\u00e9pond pas (order r\u00e9el -1007). Cause document\u00e9e : cl\u00e9s de l'ancien testnet ou compte demo non provisionn\u00e9 pour le trading. Solution non n\u00e9gociable : cr\u00e9er de NOUVELLES cl\u00e9s sur https://demo.binance.com (API Management), les mettre dans .env, relancer ce script."
+}

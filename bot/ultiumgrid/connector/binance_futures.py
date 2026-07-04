@@ -143,18 +143,39 @@ class BinanceFuturesClient:
         params: dict[str, Any] | None = None,
         signed: bool = False,
     ) -> tuple[int, Any, str]:
-        """Retourne (http_status, body_json|None, raw_text). Ne lève pas sur 4xx/5xx métier."""
+        """Retourne (http_status, body_json|None, raw_text). Ne lève pas sur 4xx/5xx métier.
+
+        POST/PUT/DELETE signés : paramètres en body form-urlencoded
+        (exemples officiels Binance docs), pas en query string.
+        GET signés : query string.
+        """
         params_use = dict(params or {})
         if signed:
             params_use = self._sign(params_use)
         url = f"{self.rest_base}{path}"
-        resp = self._session.request(
-            method,
-            url,
-            params=params_use,
-            headers=self._headers(),
-            timeout=self.timeout,
-        )
+        method_u = method.upper()
+        headers = self._headers()
+        if method_u in ("POST", "PUT", "DELETE") and signed:
+            headers = {
+                **headers,
+                "Content-Type": "application/x-www-form-urlencoded",
+                "User-Agent": "ultiumgrid/0.1.0",
+            }
+            resp = self._session.request(
+                method_u,
+                url,
+                data=params_use,
+                headers=headers,
+                timeout=self.timeout,
+            )
+        else:
+            resp = self._session.request(
+                method_u,
+                url,
+                params=params_use,
+                headers=headers,
+                timeout=self.timeout,
+            )
         raw = resp.text
         body: Any = None
         if raw:

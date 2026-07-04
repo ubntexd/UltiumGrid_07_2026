@@ -40,9 +40,28 @@ HTTP 408 {"code":-1007,"msg":"Timeout waiting for response from backend server. 
 
 Preuve : `test_place_verify_cancel_limit_order` → `RetryExhaustedError` après 5 tentatives (réponses `Order does not exist` en vérif post-timeout).
 
-**Hypothèse restante :** clés créées hors du portail demo trading actuel (`demo.binance.com`) — à régénérer côté utilisateur si le matching engine continue de timeout.
+**Diagnostic prouvé (2026-07-04, `docs/proofs/m1_order_diagnosis.json`) :**
 
-**Action :** régénérer des clés API sur l’infra demo, mettre à jour `.env`, relancer `test_place_verify_cancel_limit_order`.
+| Appel | Résultat |
+|---|---|
+| `GET /fapi/v1/ping` | 200 |
+| `GET /fapi/v2/account` | 200 `canTrade=true` |
+| `POST /fapi/v1/order/test` | **200** (signature + format OK, pas de matching engine) |
+| `POST /fapi/v1/order` | **-1007** (matching engine timeout) |
+
+Sources web convergentes (CCXT #26487, go-binance #765, bots demo 2025–2026) :
+- L’ancien Futures Sandbox est déprécié.
+- Les clés **ne sont pas interchangeables** entre ancien testnet et Demo Trading.
+- Un compte peut répondre en lecture sur `demo-fapi` avec d’anciennes clés, mais le **matching engine** reste en `-1007`.
+
+**Solution non négociable (action humaine) :**
+
+1. Aller sur https://demo.binance.com (login GitHub recommandé, pas l’ancien `testnet.binancefuture.com`).
+2. API Management → Create API → copier Key + Secret.
+3. Mettre à jour `.env` (`BINANCE_FUTURES_TESTNET_API_KEY` / `_SECRET`).
+4. Relancer : `python scripts/diagnose_binance_orders.py` puis `pytest ...::test_place_verify_cancel_limit_order`.
+
+Le code utilise déjà `https://demo-fapi.binance.com`, POST en body form-urlencoded, anti-doublon post-`-1007`.
 
 ---
 
