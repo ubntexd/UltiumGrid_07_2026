@@ -428,4 +428,82 @@ Solde base **&lt; min_qty** → pas d’ordre MARKET (`sold_orders=[]`, `noop: t
 
 ### Verdict
 
-Tous les cas listés sont **conformes** après correctif, avec preuve Binance + DB. Seule limite documentée : jambe **vente marché** du panic non exercée live (dust &lt; `min_qty`).
+Tous les cas listés sont **conformes** après correctif, avec preuve Binance + DB. Seule limite documentée dans ce paragraphe : jambe **vente marché** du panic non exercée dans `m_control_buttons.json` (dust &lt; `min_qty`) — **levée** par le test contrôlé §9 ci-dessous.
+
+---
+
+## 9. Panic close — vente réelle (test contrôlé)
+
+> **Position créée artificiellement à des fins de test — ne reflète pas un fonctionnement organique de la grille.**  
+> Ce test valide uniquement la mécanique de vente du panic close (Module 6), pas le moteur de grille (Module 3).
+
+Preuve brute : `docs/proofs/m_panic_real_sell.json`  
+Méthode : `POST /api/panic` (équivalent bouton UI).
+
+### 9.1 Filtres réels utilisés (`GET /api/v3/exchangeInfo?symbol=BTCUSDT`)
+
+| Filtre | Valeur |
+|---|---|
+| `LOT_SIZE.minQty` | `0.00001000` |
+| `LOT_SIZE.stepSize` | `0.00001000` |
+| `NOTIONAL.minNotional` | `5.00000000` (`applyMinToMarket: true`) |
+| Prix ticker au dimensionnement | `62812.00` |
+| Qty BUY artificielle | `0.00010000` (notional estimé ≈ **6.28 USDT** &gt; 5) |
+
+### 9.2 Création de la position artificielle
+
+| Étape | Résultat |
+|---|---|
+| Tag | `purpose=test_artificial_position` / `test_artificial_position=true` |
+| Ordre | MARKET BUY `orderId=…`, `executedQty=0.00010000`, `cummulativeQuoteQty=6.281201` |
+| Prix moyen achat | **62812.01** |
+| BTC free avant | `0.00000964` |
+| BTC free après buy | **`0.00010954`** (au-dessus du minNotional) |
+| Frais buy | commission en BTC convertie ≈ **0.006281 USDT** |
+
+### 9.3 Panic close — avant / après
+
+| Champ | Avant panic | Après panic |
+|---|---|---|
+| `running` | false (bot stoppé avant le buy artificiel) | **false** |
+| `openOrders` | 0 | **0** |
+| BTC free | `0.00010954` | **`0.00000954`** (dust &lt; minQty, cohérent) |
+| `sold_orders` | — | **1 ordre MARKET SELL FILLED** |
+| Cycle DB | aucun `open` | dernier cycle `closed` / **`panic_close`** |
+| `noop` | — | **`false`** |
+| Message | — | `Panic close exécuté` |
+
+**Vente marché réelle :**
+
+| Champ | Valeur |
+|---|---|
+| `orderId` | `45956984843` |
+| `type` / `side` | `MARKET` / `SELL` |
+| `executedQty` | `0.00010000` |
+| `cummulativeQuoteQty` | `6.282113` |
+| Fill price | **62821.13** |
+| Mark au clic | **62821.13** |
+| Slippage vs mark | **0.0 %** |
+| Commission sell | `0.00628211` USDT (`tradeId=254282190`) |
+
+### 9.4 Coût réel du test (Module 7quater)
+
+| Poste | USDT |
+|---|---|
+| Achat (quote) | 6.281201 |
+| Vente (quote) | 6.282113 |
+| Gross PnL | +0.000912 |
+| Frais buy | 0.006281 |
+| Frais sell | 0.006282 |
+| **Net PnL (après frais)** | **≈ −0.01165** |
+| **Total frais** | **≈ 0.01256** |
+
+### 9.5 Effets de bord
+
+- Aucun cycle `open` résiduel (`count=0`).
+- Pas de second cycle créé par le panic.
+- Dust résiduel `0.00000954` BTC = solde antérieur au buy artificiel (non vendable &lt; `minQty`) — **attendu**, pas une position grille.
+
+### Verdict §9
+
+**Conforme.** La jambe vente marché du panic close est prouvée en exécution réelle (`sold_orders` non vide, fill MARKET, solde BTC ramené au dust).

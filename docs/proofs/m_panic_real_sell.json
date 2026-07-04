@@ -1,0 +1,278 @@
+{
+  "timestamp_utc": "2026-07-04T15:14:59.517753+00:00",
+  "WARNING": "Position cr\u00e9\u00e9e artificiellement \u00e0 des fins de test \u2014 ne refl\u00e8te pas un fonctionnement organique de la grille.",
+  "method": "API POST /api/panic (\u00e9quivalent bouton UI)",
+  "filters_real": {
+    "LOT_SIZE": {
+      "filterType": "LOT_SIZE",
+      "minQty": "0.00001000",
+      "maxQty": "9000.00000000",
+      "stepSize": "0.00001000"
+    },
+    "NOTIONAL": {
+      "filterType": "NOTIONAL",
+      "minNotional": "5.00000000",
+      "applyMinToMarket": true,
+      "maxNotional": "9000000.00000000",
+      "applyMaxToMarket": false,
+      "avgPriceMins": 5
+    },
+    "ticker_at_size": "62812.00000000",
+    "artificial_buy_qty": "0.00010000",
+    "estimated_notional_usdt": "6.2812000000000000"
+  },
+  "artificial_buy": {
+    "tag": "test_artificial_position=true",
+    "purpose": "test_artificial_position",
+    "orderId": 45956981938,
+    "clientOrderId": "ugf661a017db084b469b333241ad558acb",
+    "status": "FILLED",
+    "executedQty": "0.00010000",
+    "cummulativeQuoteQty": "6.28120100",
+    "fills": [
+      {
+        "price": "62812.01000000",
+        "qty": "0.00010000",
+        "commission": "0.00000010",
+        "commissionAsset": "BTC",
+        "tradeId": 254282166
+      }
+    ]
+  },
+  "artificial_buy_avg_price": 62812.01,
+  "artificial_buy_qty": 0.0001,
+  "artificial_buy_quote_usdt": 6.281201,
+  "artificial_buy_fees_usdt": 0.006281201,
+  "before_buy": {
+    "label": "before_artificial_buy",
+    "ts": "2026-07-04T15:14:52.595437+00:00",
+    "api_running": {
+      "running": false,
+      "cycle_id": 9,
+      "grid_active": false
+    },
+    "binance_openOrders_count": 0,
+    "binance_openOrders": [],
+    "binance_balances": {
+      "BTC": {
+        "free": "0.00000964",
+        "locked": "0.00000000"
+      },
+      "USDT": {
+        "free": "4999.35190534",
+        "locked": "0.00000000"
+      },
+      "USDC": {
+        "free": "5000.00000000",
+        "locked": "0.00000000"
+      }
+    },
+    "db_cycles": "1|closed|orphan_superseded|0|0\n2|closed|user_stop|0|0\n3|closed|orphan_on_restore|0|0\n5|closed|user_stop|0|0\n6|closed|panic_close|0|0\n7|closed|user_stop|0|0\n8|closed|panic_close|0|0\n9|closed|user_stop|0|0",
+    "db_bot_state": "false|9",
+    "db_bags": "",
+    "db_open_cycle_count": "0"
+  },
+  "after_buy": {
+    "label": "after_artificial_buy",
+    "ts": "2026-07-04T15:14:53.318451+00:00",
+    "api_running": {
+      "running": false,
+      "cycle_id": 9,
+      "grid_active": false
+    },
+    "binance_openOrders_count": 0,
+    "binance_openOrders": [],
+    "binance_balances": {
+      "BTC": {
+        "free": "0.00010954",
+        "locked": "0.00000000"
+      },
+      "USDT": {
+        "free": "4993.07070434",
+        "locked": "0.00000000"
+      },
+      "USDC": {
+        "free": "5000.00000000",
+        "locked": "0.00000000"
+      }
+    },
+    "db_cycles": "1|closed|orphan_superseded|0|0\n2|closed|user_stop|0|0\n3|closed|orphan_on_restore|0|0\n5|closed|user_stop|0|0\n6|closed|panic_close|0|0\n7|closed|user_stop|0|0\n8|closed|panic_close|0|0\n9|closed|user_stop|0|0",
+    "db_bot_state": "false|9",
+    "db_bags": "",
+    "db_open_cycle_count": "0"
+  },
+  "before_panic": {
+    "label": "before_panic",
+    "ts": "2026-07-04T15:14:53.990631+00:00",
+    "api_running": {
+      "running": false,
+      "cycle_id": 9,
+      "grid_active": false
+    },
+    "binance_openOrders_count": 0,
+    "binance_openOrders": [],
+    "binance_balances": {
+      "BTC": {
+        "free": "0.00010954",
+        "locked": "0.00000000"
+      },
+      "USDT": {
+        "free": "4993.07070434",
+        "locked": "0.00000000"
+      },
+      "USDC": {
+        "free": "5000.00000000",
+        "locked": "0.00000000"
+      }
+    },
+    "db_cycles": "1|closed|orphan_superseded|0|0\n2|closed|user_stop|0|0\n3|closed|orphan_on_restore|0|0\n5|closed|user_stop|0|0\n6|closed|panic_close|0|0\n7|closed|user_stop|0|0\n8|closed|panic_close|0|0\n9|closed|user_stop|0|0",
+    "db_bot_state": "false|9",
+    "db_bags": "",
+    "db_open_cycle_count": "0"
+  },
+  "mark_at_panic_click": 62821.13,
+  "panic_last_command": {
+    "name": "panic",
+    "result": {
+      "sold_orders": [
+        {
+          "symbol": "BTCUSDT",
+          "orderId": 45956984843,
+          "orderListId": -1,
+          "clientOrderId": "ug3267c936f1024f7797db990fb5f81eb1",
+          "transactTime": 1783178094921,
+          "price": "0.00000000",
+          "origQty": "0.00010000",
+          "executedQty": "0.00010000",
+          "origQuoteOrderQty": "0.00000000",
+          "cummulativeQuoteQty": "6.28211300",
+          "status": "FILLED",
+          "timeInForce": "GTC",
+          "type": "MARKET",
+          "side": "SELL",
+          "workingTime": 1783178094921,
+          "fills": [
+            {
+              "price": "62821.13000000",
+              "qty": "0.00010000",
+              "commission": "0.00628211",
+              "commissionAsset": "USDT",
+              "tradeId": 254282190
+            }
+          ],
+          "selfTradePreventionMode": "EXPIRE_MAKER"
+        }
+      ],
+      "bags": [],
+      "base_before": 0.00010954,
+      "base_after": 0.00010954,
+      "at": "2026-07-04T15:14:54.925111+00:00",
+      "noop": false,
+      "message": "Panic close ex\u00e9cut\u00e9"
+    },
+    "ts": "2026-07-04T15:14:54.934115+00:00"
+  },
+  "after_panic": {
+    "label": "after_panic",
+    "ts": "2026-07-04T15:14:58.832410+00:00",
+    "api_running": {
+      "running": false,
+      "cycle_id": 9,
+      "grid_active": false
+    },
+    "binance_openOrders_count": 0,
+    "binance_openOrders": [],
+    "binance_balances": {
+      "BTC": {
+        "free": "0.00000954",
+        "locked": "0.00000000"
+      },
+      "USDT": {
+        "free": "4999.34653523",
+        "locked": "0.00000000"
+      },
+      "USDC": {
+        "free": "5000.00000000",
+        "locked": "0.00000000"
+      }
+    },
+    "db_cycles": "1|closed|orphan_superseded|0|0\n2|closed|user_stop|0|0\n3|closed|orphan_on_restore|0|0\n5|closed|user_stop|0|0\n6|closed|panic_close|0|0\n7|closed|user_stop|0|0\n8|closed|panic_close|0|0\n9|closed|panic_close|0|0",
+    "db_bot_state": "false|9",
+    "db_bags": "",
+    "db_open_cycle_count": "0"
+  },
+  "mark_after_panic": 62825.41,
+  "sell_details": [
+    {
+      "order": {
+        "symbol": "BTCUSDT",
+        "orderId": 45956984843,
+        "orderListId": -1,
+        "clientOrderId": "ug3267c936f1024f7797db990fb5f81eb1",
+        "transactTime": 1783178094921,
+        "price": "0.00000000",
+        "origQty": "0.00010000",
+        "executedQty": "0.00010000",
+        "origQuoteOrderQty": "0.00000000",
+        "cummulativeQuoteQty": "6.28211300",
+        "status": "FILLED",
+        "timeInForce": "GTC",
+        "type": "MARKET",
+        "side": "SELL",
+        "workingTime": 1783178094921,
+        "fills": [
+          {
+            "price": "62821.13000000",
+            "qty": "0.00010000",
+            "commission": "0.00628211",
+            "commissionAsset": "USDT",
+            "tradeId": 254282190
+          }
+        ],
+        "selfTradePreventionMode": "EXPIRE_MAKER"
+      },
+      "myTrades": [
+        {
+          "symbol": "BTCUSDT",
+          "id": 254282190,
+          "orderId": 45956984843,
+          "orderListId": -1,
+          "price": "62821.13000000",
+          "qty": "0.00010000",
+          "quoteQty": "6.28211300",
+          "commission": "0.00628211",
+          "commissionAsset": "USDT",
+          "time": 1783178094921,
+          "isBuyer": false,
+          "isMaker": false,
+          "isBestMatch": true
+        }
+      ]
+    }
+  ],
+  "sell_avg_price": 62821.13,
+  "sell_qty": 0.0001,
+  "sell_quote_usdt": 6.282113,
+  "sell_fees_usdt": 0.00628211,
+  "slippage_vs_mark_pct": 0.0,
+  "cost_of_test": {
+    "buy_quote_usdt": 6.281201,
+    "sell_quote_usdt": 6.282113,
+    "gross_pnl_usdt": 0.0009119999999995798,
+    "fees_buy_usdt": 0.006281201,
+    "fees_sell_usdt": 0.00628211,
+    "net_pnl_usdt": -0.01165131100000042,
+    "total_fees_usdt": 0.012563311
+  },
+  "checks": {
+    "sold_orders_non_empty": true,
+    "btc_after_free": 9.54e-06,
+    "btc_after_locked": 0.0,
+    "btc_near_zero": true,
+    "open_orders_after": 0,
+    "open_cycles_after": "0",
+    "panic_close_in_db": true,
+    "running_after": false,
+    "noop": false
+  }
+}
