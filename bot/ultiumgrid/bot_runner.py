@@ -128,6 +128,16 @@ class BotRunner:
         self.session.refresh(row)
         return row
 
+    def _store_command_result(self, name: str, result: dict[str, Any]) -> None:
+        row = self.session.query(BotState).filter(BotState.key == "last_command").first()
+        payload = {"name": name, "result": result, "ts": utcnow().isoformat()}
+        if not row:
+            self.session.add(BotState(key="last_command", value_json=payload))
+        else:
+            row.value_json = payload
+            row.updated_at = utcnow()
+        self.session.commit()
+
     def save_state(self) -> None:
         payload = {
             "running": self.running,
@@ -233,20 +243,103 @@ class BotRunner:
                 logger.warning("Untracked live order kept as-is: %s", o["orderId"])
 
     def start(self) -> dict[str, Any]:
-        if self.guards.state.panic or self.guards.state.circuit_breaker_triggered:
-            return {"ok": False, "error": "Bot bloqué par garde-fou"}
+        if self.guards.state.circuit_breaker_triggered:
+            return {"ok": False, "error": "Bot bloqué par circuit breaker"}
+        # Panic précédent : autoriser un redémarrage explicite (clear du flag)
+        if self.guards.state.panic:
+            self.guards.state.panic = False
+        if self.running and self.engine.state.active and self.cycle_id:
+            self.save_state()
+            return {
+                "ok": True,
+                "cycle_id": self.cycle_id,
+                "already_running": True,
+                "message": "Cycle déjà actif — aucun nouveau cycle créé",
+            }
         self.running = True
         # Toujours réconcilier les cycles open en DB avant d'en créer un nouveau
         self._ensure_single_open_cycle(reason="orphan_on_start")
         if not self.engine.state.active:
             self._open_new_cycle()
         self.save_state()
-        return {"ok": True, "cycle_id": self.cycle_id}
+        return {
+            "ok": True,
+            "cycle_id": self.cycle_id,
+            "already_running": False,
+            "message": "Démarré",
+        }
 
     def stop(self) -> dict[str, Any]:
+        """Arrêt propre : annule les ordres ouverts, ferme le cycle en DB, ne vend PAS la position."""
         self.running = False
+        cancelled = 0
+        if self.engine.state.active:
+            before_ids = [
+                lv.order_id for lv in self.engine.state.levels if lv.order_id and lv.status == "open"
+            ]
+            try:
+                self.engine.cancel_all_grid_orders()
+                cancelled = len(before_ids)
+            except Exception as exc:
+                logger.error("stop cancel_all failed: %s", exc)
+        closed_cycle_id = self.cycle_id
+        if self.cycle_id:
+            cycle = self.session.get(Cycle, self.cycle_id)
+            if cycle and cycle.status == "open":
+                cycle.status = "closed"
+                cycle.closed_at = utcnow()
+                cycle.close_reason = "user_stop"
+                cycle.grid_profit = self.engine.state.grid_profit
+                cycle.floating_profit = self.engine.state.floating_profit
+                cycle.gross_pnl = self.engine.state.gross_pnl
+                fees = (
+                    self.session.query(FeePaid)
+                    .filter(FeePaid.cycle_id == self.cycle_id)
+                    .all()
+                )
+                cycle.net_pnl = float(cycle.gross_pnl) - sum(f.commission_usdt for f in fees)
+                self.session.commit()
+        self.engine.state.active = False
+        self._out_of_range_since = None
+        self._stuck_sell_since.clear()
         self.save_state()
-        return {"ok": True}
+        return {
+            "ok": True,
+            "cancelled_orders": cancelled,
+            "cycle_closed": closed_cycle_id,
+            "message": "Arrêté — ordres annulés, position conservée",
+        }
+
+    def panic(self) -> dict[str, Any]:
+        """Panic : annule ordres, vend 100 % du base libre réel, clôture cycle + sacs."""
+        result = self.guards.panic_close(self.bags, self.engine)
+        self.running = False
+        if self.cycle_id:
+            self._close_cycle_db(
+                {
+                    "grid_profit": self.engine.state.grid_profit,
+                    "floating_profit": self.engine.state.floating_profit,
+                    "gross_pnl": self.engine.state.gross_pnl,
+                },
+                "panic_close",
+            )
+        # No-op propre si rien à vendre (solde < min_qty, pas de sacs)
+        sold = result.get("sold_orders") or []
+        bags = result.get("bags") or []
+        base_before = float(result.get("base_before") or 0)
+        try:
+            min_qty = float(self.client.get_symbol_filters(self.cfg.symbol).min_qty)
+        except Exception:
+            min_qty = 0.0
+        if not sold and not bags and base_before < min_qty:
+            self.guards.state.panic = False
+            result["noop"] = True
+            result["message"] = "Rien à fermer"
+        else:
+            result["noop"] = False
+            result["message"] = "Panic close exécuté"
+        self.save_state()
+        return result
 
     def _ensure_single_open_cycle(self, *, reason: str = "orphan_superseded") -> None:
         """Ferme tout cycle open du symbole sauf celui à conserver (cycle_id courant ou le plus récent)."""
@@ -869,13 +962,14 @@ def main_loop(database_url: str, poll_seconds: float = 5.0) -> None:
                 payload = cmd.get("payload") or {}
                 logger.info("Command received: %s", name)
                 if name == "start":
-                    bot.start()
+                    result = bot.start()
+                    bot._store_command_result("start", result)
                 elif name == "stop":
-                    bot.stop()
+                    result = bot.stop()
+                    bot._store_command_result("stop", result)
                 elif name == "panic":
-                    bot.guards.panic_close(bot.bags, bot.engine)
-                    bot.running = False
-                    bot.save_state()
+                    result = bot.panic()
+                    bot._store_command_result("panic", result)
                 elif name == "config":
                     cfg = StrategyConfig.from_dict(payload.get("params") or {})
                     bot.request_config_change(cfg, payload.get("mode") or "wait_cycle")

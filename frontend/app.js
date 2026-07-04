@@ -337,19 +337,38 @@ document.querySelectorAll(".tabs button").forEach((b) => {
   b.addEventListener("click", () => switchTab(b.dataset.tab));
 });
 
-document.getElementById("btn-start").onclick = async () => {
-  await api("/api/start", { method: "POST" });
-  refreshRunning();
-};
-document.getElementById("btn-stop").onclick = async () => {
-  await api("/api/stop", { method: "POST" });
-  refreshRunning();
-};
-document.getElementById("btn-panic").onclick = async () => {
-  if (!confirm("Panic close : clôturer grille + sacs ?")) return;
-  await api("/api/panic", { method: "POST" });
-  refreshRunning();
-};
+async function controlAction(path, { confirmMsg } = {}) {
+  if (confirmMsg && !confirm(confirmMsg)) return;
+  const banner = document.getElementById("margin-banner");
+  try {
+    const res = await api(path, { method: "POST" });
+    if (banner && res.message) {
+      banner.dataset.prev = banner.innerHTML;
+      banner.innerHTML = `<span class="${res.already_running ? "neg" : "pos"}">${res.message}</span>`;
+    }
+    // Attendre le traitement bot (poll ~5s) — ignorer un last_command antérieur
+    const t0 = Date.now();
+    for (let i = 0; i < 10; i++) {
+      await new Promise((r) => setTimeout(r, 800));
+      const last = await api("/api/last_command").catch(() => null);
+      const ts = last?.ts ? Date.parse(last.ts) : 0;
+      if (last?.name && path.endsWith(last.name) && last.result && ts >= t0 - 500) {
+        if (banner && last.result.message) {
+          banner.innerHTML = `<span class="${last.result.already_running || last.result.noop ? "neg" : "pos"}">${last.result.message}</span>`;
+        }
+        break;
+      }
+    }
+  } catch (e) {
+    if (banner) banner.innerHTML = `<span class="neg">Erreur: ${e.message || e.error || e}</span>`;
+  }
+  await refreshRunning();
+}
+
+document.getElementById("btn-start").onclick = () => controlAction("/api/start");
+document.getElementById("btn-stop").onclick = () => controlAction("/api/stop");
+document.getElementById("btn-panic").onclick = () =>
+  controlAction("/api/panic", { confirmMsg: "Panic close : vendre tout le solde base + clôturer sacs ?" });
 
 function renderRunning(s) {
   const g = s.grid || {};

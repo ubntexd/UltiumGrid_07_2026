@@ -355,3 +355,77 @@ La « marche verticale » est un **artefact d’affichage** : Chart.js utilise u
 **Aucun** correctif de données ni de logique d’insertion requis pour cette fenêtre. Historique laissé intact (trou = absence d’observation, pas des stale inventés).
 
 Note pour lecture future du graphique : un trou temporel long entre deux `price_ticks` se lit comme une discontinuité d’observation, pas comme un mouvement instantané du marché.
+
+---
+
+## 8. Boutons de contrôle (Start / Stop / Panic Close)
+
+Preuve complète : `docs/proofs/m_control_buttons.json` (2026-07-04T14:49Z).
+
+### Écarts initiaux (avant correctif)
+
+| Bouton | Problème prouvé |
+|---|---|
+| **Stop** | Ne faisait que `running=False` — **n’annulait pas** les ordres, **ne fermait pas** le cycle en DB |
+| **Panic** | Vendait le free base mais **ne fermait pas** le cycle (`close_reason` absent) ; `panic=True` bloquait tout Start ultérieur même en no-op |
+| **Start ×2** | Pas de second cycle (OK grâce à `active`), mais **aucun message UI** clair |
+
+### Correctifs
+
+- `stop()` : `cancel_all_grid_orders` (+ fallback par ordre + résidus `openOrders`), cycle `closed` / `user_stop`, **position conservée**
+- `panic()` : annule ordres, vend si `free >= min_qty`, clôture cycle `panic_close` + sacs ; **noop** si rien à vendre (`panic` flag non bloquant)
+- `start()` : si déjà `running+active` → `{already_running: true, message: "..."}` sans nouveau cycle
+- API : messages + `GET /api/last_command` ; UI affiche le retour
+
+### Résultats avant/après (re-test)
+
+#### Start depuis arrêté — **conforme**
+
+| | Avant | Après |
+|---|---|---|
+| `running` | false | **true** |
+| `openOrders` | 0 | **8** BUY |
+| cycle DB | aucun open | **id=7 open** |
+| last_command | — | `Démarré`, `cycle_id=7` |
+
+#### Start déjà actif — **conforme**
+
+| | Avant | Après |
+|---|---|---|
+| `cycle_id` | 7 | **7** (inchangé) |
+| cycles open | 1 | **1** |
+| `openOrders` | 8 | 8 |
+| HTTP | — | `already_running: true`, message anti-doublon |
+
+#### Stop avec ordres — **conforme**
+
+| | Avant | Après |
+|---|---|---|
+| `running` | true | **false** |
+| `openOrders` | 8 | **0** |
+| BTC free | 0.00000964 | **0.00000964** (pas de vente) |
+| cycle | 7 open | **7 closed / user_stop** |
+
+#### Panic avec ordres ouverts — **conforme** (vente marché : dust)
+
+| | Avant | Après |
+|---|---|---|
+| `running` | true | **false** |
+| `openOrders` | 8 | **0** |
+| cycle | 8 open | **8 closed / panic_close** |
+| BTC | 0.00000964 | 0.00000964 |
+
+Solde base **&lt; min_qty** → pas d’ordre MARKET (`sold_orders=[]`, `noop: true` pour la jambe vente). Annulation des ordres + clôture cycle prouvées. Vente 100 % d’une position **≥ min_qty** : chemin code `panic_close` (lecture `balances` juste avant) — **non rejoué live** faute de position suffisante sur le compte demo.
+
+#### Panic no-op — **conforme**
+
+| | Avant | Après |
+|---|---|---|
+| `running` | false | false |
+| `openOrders` | 0 | 0 |
+| HTTP | ok | ok, pas d’exception |
+| last_command | — | `noop: true`, `Rien à fermer` |
+
+### Verdict
+
+Tous les cas listés sont **conformes** après correctif, avec preuve Binance + DB. Seule limite documentée : jambe **vente marché** du panic non exercée live (dust &lt; `min_qty`).

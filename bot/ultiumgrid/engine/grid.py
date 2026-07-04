@@ -170,7 +170,23 @@ class GridEngine:
         try:
             self.client.cancel_all_orders(symbol)
         except Exception as exc:
-            logger.warning("cancel_all_orders: %s", exc)
+            logger.warning("cancel_all_orders: %s — fallback per-order", exc)
+            for level in self.state.levels:
+                if level.order_id and level.status == "open":
+                    try:
+                        self.client.cancel_order(symbol, level.order_id)
+                    except Exception as exc2:
+                        logger.warning("cancel order %s: %s", level.order_id, exc2)
+        # Vérifier openOrders réel et annuler tout résidu
+        try:
+            live = self.client.open_orders(symbol, force=True)
+            for o in live:
+                try:
+                    self.client.cancel_order(symbol, int(o["orderId"]))
+                except Exception as exc3:
+                    logger.warning("cancel residual %s: %s", o.get("orderId"), exc3)
+        except Exception as exc:
+            logger.warning("open_orders after cancel: %s", exc)
         for level in self.state.levels:
             if level.status == "open":
                 level.status = "cancelled"

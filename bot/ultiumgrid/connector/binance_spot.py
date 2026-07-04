@@ -700,6 +700,8 @@ class BinanceSpotClient:
             {"symbol": symbol, "orderId": order_id},
             signed=True,
         )
+        self._open_orders_cache.pop(symbol, None)
+        self._open_orders_cache.pop("*", None)
         code = body.get("code") if isinstance(body, dict) else None
         if code == -1008:
             logger.critical("ANOMALIE HAUTE PRIORITÉ: -1008 sur cancel_order orderId=%s", order_id)
@@ -733,11 +735,17 @@ class BinanceSpotClient:
         status, body, raw = self._raw_request(
             "DELETE", "/api/v3/openOrders", {"symbol": symbol}, signed=True
         )
+        # Invalider le cache openOrders
+        self._open_orders_cache.pop(symbol, None)
+        self._open_orders_cache.pop("*", None)
         code = body.get("code") if isinstance(body, dict) else None
         if code == -1008:
             logger.critical("ANOMALIE HAUTE PRIORITÉ: -1008 sur cancel_all_orders %s", symbol)
         if 200 <= status < 300:
             return body
+        # -2011 = aucun ordre à annuler → succès logique
+        if code == -2011:
+            return []
         raise requests.HTTPError(f"{status} {raw}")
 
     async def stream_mark_price(

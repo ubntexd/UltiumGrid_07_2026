@@ -278,8 +278,20 @@ def running():
 def start():
     session = get_session()
     try:
+        state = read_main_state(session)
+        already = bool(state.get("running")) and bool((state.get("grid") or {}).get("active"))
         push_command(session, "start")
-        return {"ok": True, "queued": "start"}
+        return {
+            "ok": True,
+            "queued": "start",
+            "already_running": already,
+            "cycle_id": state.get("cycle_id"),
+            "message": (
+                "Cycle déjà actif — commande ignorée côté moteur (pas de second cycle)"
+                if already
+                else "Démarrage demandé"
+            ),
+        }
     finally:
         session.close()
 
@@ -289,7 +301,11 @@ def stop():
     session = get_session()
     try:
         push_command(session, "stop")
-        return {"ok": True, "queued": "stop"}
+        return {
+            "ok": True,
+            "queued": "stop",
+            "message": "Arrêt demandé — annulation des ordres, position conservée",
+        }
     finally:
         session.close()
 
@@ -299,7 +315,23 @@ def panic():
     session = get_session()
     try:
         push_command(session, "panic")
-        return {"ok": True, "queued": "panic"}
+        return {
+            "ok": True,
+            "queued": "panic",
+            "message": "Panic close demandé — vente du solde base réel",
+        }
+    finally:
+        session.close()
+
+
+@app.get("/api/last_command")
+def last_command():
+    session = get_session()
+    try:
+        from ultiumgrid.db.models import BotState
+
+        row = session.query(BotState).filter(BotState.key == "last_command").first()
+        return row.value_json if row else {"name": None, "result": None}
     finally:
         session.close()
 

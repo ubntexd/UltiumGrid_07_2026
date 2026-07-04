@@ -1,0 +1,805 @@
+{
+  "timestamp_utc": "2026-07-04T14:49:29.982834+00:00",
+  "cases": [
+    {
+      "case": "start_from_stopped",
+      "description": "Start depuis arr\u00eat\u00e9",
+      "http_response": {
+        "ok": true,
+        "queued": "start",
+        "already_running": false,
+        "cycle_id": 6,
+        "message": "D\u00e9marrage demand\u00e9"
+      },
+      "last_command": {
+        "name": "start",
+        "result": {
+          "ok": true,
+          "cycle_id": 7,
+          "already_running": false,
+          "message": "D\u00e9marr\u00e9"
+        },
+        "ts": "2026-07-04T14:49:39.335432+00:00"
+      },
+      "before": {
+        "label": "start_from_stopped_before",
+        "ts": "2026-07-04T14:49:37.656602+00:00",
+        "api_running": {
+          "running": false,
+          "cycle_id": 6,
+          "grid_active": false,
+          "open_levels": 0
+        },
+        "binance_openOrders": [],
+        "binance_openOrders_count": 0,
+        "binance_balances": {
+          "BTC": {
+            "free": "0.00000964",
+            "locked": "0.00000000"
+          },
+          "USDT": {
+            "free": "4999.35190534",
+            "locked": "0.00000000"
+          },
+          "USDC": {
+            "free": "5000.00000000",
+            "locked": "0.00000000"
+          }
+        },
+        "db_cycles": "1|closed|orphan_superseded\n2|closed|user_stop\n3|closed|orphan_on_restore\n5|closed|user_stop\n6|closed|panic_close",
+        "db_bot_state": "main|false|6",
+        "db_bags": ""
+      },
+      "after": {
+        "label": "start_from_stopped_after",
+        "ts": "2026-07-04T14:49:41.721735+00:00",
+        "api_running": {
+          "running": true,
+          "cycle_id": 7,
+          "grid_active": true,
+          "open_levels": 8
+        },
+        "binance_openOrders": [
+          {
+            "orderId": 45952770578,
+            "side": "BUY",
+            "price": "61261.88000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770579,
+            "side": "BUY",
+            "price": "61449.90000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770580,
+            "side": "BUY",
+            "price": "61637.92000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770581,
+            "side": "BUY",
+            "price": "61825.93000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770582,
+            "side": "BUY",
+            "price": "62013.95000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770583,
+            "side": "BUY",
+            "price": "62201.96000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770584,
+            "side": "BUY",
+            "price": "62389.98000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770585,
+            "side": "BUY",
+            "price": "62578.00000000",
+            "status": "NEW"
+          }
+        ],
+        "binance_openOrders_count": 8,
+        "binance_balances": {
+          "BTC": {
+            "free": "0.00000964",
+            "locked": "0.00000000"
+          },
+          "USDT": {
+            "free": "4013.58646054",
+            "locked": "985.76544480"
+          },
+          "USDC": {
+            "free": "5000.00000000",
+            "locked": "0.00000000"
+          }
+        },
+        "db_cycles": "1|closed|orphan_superseded\n2|closed|user_stop\n3|closed|orphan_on_restore\n5|closed|user_stop\n6|closed|panic_close\n7|open|",
+        "db_bot_state": "main|true|7",
+        "db_bags": ""
+      }
+    },
+    {
+      "case": "start_already_running",
+      "description": "Start d\u00e9j\u00e0 actif",
+      "http_response": {
+        "ok": true,
+        "queued": "start",
+        "already_running": true,
+        "cycle_id": 7,
+        "message": "Cycle d\u00e9j\u00e0 actif \u2014 commande ignor\u00e9e c\u00f4t\u00e9 moteur (pas de second cycle)"
+      },
+      "last_command": {
+        "name": "start",
+        "result": {
+          "ok": true,
+          "cycle_id": 7,
+          "already_running": false,
+          "message": "D\u00e9marr\u00e9"
+        },
+        "ts": "2026-07-04T14:49:39.335432+00:00"
+      },
+      "before": {
+        "label": "start_already_running_before",
+        "ts": "2026-07-04T14:49:42.221484+00:00",
+        "api_running": {
+          "running": true,
+          "cycle_id": 7,
+          "grid_active": true,
+          "open_levels": 8
+        },
+        "binance_openOrders": [
+          {
+            "orderId": 45952770578,
+            "side": "BUY",
+            "price": "61261.88000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770579,
+            "side": "BUY",
+            "price": "61449.90000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770580,
+            "side": "BUY",
+            "price": "61637.92000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770581,
+            "side": "BUY",
+            "price": "61825.93000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770582,
+            "side": "BUY",
+            "price": "62013.95000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770583,
+            "side": "BUY",
+            "price": "62201.96000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770584,
+            "side": "BUY",
+            "price": "62389.98000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770585,
+            "side": "BUY",
+            "price": "62578.00000000",
+            "status": "NEW"
+          }
+        ],
+        "binance_openOrders_count": 8,
+        "binance_balances": {
+          "BTC": {
+            "free": "0.00000964",
+            "locked": "0.00000000"
+          },
+          "USDT": {
+            "free": "4013.58646054",
+            "locked": "985.76544480"
+          },
+          "USDC": {
+            "free": "5000.00000000",
+            "locked": "0.00000000"
+          }
+        },
+        "db_cycles": "1|closed|orphan_superseded\n2|closed|user_stop\n3|closed|orphan_on_restore\n5|closed|user_stop\n6|closed|panic_close\n7|open|",
+        "db_bot_state": "main|true|7",
+        "db_bags": ""
+      },
+      "after": {
+        "label": "start_already_running_after",
+        "ts": "2026-07-04T14:49:44.702368+00:00",
+        "api_running": {
+          "running": true,
+          "cycle_id": 7,
+          "grid_active": true,
+          "open_levels": 8
+        },
+        "binance_openOrders": [
+          {
+            "orderId": 45952770578,
+            "side": "BUY",
+            "price": "61261.88000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770579,
+            "side": "BUY",
+            "price": "61449.90000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770580,
+            "side": "BUY",
+            "price": "61637.92000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770581,
+            "side": "BUY",
+            "price": "61825.93000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770582,
+            "side": "BUY",
+            "price": "62013.95000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770583,
+            "side": "BUY",
+            "price": "62201.96000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770584,
+            "side": "BUY",
+            "price": "62389.98000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770585,
+            "side": "BUY",
+            "price": "62578.00000000",
+            "status": "NEW"
+          }
+        ],
+        "binance_openOrders_count": 8,
+        "binance_balances": {
+          "BTC": {
+            "free": "0.00000964",
+            "locked": "0.00000000"
+          },
+          "USDT": {
+            "free": "4013.58646054",
+            "locked": "985.76544480"
+          },
+          "USDC": {
+            "free": "5000.00000000",
+            "locked": "0.00000000"
+          }
+        },
+        "db_cycles": "1|closed|orphan_superseded\n2|closed|user_stop\n3|closed|orphan_on_restore\n5|closed|user_stop\n6|closed|panic_close\n7|open|",
+        "db_bot_state": "main|true|7",
+        "db_bags": ""
+      }
+    },
+    {
+      "case": "stop_active",
+      "description": "Stop avec ordres",
+      "http_response": {
+        "ok": true,
+        "queued": "stop",
+        "message": "Arr\u00eat demand\u00e9 \u2014 annulation des ordres, position conserv\u00e9e"
+      },
+      "last_command": {
+        "name": "stop",
+        "result": {
+          "ok": true,
+          "cancelled_orders": 8,
+          "cycle_closed": 7,
+          "message": "Arr\u00eat\u00e9 \u2014 ordres annul\u00e9s, position conserv\u00e9e"
+        },
+        "ts": "2026-07-04T14:49:49.425951+00:00"
+      },
+      "before": {
+        "label": "stop_active_before",
+        "ts": "2026-07-04T14:49:45.164483+00:00",
+        "api_running": {
+          "running": true,
+          "cycle_id": 7,
+          "grid_active": true,
+          "open_levels": 8
+        },
+        "binance_openOrders": [
+          {
+            "orderId": 45952770578,
+            "side": "BUY",
+            "price": "61261.88000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770579,
+            "side": "BUY",
+            "price": "61449.90000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770580,
+            "side": "BUY",
+            "price": "61637.92000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770581,
+            "side": "BUY",
+            "price": "61825.93000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770582,
+            "side": "BUY",
+            "price": "62013.95000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770583,
+            "side": "BUY",
+            "price": "62201.96000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770584,
+            "side": "BUY",
+            "price": "62389.98000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952770585,
+            "side": "BUY",
+            "price": "62578.00000000",
+            "status": "NEW"
+          }
+        ],
+        "binance_openOrders_count": 8,
+        "binance_balances": {
+          "BTC": {
+            "free": "0.00000964",
+            "locked": "0.00000000"
+          },
+          "USDT": {
+            "free": "4013.58646054",
+            "locked": "985.76544480"
+          },
+          "USDC": {
+            "free": "5000.00000000",
+            "locked": "0.00000000"
+          }
+        },
+        "db_cycles": "1|closed|orphan_superseded\n2|closed|user_stop\n3|closed|orphan_on_restore\n5|closed|user_stop\n6|closed|panic_close\n7|open|",
+        "db_bot_state": "main|true|7",
+        "db_bags": ""
+      },
+      "after": {
+        "label": "stop_active_after",
+        "ts": "2026-07-04T14:49:51.687332+00:00",
+        "api_running": {
+          "running": false,
+          "cycle_id": 7,
+          "grid_active": false,
+          "open_levels": 0
+        },
+        "binance_openOrders": [],
+        "binance_openOrders_count": 0,
+        "binance_balances": {
+          "BTC": {
+            "free": "0.00000964",
+            "locked": "0.00000000"
+          },
+          "USDT": {
+            "free": "4999.35190534",
+            "locked": "0.00000000"
+          },
+          "USDC": {
+            "free": "5000.00000000",
+            "locked": "0.00000000"
+          }
+        },
+        "db_cycles": "1|closed|orphan_superseded\n2|closed|user_stop\n3|closed|orphan_on_restore\n5|closed|user_stop\n6|closed|panic_close\n7|closed|user_stop",
+        "db_bot_state": "main|false|7",
+        "db_bags": ""
+      }
+    },
+    {
+      "case": "start_before_panic",
+      "description": "Start avant panic",
+      "http_response": {
+        "ok": true,
+        "queued": "start",
+        "already_running": false,
+        "cycle_id": 7,
+        "message": "D\u00e9marrage demand\u00e9"
+      },
+      "last_command": {
+        "name": "start",
+        "result": {
+          "ok": true,
+          "cycle_id": 8,
+          "already_running": false,
+          "message": "D\u00e9marr\u00e9"
+        },
+        "ts": "2026-07-04T14:49:54.564745+00:00"
+      },
+      "before": {
+        "label": "start_before_panic_before",
+        "ts": "2026-07-04T14:49:52.194812+00:00",
+        "api_running": {
+          "running": false,
+          "cycle_id": 7,
+          "grid_active": false,
+          "open_levels": 0
+        },
+        "binance_openOrders": [],
+        "binance_openOrders_count": 0,
+        "binance_balances": {
+          "BTC": {
+            "free": "0.00000964",
+            "locked": "0.00000000"
+          },
+          "USDT": {
+            "free": "4999.35190534",
+            "locked": "0.00000000"
+          },
+          "USDC": {
+            "free": "5000.00000000",
+            "locked": "0.00000000"
+          }
+        },
+        "db_cycles": "1|closed|orphan_superseded\n2|closed|user_stop\n3|closed|orphan_on_restore\n5|closed|user_stop\n6|closed|panic_close\n7|closed|user_stop",
+        "db_bot_state": "main|false|7",
+        "db_bags": ""
+      },
+      "after": {
+        "label": "start_before_panic_after",
+        "ts": "2026-07-04T14:49:56.735629+00:00",
+        "api_running": {
+          "running": true,
+          "cycle_id": 8,
+          "grid_active": true,
+          "open_levels": 8
+        },
+        "binance_openOrders": [
+          {
+            "orderId": 45952811990,
+            "side": "BUY",
+            "price": "61254.06000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952811991,
+            "side": "BUY",
+            "price": "61442.06000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952811992,
+            "side": "BUY",
+            "price": "61630.05000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952811993,
+            "side": "BUY",
+            "price": "61818.04000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952811994,
+            "side": "BUY",
+            "price": "62006.03000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952811995,
+            "side": "BUY",
+            "price": "62194.02000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952811996,
+            "side": "BUY",
+            "price": "62382.02000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952811997,
+            "side": "BUY",
+            "price": "62570.01000000",
+            "status": "NEW"
+          }
+        ],
+        "binance_openOrders_count": 8,
+        "binance_balances": {
+          "BTC": {
+            "free": "0.00000964",
+            "locked": "0.00000000"
+          },
+          "USDT": {
+            "free": "4013.71228824",
+            "locked": "985.63961710"
+          },
+          "USDC": {
+            "free": "5000.00000000",
+            "locked": "0.00000000"
+          }
+        },
+        "db_cycles": "1|closed|orphan_superseded\n2|closed|user_stop\n3|closed|orphan_on_restore\n5|closed|user_stop\n6|closed|panic_close\n7|closed|user_stop\n8|open|",
+        "db_bot_state": "main|true|8",
+        "db_bags": ""
+      }
+    },
+    {
+      "case": "panic_with_orders",
+      "description": "Panic avec ordres ouverts",
+      "http_response": {
+        "ok": true,
+        "queued": "panic",
+        "message": "Panic close demand\u00e9 \u2014 vente du solde base r\u00e9el"
+      },
+      "last_command": {
+        "name": "panic",
+        "result": {
+          "sold_orders": [],
+          "bags": [],
+          "base_before": 9.64e-06,
+          "base_after": 9.64e-06,
+          "at": "2026-07-04T14:49:59.645719+00:00",
+          "noop": true,
+          "message": "Rien \u00e0 fermer"
+        },
+        "ts": "2026-07-04T14:49:59.655208+00:00"
+      },
+      "before": {
+        "label": "panic_with_orders_before",
+        "ts": "2026-07-04T14:49:57.266701+00:00",
+        "api_running": {
+          "running": true,
+          "cycle_id": 8,
+          "grid_active": true,
+          "open_levels": 8
+        },
+        "binance_openOrders": [
+          {
+            "orderId": 45952811990,
+            "side": "BUY",
+            "price": "61254.06000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952811991,
+            "side": "BUY",
+            "price": "61442.06000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952811992,
+            "side": "BUY",
+            "price": "61630.05000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952811993,
+            "side": "BUY",
+            "price": "61818.04000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952811994,
+            "side": "BUY",
+            "price": "62006.03000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952811995,
+            "side": "BUY",
+            "price": "62194.02000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952811996,
+            "side": "BUY",
+            "price": "62382.02000000",
+            "status": "NEW"
+          },
+          {
+            "orderId": 45952811997,
+            "side": "BUY",
+            "price": "62570.01000000",
+            "status": "NEW"
+          }
+        ],
+        "binance_openOrders_count": 8,
+        "binance_balances": {
+          "BTC": {
+            "free": "0.00000964",
+            "locked": "0.00000000"
+          },
+          "USDT": {
+            "free": "4013.71228824",
+            "locked": "985.63961710"
+          },
+          "USDC": {
+            "free": "5000.00000000",
+            "locked": "0.00000000"
+          }
+        },
+        "db_cycles": "1|closed|orphan_superseded\n2|closed|user_stop\n3|closed|orphan_on_restore\n5|closed|user_stop\n6|closed|panic_close\n7|closed|user_stop\n8|open|",
+        "db_bot_state": "main|true|8",
+        "db_bags": ""
+      },
+      "after": {
+        "label": "panic_with_orders_after",
+        "ts": "2026-07-04T14:50:01.797884+00:00",
+        "api_running": {
+          "running": false,
+          "cycle_id": 8,
+          "grid_active": false,
+          "open_levels": 0
+        },
+        "binance_openOrders": [],
+        "binance_openOrders_count": 0,
+        "binance_balances": {
+          "BTC": {
+            "free": "0.00000964",
+            "locked": "0.00000000"
+          },
+          "USDT": {
+            "free": "4999.35190534",
+            "locked": "0.00000000"
+          },
+          "USDC": {
+            "free": "5000.00000000",
+            "locked": "0.00000000"
+          }
+        },
+        "db_cycles": "1|closed|orphan_superseded\n2|closed|user_stop\n3|closed|orphan_on_restore\n5|closed|user_stop\n6|closed|panic_close\n7|closed|user_stop\n8|closed|panic_close",
+        "db_bot_state": "main|false|8",
+        "db_bags": ""
+      }
+    },
+    {
+      "case": "panic_noop",
+      "description": "Panic no-op",
+      "http_response": {
+        "ok": true,
+        "queued": "panic",
+        "message": "Panic close demand\u00e9 \u2014 vente du solde base r\u00e9el"
+      },
+      "last_command": {
+        "name": "panic",
+        "result": {
+          "sold_orders": [],
+          "bags": [],
+          "base_before": 9.64e-06,
+          "base_after": 9.64e-06,
+          "at": "2026-07-04T14:49:59.645719+00:00",
+          "noop": true,
+          "message": "Rien \u00e0 fermer"
+        },
+        "ts": "2026-07-04T14:49:59.655208+00:00"
+      },
+      "before": {
+        "label": "panic_noop_before",
+        "ts": "2026-07-04T14:50:02.313362+00:00",
+        "api_running": {
+          "running": false,
+          "cycle_id": 8,
+          "grid_active": false,
+          "open_levels": 0
+        },
+        "binance_openOrders": [],
+        "binance_openOrders_count": 0,
+        "binance_balances": {
+          "BTC": {
+            "free": "0.00000964",
+            "locked": "0.00000000"
+          },
+          "USDT": {
+            "free": "4999.35190534",
+            "locked": "0.00000000"
+          },
+          "USDC": {
+            "free": "5000.00000000",
+            "locked": "0.00000000"
+          }
+        },
+        "db_cycles": "1|closed|orphan_superseded\n2|closed|user_stop\n3|closed|orphan_on_restore\n5|closed|user_stop\n6|closed|panic_close\n7|closed|user_stop\n8|closed|panic_close",
+        "db_bot_state": "main|false|8",
+        "db_bags": ""
+      },
+      "after": {
+        "label": "panic_noop_after",
+        "ts": "2026-07-04T14:50:04.783401+00:00",
+        "api_running": {
+          "running": false,
+          "cycle_id": 8,
+          "grid_active": false,
+          "open_levels": 0
+        },
+        "binance_openOrders": [],
+        "binance_openOrders_count": 0,
+        "binance_balances": {
+          "BTC": {
+            "free": "0.00000964",
+            "locked": "0.00000000"
+          },
+          "USDT": {
+            "free": "4999.35190534",
+            "locked": "0.00000000"
+          },
+          "USDC": {
+            "free": "5000.00000000",
+            "locked": "0.00000000"
+          }
+        },
+        "db_cycles": "1|closed|orphan_superseded\n2|closed|user_stop\n3|closed|orphan_on_restore\n5|closed|user_stop\n6|closed|panic_close\n7|closed|user_stop\n8|closed|panic_close",
+        "db_bot_state": "main|false|8",
+        "db_bags": ""
+      }
+    }
+  ],
+  "evaluation": [
+    {
+      "case": "start_from_stopped",
+      "conforme": true,
+      "notes": []
+    },
+    {
+      "case": "start_already_running",
+      "conforme": true,
+      "notes": []
+    },
+    {
+      "case": "stop_active",
+      "conforme": true,
+      "notes": []
+    },
+    {
+      "case": "start_before_panic",
+      "conforme": true,
+      "notes": []
+    },
+    {
+      "case": "panic_with_orders",
+      "conforme": true,
+      "notes": []
+    },
+    {
+      "case": "panic_noop",
+      "conforme": true,
+      "notes": []
+    }
+  ]
+}
