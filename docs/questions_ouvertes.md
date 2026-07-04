@@ -12,11 +12,12 @@
 - **Résolution :** nouvelles clés fournies le 2026-07-04 → `GET /fapi/v2/account` HTTP 200, `canTrade=true`.
 - **Preuve :** `docs/proofs/01_binance_auth_new_keys.json`.
 
-## Q2b — Erreur Binance `-1007` sur écriture d’ordres (bloquant trading)
+## Q2b — Erreur Binance `-1007` sur écriture d’ordres (bloquant trading live)
 
-- **Constat :** `POST /fapi/v1/order` et `POST /fapi/v1/leverage` renvoient timeout backend / 502 / throttle.
-- **Décision :** ne pas déclarer les modules trading live comme terminés ; code prêt, preuves lecture OK.
-- **Pourquoi :** impossible de prouver place/cancel sans réponse Binance.
+- **Constat :** `POST /fapi/v1/order` renvoie timeout backend / 502.
+- **Décision anti-doublon (obligatoire) :** un `-1007` (ou 502) ne signifie pas échec — vérifier `openOrders` / `allOrders` / `origClientOrderId` avant tout renvoi ; chaque tentative a un `newClientOrderId` unique ; backoff 200ms→400ms→800ms (max 5) ; journal `order_attempts`.
+- **`-1008` :** distinct — reduce-only / close / cancel censés exempts ; si reçus sur panic/coupe → `anomaly_1008_priority`.
+- **Preuve :** `docs/proofs/m1_antiduze_post_1007.json`.
 
 ## Q3 — Seuil circuit breaker journalier (non tranché dans le prompt)
 

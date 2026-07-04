@@ -56,6 +56,8 @@ class BagManager:
             "order_type": order_type.upper(),
             "quantity": bag.quantity,
             "position_side": "LONG" if self.client.is_hedge_mode() else None,
+            "purpose": "bag_sell",
+            "reduce_only": True,
         }
         if order_type.upper() == "LIMIT":
             if limit_price is None:

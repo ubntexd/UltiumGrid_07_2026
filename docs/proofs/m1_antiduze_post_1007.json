@@ -1,0 +1,303 @@
+{
+  "steps": [
+    {
+      "action": "PLACE_RAISED",
+      "error": "408 {\"code\":-1007,\"msg\":\"Timeout waiting for response from backend server. Send status unknown; execution status unknown.\"}",
+      "attempt_log": [
+        {
+          "symbol": "BTCUSDT",
+          "side": "BUY",
+          "order_type": "LIMIT",
+          "purpose": "normal",
+          "client_order_id": "ugce2adcb46bc04f1eb269c306f96cc3d4",
+          "attempt_no": 1,
+          "outcome": "timeout_not_found",
+          "http_status": 408,
+          "binance_code": -1007,
+          "binance_msg": "Timeout waiting for response from backend server. Send status unknown; execution status unknown.",
+          "order_id": null,
+          "request_json": {
+            "symbol": "BTCUSDT",
+            "side": "BUY",
+            "type": "LIMIT",
+            "quantity": "0.0013",
+            "price": "43744.60",
+            "timeInForce": "GTC",
+            "positionSide": "LONG",
+            "newClientOrderId": "ugce2adcb46bc04f1eb269c306f96cc3d4"
+          },
+          "response_json": {
+            "code": -1007,
+            "msg": "Timeout waiting for response from backend server. Send status unknown; execution status unknown."
+          },
+          "verify_json": {
+            "client_order_id": "ugce2adcb46bc04f1eb269c306f96cc3d4",
+            "symbol": "BTCUSDT",
+            "open_orders_match": null,
+            "all_orders_match": null,
+            "get_order_match": null,
+            "open_orders_count": 0,
+            "all_orders_scanned": 0,
+            "get_order_error": "400 {\"code\":-2013,\"msg\":\"Order does not exist.\"}",
+            "source": null
+          },
+          "used_client_ids": [
+            "ugce2adcb46bc04f1eb269c306f96cc3d4"
+          ]
+        },
+        {
+          "symbol": "BTCUSDT",
+          "side": "BUY",
+          "order_type": "LIMIT",
+          "purpose": "normal",
+          "client_order_id": "ug57c81233a1ac4e849fa614f1000c6c8d",
+          "attempt_no": 2,
+          "outcome": "timeout_not_found",
+          "http_status": 408,
+          "binance_code": -1007,
+          "binance_msg": "Timeout waiting for response from backend server. Send status unknown; execution status unknown.",
+          "order_id": null,
+          "request_json": {
+            "symbol": "BTCUSDT",
+            "side": "BUY",
+            "type": "LIMIT",
+            "quantity": "0.0013",
+            "price": "43744.60",
+            "timeInForce": "GTC",
+            "positionSide": "LONG",
+            "newClientOrderId": "ug57c81233a1ac4e849fa614f1000c6c8d"
+          },
+          "response_json": {
+            "code": -1007,
+            "msg": "Timeout waiting for response from backend server. Send status unknown; execution status unknown."
+          },
+          "verify_json": {
+            "client_order_id": "ug57c81233a1ac4e849fa614f1000c6c8d",
+            "symbol": "BTCUSDT",
+            "open_orders_match": null,
+            "all_orders_match": null,
+            "get_order_match": null,
+            "open_orders_count": 0,
+            "all_orders_scanned": 0,
+            "get_order_error": "400 {\"code\":-2013,\"msg\":\"Order does not exist.\"}",
+            "source": null
+          },
+          "used_client_ids": [
+            "ugce2adcb46bc04f1eb269c306f96cc3d4",
+            "ug57c81233a1ac4e849fa614f1000c6c8d"
+          ]
+        },
+        {
+          "symbol": "BTCUSDT",
+          "side": "BUY",
+          "order_type": "LIMIT",
+          "purpose": "normal",
+          "client_order_id": "ugaf04c6c404794d3f8578801a95fb6ae4",
+          "attempt_no": 3,
+          "outcome": "timeout_not_found",
+          "http_status": 408,
+          "binance_code": -1007,
+          "binance_msg": "Timeout waiting for response from backend server. Send status unknown; execution status unknown.",
+          "order_id": null,
+          "request_json": {
+            "symbol": "BTCUSDT",
+            "side": "BUY",
+            "type": "LIMIT",
+            "quantity": "0.0013",
+            "price": "43744.60",
+            "timeInForce": "GTC",
+            "positionSide": "LONG",
+            "newClientOrderId": "ugaf04c6c404794d3f8578801a95fb6ae4"
+          },
+          "response_json": {
+            "code": -1007,
+            "msg": "Timeout waiting for response from backend server. Send status unknown; execution status unknown."
+          },
+          "verify_json": {
+            "client_order_id": "ugaf04c6c404794d3f8578801a95fb6ae4",
+            "symbol": "BTCUSDT",
+            "open_orders_match": null,
+            "all_orders_match": null,
+            "get_order_match": null,
+            "open_orders_count": 0,
+            "all_orders_scanned": 0,
+            "get_order_error": "400 {\"code\":-2013,\"msg\":\"Order does not exist.\"}",
+            "source": null
+          },
+          "used_client_ids": [
+            "ugce2adcb46bc04f1eb269c306f96cc3d4",
+            "ug57c81233a1ac4e849fa614f1000c6c8d",
+            "ugaf04c6c404794d3f8578801a95fb6ae4"
+          ]
+        }
+      ]
+    },
+    {
+      "action": "NATURAL_1007_VERIFY_TRACE",
+      "client_order_id": "ugce2adcb46bc04f1eb269c306f96cc3d4",
+      "verify_json": {
+        "client_order_id": "ugce2adcb46bc04f1eb269c306f96cc3d4",
+        "symbol": "BTCUSDT",
+        "open_orders_match": null,
+        "all_orders_match": null,
+        "get_order_match": null,
+        "open_orders_count": 0,
+        "all_orders_scanned": 0,
+        "get_order_error": "400 {\"code\":-2013,\"msg\":\"Order does not exist.\"}",
+        "source": null
+      }
+    },
+    {
+      "action": "NATURAL_1007_VERIFY_TRACE",
+      "client_order_id": "ug57c81233a1ac4e849fa614f1000c6c8d",
+      "verify_json": {
+        "client_order_id": "ug57c81233a1ac4e849fa614f1000c6c8d",
+        "symbol": "BTCUSDT",
+        "open_orders_match": null,
+        "all_orders_match": null,
+        "get_order_match": null,
+        "open_orders_count": 0,
+        "all_orders_scanned": 0,
+        "get_order_error": "400 {\"code\":-2013,\"msg\":\"Order does not exist.\"}",
+        "source": null
+      }
+    },
+    {
+      "action": "NATURAL_1007_VERIFY_TRACE",
+      "client_order_id": "ugaf04c6c404794d3f8578801a95fb6ae4",
+      "verify_json": {
+        "client_order_id": "ugaf04c6c404794d3f8578801a95fb6ae4",
+        "symbol": "BTCUSDT",
+        "open_orders_match": null,
+        "all_orders_match": null,
+        "get_order_match": null,
+        "open_orders_count": 0,
+        "all_orders_scanned": 0,
+        "get_order_error": "400 {\"code\":-2013,\"msg\":\"Order does not exist.\"}",
+        "source": null
+      }
+    },
+    {
+      "action": "NO_GHOST_ORDERS",
+      "open_orders": [],
+      "ghosts": []
+    },
+    {
+      "action": "DUPLICATE_AVOIDED_DEMO",
+      "note": "POST simul\u00e9 -1007 ; openOrders R\u00c9EL + entr\u00e9e inject\u00e9e repr\u00e9sentant l'ordre accept\u00e9 c\u00f4t\u00e9 matching engine. Le connecteur rattache l'ordre existant et n'effectue pas de second envoi.",
+      "client_order_id": "ug0cf7e22a35b74aae92606f7612522361",
+      "recovered_order_id": 900001,
+      "open_orders_calls": [
+        {
+          "live_raw": [],
+          "injected": {
+            "orderId": 900001,
+            "clientOrderId": "ug0cf7e22a35b74aae92606f7612522361",
+            "status": "NEW",
+            "symbol": "BTCUSDT",
+            "side": "BUY",
+            "type": "LIMIT",
+            "price": "43744.60",
+            "origQty": "0.0013"
+          }
+        }
+      ],
+      "duplicate_avoided_log": {
+        "symbol": "BTCUSDT",
+        "side": "BUY",
+        "order_type": "LIMIT",
+        "purpose": "normal",
+        "client_order_id": "ug0cf7e22a35b74aae92606f7612522361",
+        "attempt_no": 1,
+        "outcome": "duplicate_avoided",
+        "http_status": 408,
+        "binance_code": -1007,
+        "binance_msg": "Timeout waiting for response from backend server. Send status unknown; execution status unknown.",
+        "order_id": "900001",
+        "request_json": {
+          "symbol": "BTCUSDT",
+          "side": "BUY",
+          "type": "LIMIT",
+          "quantity": "0.0013",
+          "price": "43744.60",
+          "timeInForce": "GTC",
+          "positionSide": "LONG",
+          "newClientOrderId": "ug0cf7e22a35b74aae92606f7612522361"
+        },
+        "response_json": {
+          "code": -1007,
+          "msg": "Timeout waiting for response from backend server. Send status unknown; execution status unknown."
+        },
+        "verify_json": {
+          "client_order_id": "ug0cf7e22a35b74aae92606f7612522361",
+          "symbol": "BTCUSDT",
+          "open_orders_match": {
+            "orderId": 900001,
+            "clientOrderId": "ug0cf7e22a35b74aae92606f7612522361",
+            "status": "NEW",
+            "symbol": "BTCUSDT",
+            "side": "BUY",
+            "type": "LIMIT",
+            "price": "43744.60",
+            "origQty": "0.0013"
+          },
+          "all_orders_match": null,
+          "get_order_match": null,
+          "source": "openOrders"
+        },
+        "used_client_ids": [
+          "ug0cf7e22a35b74aae92606f7612522361"
+        ]
+      },
+      "all_orders_still_real": true
+    }
+  ],
+  "scenario": "natural_1007_timeout_not_found",
+  "ticker": {
+    "price": "62492.30",
+    "symbol": "BTCUSDT",
+    "time": 1783156129943
+  },
+  "limit_price": "43744.60",
+  "qty": "0.0013",
+  "outcomes": [
+    "timeout_not_found",
+    "timeout_not_found",
+    "timeout_not_found"
+  ],
+  "client_order_ids": [
+    "ugce2adcb46bc04f1eb269c306f96cc3d4",
+    "ug57c81233a1ac4e849fa614f1000c6c8d",
+    "ugaf04c6c404794d3f8578801a95fb6ae4"
+  ],
+  "db_order_attempts": [
+    [
+      "ugce2adcb46bc04f1eb269c306f96cc3d4",
+      1,
+      "timeout_not_found",
+      -1007,
+      null
+    ],
+    [
+      "ug57c81233a1ac4e849fa614f1000c6c8d",
+      2,
+      "timeout_not_found",
+      -1007,
+      null
+    ],
+    [
+      "ugaf04c6c404794d3f8578801a95fb6ae4",
+      3,
+      "timeout_not_found",
+      -1007,
+      null
+    ],
+    [
+      "ug0cf7e22a35b74aae92606f7612522361",
+      1,
+      "duplicate_avoided",
+      -1007,
+      "900001"
+    ]
+  ]
+}

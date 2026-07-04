@@ -13,7 +13,15 @@ from sqlalchemy.orm import Session
 
 from ultiumgrid.bags.manager import BagManager
 from ultiumgrid.connector.binance_futures import BinanceFuturesClient
-from ultiumgrid.db.models import BotState, Configuration, Cycle, PnlSnapshot, Trade, utcnow
+from ultiumgrid.db.models import (
+    BotState,
+    Configuration,
+    Cycle,
+    OrderAttempt,
+    PnlSnapshot,
+    Trade,
+    utcnow,
+)
 from ultiumgrid.engine.config import StrategyConfig
 from ultiumgrid.engine.grid import GridEngine
 from ultiumgrid.guards.safety import SafetyGuards
@@ -27,6 +35,7 @@ class BotRunner:
         self.client = client
         self.session = session
         self.cfg = cfg or self._load_active_config()
+        self.client.set_order_log_callback(self._persist_order_attempt)
         self.engine = GridEngine(client, self.cfg)
         self.cuts = ProgressiveCutManager(self.engine, self.cfg)
         self.bags = BagManager(client, session, self.cfg)
@@ -35,6 +44,26 @@ class BotRunner:
         self.cycle_id: int | None = None
         self._pending_config: StrategyConfig | None = None
         self._pending_config_mode: str | None = None  # wait_cycle | close_now
+
+    def _persist_order_attempt(self, entry: dict) -> None:
+        row = OrderAttempt(
+            symbol=entry.get("symbol") or "",
+            side=entry.get("side") or "",
+            order_type=entry.get("order_type") or "",
+            purpose=entry.get("purpose") or "normal",
+            client_order_id=entry.get("client_order_id") or "",
+            attempt_no=int(entry.get("attempt_no") or 0),
+            outcome=entry.get("outcome") or "",
+            http_status=entry.get("http_status"),
+            binance_code=entry.get("binance_code"),
+            binance_msg=entry.get("binance_msg"),
+            order_id=entry.get("order_id"),
+            request_json=entry.get("request_json"),
+            response_json=entry.get("response_json"),
+            verify_json=entry.get("verify_json"),
+        )
+        self.session.add(row)
+        self.session.commit()
 
     def _load_active_config(self) -> StrategyConfig:
         row = (

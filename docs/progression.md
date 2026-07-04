@@ -6,7 +6,7 @@ Légende : `terminé` uniquement si développement + audit conformité + tests r
 |---|---|---|
 | Audit initial | **terminé** | `docs/00_audit_initial.md`, `docs/proofs/00_binance_audit_raw.json` |
 | Auth clés renouvelées | **terminé** | `docs/proofs/01_binance_auth_new_keys.json` — `canTrade=true`, wallet 5000 USDT |
-| Module 1 — Connecteur | **partiel** | Lecture compte/funding/WS **OK** ; placement d’ordres **bloqué** par Binance `-1007`/`502` |
+| Module 1 — Connecteur | **partiel** | Lecture/WS OK ; anti-doublon post-`-1007` **prouvé** (`m1_antiduze_post_1007.json`) ; placement live toujours en timeout Binance |
 | Module 2 — Base de données | **terminé** | `docs/proofs/m2_database_sql.json` + test SQL direct |
 | Module 3 — Moteur de grille | **partiel** | Calcul 20 niveaux **OK** (unit) ; cycle live **non vérifié** (ordres Binance en timeout) |
 | Module 4 — Coupe progressive | **partiel** | Logique unit **OK** ; scénario live **non vérifié** |

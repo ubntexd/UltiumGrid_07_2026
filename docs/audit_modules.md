@@ -7,7 +7,10 @@ Référence : `docs/spec.md`.
 | Exigence | Statut | Preuve |
 |---|---|---|
 | Prix temps réel WebSocket | conforme | `m1_websocket_reconnect.json` |
-| Placement / annulation ordres | **non vérifié** | Binance `-1007` / `502` sur `POST /fapi/v1/order` |
+| Placement / annulation ordres | **non vérifié** (live fill) | Binance `-1007`/`502` ; anti-doublon post-timeout **prouvé** |
+| Anti-doublon post `-1007` | conforme | `docs/proofs/m1_antiduze_post_1007.json` + tests unit/intégration |
+| Journal `order_attempts` | conforme | table DB + SQL dans la preuve |
+| `-1008` sur fermeture = anomalie HP | conforme (unit) | `test_1008_on_priority_close_is_anomaly` |
 | Lecture position | conforme (API répond) | `open_positions=0` dans auth proof |
 | Solde / marge | conforme | `availableBalance=5000` |
 | Funding rate | conforme | `m1_account_funding.json` |

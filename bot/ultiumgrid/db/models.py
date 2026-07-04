@@ -130,6 +130,30 @@ class AlertEvent(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class OrderAttempt(Base):
+    """Journal des tentatives d'ordres — anti-doublon post -1007 / audit instabilité testnet."""
+
+    __tablename__ = "order_attempts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    symbol: Mapped[str] = mapped_column(String(32), index=True)
+    side: Mapped[str] = mapped_column(String(8))
+    order_type: Mapped[str] = mapped_column(String(16))
+    purpose: Mapped[str] = mapped_column(String(32), default="normal")
+    client_order_id: Mapped[str] = mapped_column(String(64), index=True)
+    attempt_no: Mapped[int] = mapped_column(Integer)
+    outcome: Mapped[str] = mapped_column(String(64), index=True)
+    # success | timeout_not_found | duplicate_avoided | throttled | anomaly_1008_priority | error
+    http_status: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    binance_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    binance_msg: Mapped[str | None] = mapped_column(Text, nullable=True)
+    order_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    request_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    response_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    verify_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 def make_engine(database_url: str):
     return create_engine(database_url, pool_pre_ping=True)
 

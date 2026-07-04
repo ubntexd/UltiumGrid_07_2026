@@ -235,6 +235,8 @@ class GridEngine:
                     order_type="MARKET",
                     quantity=abs(amt),
                     position_side=ps if self.client.is_hedge_mode() else None,
+                    purpose="cycle_close",
+                    reduce_only=True,
                 )
                 closed.append(order)
             except Exception as exc:
