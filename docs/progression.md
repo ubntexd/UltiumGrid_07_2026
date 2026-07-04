@@ -26,20 +26,23 @@ Légende : `terminé` uniquement si développement + audit conformité + tests r
 
 ### B3 — API d’écriture ordres Binance Futures Testnet instable
 
-Réponses brutes observées à répétition sur `POST /fapi/v1/order` et `POST /fapi/v1/leverage` :
+**URL REST réelle (avant correction) :** `https://testnet.binancefuture.com` (hardcodée dans le connecteur).  
+**URL officielle docs Binance :** `https://demo-fapi.binance.com` (WS `wss://demo-fstream.binance.com`).
+
+Correction appliquée (2026-07-04) : connecteur + `.env` pointent vers `demo-fapi`.  
+Les clés actuelles authentifient `GET /fapi/v2/account` sur **les deux** bases (HTTP 200, `canTrade=true`).
+
+`POST /fapi/v1/order` reste en échec sur **demo-fapi** aussi :
 
 ```
-HTTP 408 {"code":-2015?} non — code -1007
-{"code":-1007,"msg":"Timeout waiting for response from backend server. Send status unknown; execution status unknown."}
-HTTP 502 Bad Gateway (nginx)
-HTTP 503 {"code":-1008,"msg":"Request throttled by system-level protection..."}
+HTTP 408 {"code":-1007,"msg":"Timeout waiting for response from backend server. Send status unknown; execution status unknown."}
 ```
 
-Endpoints **lecture** authentifiés OK (`/fapi/v2/account`, `/fapi/v1/openOrders`, `/fapi/v2/positionRisk`, `listenKey`).
+Preuve : `test_place_verify_cancel_limit_order` → `RetryExhaustedError` après 5 tentatives (réponses `Order does not exist` en vérif post-timeout).
 
-**Conséquence :** impossible de prouver honnêtement place/cancel, cycle grille, coupe, sacs, panic close, reprise avec ordres réels tant que Binance Testnet n’accepte pas les écritures.
+**Hypothèse restante :** clés créées hors du portail demo trading actuel (`demo.binance.com`) — à régénérer côté utilisateur si le matching engine continue de timeout.
 
-**Action :** réessayer `POST /fapi/v1/order` ; dès HTTP 200, relancer `bot/tests/test_m1_connector_integration.py::test_place_verify_cancel_limit_order` puis start bot.
+**Action :** régénérer des clés API sur l’infra demo, mettre à jour `.env`, relancer `test_place_verify_cancel_limit_order`.
 
 ---
 

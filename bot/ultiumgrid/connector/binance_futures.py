@@ -28,8 +28,10 @@ from websockets.exceptions import ConnectionClosed
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_REST = "https://testnet.binancefuture.com"
-DEFAULT_WS = "wss://stream.binancefuture.com"
+# Docs Binance USD-M Futures Testnet (demo trading) :
+# https://developers.binance.com/docs/derivatives/usds-margined-futures/general-info
+DEFAULT_REST = "https://demo-fapi.binance.com"
+DEFAULT_WS = "wss://demo-fstream.binance.com"
 
 # Backoff initial (secondes) : 200ms, 400ms, 800ms, 1600ms, 3200ms
 BACKOFF_BASE_S = 0.2
@@ -95,12 +97,18 @@ class SymbolFilters:
         return f"{q:.{self.quantity_precision}f}"
 
 
+def _env_url(name: str, default: str) -> str:
+    import os
+
+    return (os.getenv(name) or default).strip().rstrip("/")
+
+
 @dataclass
 class BinanceFuturesClient:
     api_key: str
     api_secret: str
-    rest_base: str = DEFAULT_REST
-    ws_base: str = DEFAULT_WS
+    rest_base: str = field(default_factory=lambda: _env_url("BINANCE_FUTURES_REST_BASE", DEFAULT_REST))
+    ws_base: str = field(default_factory=lambda: _env_url("BINANCE_FUTURES_WS_BASE", DEFAULT_WS))
     timeout: int = 15
     _filters_cache: dict[str, SymbolFilters] = field(default_factory=dict, repr=False)
     _hedge_mode: bool | None = field(default=None, repr=False)

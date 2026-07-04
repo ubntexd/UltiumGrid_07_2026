@@ -1,0 +1,26 @@
+{
+  "before": "https://testnet.binancefuture.com",
+  "official_docs": "https://demo-fapi.binance.com",
+  "DEFAULT_REST": "https://demo-fapi.binance.com",
+  "DEFAULT_WS": "wss://demo-fstream.binance.com",
+  "client.rest_base": "https://demo-fapi.binance.com",
+  "client.ws_base": "wss://demo-fstream.binance.com",
+  "env_REST": "https://demo-fapi.binance.com",
+  "env_WS": "wss://demo-fstream.binance.com",
+  "differs_from_official_before": true,
+  "now_matches_official": true,
+  "account": {
+    "canTrade": true,
+    "availableBalance": "5000.00000000"
+  },
+  "order_error": "retry_exhausted symbol=BTCUSDT level=None price=40000.00 qty=0.0020 attempts=2",
+  "attempt_outcomes": [
+    "timeout_not_found",
+    "timeout_not_found",
+    "retry_exhausted"
+  ],
+  "last_response": {
+    "code": -1007,
+    "msg": "Timeout waiting for response from backend server. Send status unknown; execution status unknown."
+  }
+}

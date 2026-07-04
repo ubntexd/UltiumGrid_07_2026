@@ -6,7 +6,7 @@
 
 ## 1. Marché et connectivité
 
-- Exchange : Binance USDT-M Futures **Testnet** (`https://testnet.binancefuture.com`).
+- Exchange : Binance USDT-M Futures **Testnet / demo trading** (`https://demo-fapi.binance.com`, WS `wss://demo-fstream.binance.com`).
 - Connecteur : prix temps réel (WebSocket), placement/annulation d’ordres, lecture position, solde/marge, funding rate.
 - Filtres symbole (`tickSize`, `stepSize`, `MIN_NOTIONAL`) toujours lus via `GET /fapi/v1/exchangeInfo`, jamais inventés.
 

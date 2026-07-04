@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Connexion Binance USDT-M Futures Testnet.
 
-Base URL : https://testnet.binancefuture.com
-Docs     : https://developers.binance.com/docs/derivatives/usds-margined-futures/general-info
+Base URL par défaut : https://demo-fapi.binance.com
+Docs : https://developers.binance.com/docs/derivatives/usds-margined-futures/general-info
+Surcharge : BINANCE_FUTURES_REST_BASE dans .env
 """
 
 from __future__ import annotations
@@ -18,7 +19,6 @@ from urllib.parse import urlencode
 import requests
 from dotenv import load_dotenv
 
-BASE_URL = "https://testnet.binancefuture.com"
 TIMEOUT = 15
 
 
@@ -26,6 +26,10 @@ def _load_env() -> None:
     root = Path(__file__).resolve().parent.parent
     load_dotenv(root / ".env")
     load_dotenv(Path(__file__).resolve().parent / ".env")
+
+
+def _base_url() -> str:
+    return os.getenv("BINANCE_FUTURES_REST_BASE", "https://demo-fapi.binance.com").strip().rstrip("/")
 
 
 def _signed_get(path: str, api_key: str, api_secret: str, params: dict | None = None) -> dict:
@@ -37,7 +41,7 @@ def _signed_get(path: str, api_key: str, api_secret: str, params: dict | None = 
         query.encode("utf-8"),
         hashlib.sha256,
     ).hexdigest()
-    url = f"{BASE_URL}{path}?{query}&signature={signature}"
+    url = f"{_base_url()}{path}?{query}&signature={signature}"
     headers = {"X-MBX-APIKEY": api_key}
     resp = requests.get(url, headers=headers, timeout=TIMEOUT)
     resp.raise_for_status()
@@ -45,19 +49,19 @@ def _signed_get(path: str, api_key: str, api_secret: str, params: dict | None = 
 
 
 def ping() -> bool:
-    r = requests.get(f"{BASE_URL}/fapi/v1/ping", timeout=TIMEOUT)
+    r = requests.get(f"{_base_url()}/fapi/v1/ping", timeout=TIMEOUT)
     r.raise_for_status()
     return r.json() == {}
 
 
 def server_time() -> int:
-    r = requests.get(f"{BASE_URL}/fapi/v1/time", timeout=TIMEOUT)
+    r = requests.get(f"{_base_url()}/fapi/v1/time", timeout=TIMEOUT)
     r.raise_for_status()
     return int(r.json()["serverTime"])
 
 
 def exchange_info_symbols(limit: int = 5) -> list[str]:
-    r = requests.get(f"{BASE_URL}/fapi/v1/exchangeInfo", timeout=TIMEOUT)
+    r = requests.get(f"{_base_url()}/fapi/v1/exchangeInfo", timeout=TIMEOUT)
     r.raise_for_status()
     symbols = [s["symbol"] for s in r.json().get("symbols", []) if s.get("status") == "TRADING"]
     return symbols[:limit]
@@ -70,7 +74,7 @@ def account(api_key: str, api_secret: str) -> dict:
 def main() -> int:
     _load_env()
     print("=== Binance Futures Testnet ===")
-    print(f"Base URL : {BASE_URL}")
+    print(f"Base URL : {_base_url()}")
 
     try:
         ok = ping()
