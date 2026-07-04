@@ -1,0 +1,67 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ultium
+      POSTGRES_PASSWORD: ultium
+      POSTGRES_DB: ultiumgrid
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ultium -d ultiumgrid"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - ultiumnet
+
+  bot:
+    build:
+      context: .
+      dockerfile: bot/Dockerfile
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg2://ultium:ultium@db:5432/ultiumgrid
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - ultiumnet
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg2://ultium:ultium@db:5432/ultiumgrid
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    networks:
+      - ultiumnet
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    networks:
+      - ultiumnet
+
+volumes:
+  pgdata:
+
+networks:
+  ultiumnet:
+    driver: bridge

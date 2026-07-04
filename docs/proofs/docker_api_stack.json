@@ -1,0 +1,401 @@
+{
+  "timestamp": "2026-07-04T08:50:09.808248+00:00",
+  "docker_ps": "{\"Command\":\"\\\"uvicorn app.main:ap\u2026\\\"\",\"CreatedAt\":\"2026-07-04 08:48:15 +0000 UTC\",\"ExitCode\":0,\"Health\":\"\",\"ID\":\"df35d4d6d42c\",\"Image\":\"ultiumgrid_07_2026-backend\",\"Labels\":\"com.docker.compose.oneoff=False,com.docker.compose.project.config_files=/home/dev/dev/UltiumGrid_07_2026/docker-compose.yml,com.docker.compose.project.working_dir=/home/dev/dev/UltiumGrid_07_2026,com.docker.compose.service=backend,com.docker.compose.config-hash=281e70446882ff0a8bb7a5cffc7e2815ee65370331ae70717c3c887e2a9d6040,com.docker.compose.container-number=1,com.docker.compose.image=sha256:aa42d0c4945e07ecd52c7c4401354e99e2b063da4968d6bbb6319d322bf9c8bf,com.docker.compose.project=ultiumgrid_07_2026,com.docker.compose.version=5.3.0,com.docker.compose.depends_on=db:service_healthy:false\",\"LocalVolumes\":\"0\",\"Mounts\":\"\",\"Name\":\"ultiumgrid_07_2026-backend-1\",\"Names\":\"ultiumgrid_07_2026-backend-1\",\"Networks\":\"ultiumgrid_07_2026_ultiumnet\",\"Ports\":\"0.0.0.0:8000-\\u003e8000/tcp, [::]:8000-\\u003e8000/tcp\",\"Project\":\"ultiumgrid_07_2026\",\"Publishers\":[{\"URL\":\"0.0.0.0\",\"TargetPort\":8000,\"PublishedPort\":8000,\"Protocol\":\"tcp\"},{\"URL\":\"::\",\"TargetPort\":8000,\"PublishedPort\":8000,\"Protocol\":\"tcp\"}],\"RunningFor\":\"About a minute ago\",\"Service\":\"backend\",\"Size\":\"0B\",\"State\":\"running\",\"Status\":\"Up About a minute\"}\n{\"Command\":\"\\\"python -m ultiumgri\u2026\\\"\",\"CreatedAt\":\"2026-07-04 08:48:15 +0000 UTC\",\"ExitCode\":0,\"Health\":\"\",\"ID\":\"edf5c9687fea\",\"Image\":\"ultiumgrid_07_2026-bot\",\"Labels\":\"com.docker.compose.depends_on=db:service_healthy:false,com.docker.compose.image=sha256:d4b217c0e5440aeb3d03c6a7c4414acd3903d807d2edf756a981d63f97b4e725,com.docker.compose.project=ultiumgrid_07_2026,com.docker.compose.project.config_files=/home/dev/dev/UltiumGrid_07_2026/docker-compose.yml,com.docker.compose.service=bot,com.docker.compose.oneoff=False,com.docker.compose.project.working_dir=/home/dev/dev/UltiumGrid_07_2026,com.docker.compose.version=5.3.0,com.docker.compose.config-hash=627db3b6c265516d2fc0efaf01a87bfc2228e69f02cc68938fe424ff9cd101e4,com.docker.compose.container-number=1\",\"LocalVolumes\":\"0\",\"Mounts\":\"\",\"Name\":\"ultiumgrid_07_2026-bot-1\",\"Names\":\"ultiumgrid_07_2026-bot-1\",\"Networks\":\"ultiumgrid_07_2026_ultiumnet\",\"Ports\":\"\",\"Project\":\"ultiumgrid_07_2026\",\"Publishers\":[],\"RunningFor\":\"About a minute ago\",\"Service\":\"bot\",\"Size\":\"0B\",\"State\":\"running\",\"Status\":\"Up About a minute\"}\n{\"Command\":\"\\\"docker-entrypoint.s\u2026\\\"\",\"CreatedAt\":\"2026-07-04 08:48:15 +0000 UTC\",\"ExitCode\":0,\"Health\":\"healthy\",\"ID\":\"3dbb89f3c44f\",\"Image\":\"postgres:16-alpine\",\"Labels\":\"com.docker.compose.service=db,com.docker.compose.version=5.3.0,com.docker.compose.container-number=1,com.docker.compose.oneoff=False,com.docker.compose.project=ultiumgrid_07_2026,com.docker.compose.project.config_files=/home/dev/dev/UltiumGrid_07_2026/docker-compose.yml,com.docker.compose.config-hash=639ee1d43125535194027f0604abcc2786443ce777ce5d690eff57d9e950a7ee,com.docker.compose.depends_on=,com.docker.compose.image=sha256:e013e867e712fec275706a6c51c966f0bb0c93cfa8f51000f85a15f9865a28cb,com.docker.compose.project.working_dir=/home/dev/dev/UltiumGrid_07_2026\",\"LocalVolumes\":\"1\",\"Mounts\":\"ultiumgrid_07_\u2026\",\"Name\":\"ultiumgrid_07_2026-db-1\",\"Names\":\"ultiumgrid_07_2026-db-1\",\"Networks\":\"ultiumgrid_07_2026_ultiumnet\",\"Ports\":\"5432/tcp\",\"Project\":\"ultiumgrid_07_2026\",\"Publishers\":[{\"URL\":\"\",\"TargetPort\":5432,\"PublishedPort\":0,\"Protocol\":\"tcp\"}],\"RunningFor\":\"About a minute ago\",\"Service\":\"db\",\"Size\":\"0B\",\"State\":\"running\",\"Status\":\"Up About a minute (healthy)\"}\n{\"Command\":\"\\\"/docker-entrypoint.\u2026\\\"\",\"CreatedAt\":\"2026-07-04 08:48:15 +0000 UTC\",\"ExitCode\":0,\"Health\":\"\",\"ID\":\"7310df748bf7\",\"Image\":\"ultiumgrid_07_2026-frontend\",\"Labels\":\"com.docker.compose.service=frontend,maintainer=NGINX Docker Maintainers \\u003cdocker-maint@nginx.com\\u003e,com.docker.compose.config-hash=87424b48c84bbea1116807d85979403df7c6530ff5d150a2127ea75ce15be1f1,com.docker.compose.container-number=1,com.docker.compose.image=sha256:82363b8200a15013fcb260a0de7936ee52a8adb7b2017ed669be39f1333cf744,com.docker.compose.project=ultiumgrid_07_2026,com.docker.compose.version=5.3.0,com.docker.compose.depends_on=backend:service_started:false,com.docker.compose.oneoff=False,com.docker.compose.project.config_files=/home/dev/dev/UltiumGrid_07_2026/docker-compose.yml,com.docker.compose.project.working_dir=/home/dev/dev/UltiumGrid_07_2026\",\"LocalVolumes\":\"0\",\"Mounts\":\"\",\"Name\":\"ultiumgrid_07_2026-frontend-1\",\"Names\":\"ultiumgrid_07_2026-frontend-1\",\"Networks\":\"ultiumgrid_07_2026_ultiumnet\",\"Ports\":\"0.0.0.0:8080-\\u003e80/tcp, [::]:8080-\\u003e80/tcp\",\"Project\":\"ultiumgrid_07_2026\",\"Publishers\":[{\"URL\":\"0.0.0.0\",\"TargetPort\":80,\"PublishedPort\":8080,\"Protocol\":\"tcp\"},{\"URL\":\"::\",\"TargetPort\":80,\"PublishedPort\":8080,\"Protocol\":\"tcp\"}],\"RunningFor\":\"About a minute ago\",\"Service\":\"frontend\",\"Size\":\"0B\",\"State\":\"running\",\"Status\":\"Up About a minute\"}\n",
+  "health": {
+    "ok": true
+  },
+  "running": {
+    "running": false,
+    "symbol": "BTCUSDT",
+    "mark_price": 62533.0,
+    "grid": {
+      "active": false,
+      "center_price": 0.0,
+      "range_low": null,
+      "range_high": null,
+      "position_qty": 0.0,
+      "entry_avg": 0.0,
+      "grid_profit": 0.0,
+      "floating_profit": 0.0,
+      "funding_pnl": 0.0,
+      "gross_pnl": 0,
+      "levels": []
+    },
+    "bags": [],
+    "margin": {
+      "availableBalance": "5000.00000000",
+      "totalWalletBalance": "5000.00000000",
+      "totalUnrealizedProfit": "0.00000000",
+      "totalInitialMargin": "0.00000000",
+      "canTrade": true
+    },
+    "guards": {
+      "daily_pnl": 0.0,
+      "hard_stop": null,
+      "circuit_breaker": null,
+      "panic": false
+    },
+    "config": {
+      "symbol": "BTCUSDT",
+      "capital_usdt": 1000.0,
+      "leverage": 3,
+      "num_levels": 20,
+      "step_pct": 0.3,
+      "cycle_trigger_usd": 12,
+      "cut_level_1": 10,
+      "cut_pct_1": 50.0,
+      "cut_level_2": 14,
+      "cut_pct_2": 100.0,
+      "rearm_levels": 2,
+      "rearm_delay_min": 20,
+      "hard_stop_pct": -8.0,
+      "daily_circuit_breaker_usd": -40.0,
+      "bags_margin_threshold_pct": 40.0
+    },
+    "cycle_id": null
+  },
+  "margin": {
+    "availableBalance": "5000.00000000",
+    "totalWalletBalance": "5000.00000000",
+    "totalInitialMargin": "0.00000000",
+    "totalUnrealizedProfit": "0.00000000",
+    "canTrade": true
+  },
+  "history": [],
+  "pnl": {
+    "symbol": "BTCUSDT",
+    "cycles_total": 0,
+    "cycles_won": 0,
+    "cycles_lost": 0,
+    "win_rate": 0.0,
+    "avg_win": 0.0,
+    "avg_loss": 0.0,
+    "avg_cycle_duration_sec": 0.0,
+    "net_pnl": 0,
+    "theoretical_pnl": 0.0,
+    "curve": [],
+    "formulas": {
+      "win_rate": "cycles_won / cycles_total",
+      "avg_win": "sum(net_pnl where net_pnl>0) / cycles_won",
+      "avg_loss": "sum(net_pnl where net_pnl<=0) / cycles_lost",
+      "avg_cycle_duration_sec": "mean(closed_at - opened_at)",
+      "net_pnl": "sum(cycle.net_pnl)",
+      "theoretical_pnl": "10 * cycles_total",
+      "cumulative_pnl": "closed_cycles_pnl + grid_pnl + bags_pnl (snapshot)"
+    }
+  },
+  "bags": [],
+  "config": {
+    "active": {
+      "symbol": "BTCUSDT",
+      "capital_usdt": 1000.0,
+      "leverage": 3,
+      "num_levels": 20,
+      "step_pct": 0.3,
+      "cycle_trigger_usd": 12,
+      "cut_level_1": 10,
+      "cut_pct_1": 50.0,
+      "cut_level_2": 14,
+      "cut_pct_2": 100.0,
+      "rearm_levels": 2,
+      "rearm_delay_min": 20,
+      "hard_stop_pct": -8.0,
+      "daily_circuit_breaker_usd": -40.0,
+      "bags_margin_threshold_pct": 40.0
+    },
+    "bounds": {
+      "leverage": [
+        1,
+        20
+      ],
+      "step_pct": [
+        0.05,
+        2.0
+      ],
+      "num_levels": [
+        4,
+        40
+      ],
+      "capital_usdt": [
+        50.0,
+        1000000.0
+      ],
+      "cycle_trigger_usd": [
+        1.0,
+        10000.0
+      ],
+      "cut_level_1": [
+        1,
+        30
+      ],
+      "cut_pct_1": [
+        1.0,
+        100.0
+      ],
+      "cut_level_2": [
+        2,
+        40
+      ],
+      "cut_pct_2": [
+        1.0,
+        100.0
+      ],
+      "rearm_levels": [
+        1,
+        10
+      ],
+      "rearm_delay_min": [
+        5,
+        120
+      ],
+      "hard_stop_pct": [
+        -50.0,
+        -1.0
+      ],
+      "daily_circuit_breaker_usd": [
+        -10000.0,
+        -1.0
+      ],
+      "bags_margin_threshold_pct": [
+        5.0,
+        95.0
+      ]
+    },
+    "history": [
+      {
+        "id": 3,
+        "symbol": "BTCUSDT",
+        "params": {
+          "symbol": "BTCUSDT",
+          "capital_usdt": 1000.0,
+          "leverage": 3,
+          "num_levels": 20,
+          "step_pct": 0.3,
+          "cycle_trigger_usd": 12,
+          "cut_level_1": 10,
+          "cut_pct_1": 50.0,
+          "cut_level_2": 14,
+          "cut_pct_2": 100.0,
+          "rearm_levels": 2,
+          "rearm_delay_min": 20,
+          "hard_stop_pct": -8.0,
+          "daily_circuit_breaker_usd": -40.0,
+          "bags_margin_threshold_pct": 40.0
+        },
+        "is_active": true,
+        "created_at": "2026-07-04T08:48:42.984245+00:00",
+        "cycles_won": 0,
+        "cycles_lost": 0,
+        "net_pnl": 0.0,
+        "avg_cycle_duration_sec": 0.0
+      },
+      {
+        "id": 2,
+        "symbol": "BTCUSDT",
+        "params": {
+          "symbol": "BTCUSDT",
+          "capital_usdt": 1000.0,
+          "leverage": 3,
+          "num_levels": 20,
+          "step_pct": 0.3,
+          "cycle_trigger_usd": 12,
+          "cut_level_1": 10,
+          "cut_pct_1": 50.0,
+          "cut_level_2": 14,
+          "cut_pct_2": 100.0,
+          "rearm_levels": 2,
+          "rearm_delay_min": 20,
+          "hard_stop_pct": -8.0,
+          "daily_circuit_breaker_usd": -40.0,
+          "bags_margin_threshold_pct": 40.0
+        },
+        "is_active": false,
+        "created_at": "2026-07-04T08:48:40.777942+00:00",
+        "cycles_won": 0,
+        "cycles_lost": 0,
+        "net_pnl": 0.0,
+        "avg_cycle_duration_sec": 0.0
+      },
+      {
+        "id": 1,
+        "symbol": "BTCUSDT",
+        "params": {
+          "symbol": "BTCUSDT",
+          "capital_usdt": 1000.0,
+          "leverage": 5,
+          "num_levels": 20,
+          "step_pct": 0.25,
+          "cycle_trigger_usd": 15.0,
+          "cut_level_1": 10,
+          "cut_pct_1": 50.0,
+          "cut_level_2": 14,
+          "cut_pct_2": 100.0,
+          "rearm_levels": 2,
+          "rearm_delay_min": 20,
+          "hard_stop_pct": -8.0,
+          "daily_circuit_breaker_usd": -40.0,
+          "bags_margin_threshold_pct": 40.0
+        },
+        "is_active": false,
+        "created_at": "2026-07-04T08:48:22.947491+00:00",
+        "cycles_won": 0,
+        "cycles_lost": 0,
+        "net_pnl": 0.0,
+        "avg_cycle_duration_sec": 0.0
+      }
+    ]
+  },
+  "market_btc": {
+    "symbol": "BTCUSDT",
+    "price": 62533.0,
+    "filters": {
+      "tickSize": "0.10",
+      "stepSize": "0.0001",
+      "minQty": "0.0001",
+      "minNotional": "50"
+    },
+    "funding": {
+      "symbol": "BTCUSDT",
+      "markPrice": "62518.73056159",
+      "lastFundingRate": "0.00010000",
+      "nextFundingTime": 1783180800000,
+      "time": 1783155010001
+    },
+    "orderbook": {
+      "bids": [
+        [
+          "62504.20",
+          "45.0306"
+        ],
+        [
+          "62503.90",
+          "56.8228"
+        ],
+        [
+          "62503.40",
+          "0.0010"
+        ],
+        [
+          "62503.30",
+          "0.0040"
+        ],
+        [
+          "62502.10",
+          "0.0010"
+        ]
+      ],
+      "asks": [
+        [
+          "62533.00",
+          "759.1018"
+        ],
+        [
+          "62533.10",
+          "0.0145"
+        ],
+        [
+          "62533.20",
+          "0.0069"
+        ],
+        [
+          "62533.40",
+          "0.0011"
+        ],
+        [
+          "62533.50",
+          "0.0073"
+        ]
+      ]
+    },
+    "volatility_stdev_1h": 0.002748478933036861,
+    "atr_14_1h": 200.43571428571417
+  },
+  "market_eth": {
+    "symbol": "ETHUSDT",
+    "price": 1756.91,
+    "filters": {
+      "tickSize": "0.01",
+      "stepSize": "0.001",
+      "minQty": "0.001",
+      "minNotional": "20"
+    },
+    "funding": {
+      "symbol": "ETHUSDT",
+      "markPrice": "1756.82866279",
+      "lastFundingRate": "-0.00054178",
+      "nextFundingTime": 1783180800000,
+      "time": 1783155010001
+    },
+    "orderbook": {
+      "bids": [
+        [
+          "1754.61",
+          "0.008"
+        ],
+        [
+          "1754.54",
+          "8198.151"
+        ],
+        [
+          "1754.53",
+          "56.897"
+        ],
+        [
+          "1754.52",
+          "16108.199"
+        ],
+        [
+          "1754.51",
+          "13.644"
+        ]
+      ],
+      "asks": [
+        [
+          "1757.52",
+          "0.012"
+        ],
+        [
+          "1758.24",
+          "0.058"
+        ],
+        [
+          "1758.26",
+          "3702.140"
+        ],
+        [
+          "1758.27",
+          "11376.238"
+        ],
+        [
+          "1758.30",
+          "19684.489"
+        ]
+      ]
+    },
+    "volatility_stdev_1h": 0.004278690593618921,
+    "atr_14_1h": 7.800714285714305
+  },
+  "frontend_http": 200,
+  "frontend_proxy_running_mark": 62504.2,
+  "config_reject": {
+    "detail": {
+      "errors": [
+        "leverage=99 hors bornes [1, 20]"
+      ]
+    }
+  },
+  "binance_btc": {
+    "price": "62504.20",
+    "symbol": "BTCUSDT",
+    "time": 1783155006723
+  },
+  "binance_eth": {
+    "price": "1754.61",
+    "symbol": "ETHUSDT",
+    "time": 1783155006565
+  },
+  "start_queued": {
+    "ok": true,
+    "queued": "start"
+  }
+}

@@ -1,0 +1,98 @@
+:root {
+  --bg: #0b1220;
+  --card: #121a2b;
+  --text: #e8eefc;
+  --muted: #8fa3c8;
+  --ok: #1f9d55;
+  --bad: #d64545;
+  --accent: #3b82f6;
+  --border: #243049;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+.top {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: #0e1628;
+}
+.brand { font-weight: 700; letter-spacing: 0.04em; }
+.margin-banner {
+  flex: 1;
+  background: #18233a;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.95rem;
+}
+.controls { display: flex; gap: 0.5rem; }
+button {
+  background: #1c2942;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.45rem 0.8rem;
+  cursor: pointer;
+}
+button.ok { background: #143524; border-color: #1f9d55; }
+button.danger { background: #3a1515; border-color: var(--bad); }
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.tabs button.active { background: var(--accent); border-color: var(--accent); }
+main { padding: 1rem; }
+.tab { display: none; }
+.tab.active { display: block; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+th, td { border-bottom: 1px solid var(--border); padding: 0.4rem; text-align: left; }
+.pos { color: var(--ok); }
+.neg { color: var(--bad); }
+.range-bar {
+  position: relative;
+  height: 18px;
+  background: linear-gradient(90deg, #1d4ed8, #22c55e);
+  border-radius: 999px;
+  margin: 1rem 0;
+}
+#grid-marker {
+  position: absolute;
+  top: -4px;
+  width: 4px;
+  height: 26px;
+  background: #fff;
+  border-radius: 2px;
+  left: 50%;
+}
+label { display: block; margin: 0.4rem 0; color: var(--muted); font-size: 0.85rem; }
+input, select {
+  width: 100%;
+  background: #0b1220;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem;
+  margin-top: 0.2rem;
+}
+pre { white-space: pre-wrap; color: var(--muted); font-size: 0.85rem; }
+@media (max-width: 900px) {
+  .grid-2 { grid-template-columns: 1fr; }
+  .top { flex-wrap: wrap; }
+}

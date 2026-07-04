@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UltiumGrid</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="brand">UltiumGrid</div>
+    <div id="margin-banner" class="margin-banner">Marge : —</div>
+    <div class="controls">
+      <button id="btn-start" class="ok">Start</button>
+      <button id="btn-stop">Stop</button>
+      <button id="btn-panic" class="danger">Panic Close</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button data-tab="running" class="active">Running</button>
+    <button data-tab="history">History</button>
+    <button data-tab="pnl">PnL Analysis</button>
+    <button data-tab="bags">Bags</button>
+    <button data-tab="config">Config</button>
+    <button data-tab="market">Market</button>
+  </nav>
+
+  <main>
+    <section id="tab-running" class="tab active">
+      <div class="grid-2">
+        <div class="card">
+          <h2>État</h2>
+          <div id="running-status"></div>
+        </div>
+        <div class="card">
+          <h2>Grille</h2>
+          <div id="grid-range" class="range-bar"><div id="grid-marker"></div></div>
+          <div id="grid-details"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Niveaux</h2>
+        <table id="levels-table"><thead><tr><th>#</th><th>Side</th><th>Price</th><th>Qty</th><th>Status</th><th>Order</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <section id="tab-history" class="tab">
+      <div class="card">
+        <table id="history-table"><thead><tr><th>ID</th><th>Symbol</th><th>Status</th><th>Gross</th><th>Net</th><th>Opened</th><th>Closed</th><th>Reason</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <section id="tab-pnl" class="tab">
+      <div class="grid-2">
+        <div class="card" id="pnl-kpis"></div>
+        <div class="card">
+          <h2>PnL cumulé vs théorique (+10/cycle)</h2>
+          <canvas id="pnl-chart" width="600" height="240"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-bags" class="tab">
+      <div class="card">
+        <table id="bags-table"><thead><tr><th>ID</th><th>Qty</th><th>Entry</th><th>Cut</th><th>PnL</th><th>Action</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <section id="tab-config" class="tab">
+      <div class="grid-2">
+        <div class="card">
+          <h2>Paramètres</h2>
+          <form id="config-form"></form>
+          <div class="row">
+            <label>Application <select id="config-mode"><option value="wait_cycle">Attendre fin de cycle</option><option value="close_now">Fermer et appliquer</option></select></label>
+          </div>
+          <button id="btn-save-config" class="ok">Appliquer</button>
+          <button id="btn-simulate">Simuler</button>
+          <pre id="config-msg"></pre>
+        </div>
+        <div class="card">
+          <h2>Configs testées</h2>
+          <div id="config-history"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-market" class="tab">
+      <div class="card">
+        <h2>Marché temps réel</h2>
+        <table id="market-table"><thead><tr><th>Symbol</th><th>Price</th><th>24h %</th><th>Volume</th></tr></thead><tbody></tbody></table>
+      </div>
+      <div class="card" id="market-detail"></div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

@@ -1,65 +1,54 @@
 # Progression — UltiumGrid_07_2026
 
-Légende : `terminé` uniquement si développement + audit conformité + tests réels + vérification croisée Binance↔DB sont prouvés.
+Légende : `terminé` uniquement si développement + audit conformité + tests réels + vérification croisée sont prouvés.
 
 | Étape | Statut | Preuve / notes |
 |---|---|---|
 | Audit initial | **terminé** | `docs/00_audit_initial.md`, `docs/proofs/00_binance_audit_raw.json` |
-| Module 1 — Connecteur Binance | **bloqué** | Auth `-2015` ; impossible de placer/annuler un ordre |
-| Module 2 — Base de données | non démarré | dépend Module 1 pour vérif croisée |
-| Module 3 — Moteur de grille | non démarré | |
-| Module 4 — Gestion du risque | non démarré | |
-| Module 5 — Système de sacs | non démarré | |
-| Module 6 — Garde-fous | non démarré | |
-| Module 7 — Backend API | non démarré | |
-| Module 7bis — Configuration UI | non démarré | |
-| Module 7ter — Marché / analytics | non démarré | |
-| Module 8 — Interface web | non démarré | |
-| Module 9 — Reprise après crash | non démarré | |
-| Module 10 — Audit final | non démarré | |
-| Infrastructure Docker complète | **non vérifié** | aucun `docker-compose.yml` au moment de l’audit |
+| Auth clés renouvelées | **terminé** | `docs/proofs/01_binance_auth_new_keys.json` — `canTrade=true`, wallet 5000 USDT |
+| Module 1 — Connecteur | **partiel** | Lecture compte/funding/WS **OK** ; placement d’ordres **bloqué** par Binance `-1007`/`502` |
+| Module 2 — Base de données | **terminé** | `docs/proofs/m2_database_sql.json` + test SQL direct |
+| Module 3 — Moteur de grille | **partiel** | Calcul 20 niveaux **OK** (unit) ; cycle live **non vérifié** (ordres Binance en timeout) |
+| Module 4 — Coupe progressive | **partiel** | Logique unit **OK** ; scénario live **non vérifié** |
+| Module 5 — Sacs | **partiel** | Code + schéma DB prêts ; vente live **non vérifiée** |
+| Module 6 — Garde-fous | **partiel** | Logique unit **OK** ; déclenchement live **non vérifié** |
+| Module 7 — Backend API | **terminé** (lecture) | Endpoints prouvés dans `docs/proofs/docker_api_stack.json` |
+| Module 7bis — Config UI | **terminé** (hors cycle live) | 3 params appliqués en DB ; rejet levier 99 prouvé |
+| Module 7ter — Marché | **terminé** (prix) | BTC/ETH prix API = Binance direct (même instant, session précédente) |
+| Module 8 — UI | **partiel** | UI accessible `:8080` ; proxy API OK ; audit valeurs live limité sans grille active |
+| Module 9 — Reprise crash | **non vérifié** | Code `restore_state` présent ; pas de preuve kill/restart avec ordres ouverts |
+| Module 10 — Audit final | **terminé** (état réel) | `docs/audit_final.md` |
+| Infrastructure Docker | **terminé** | `docker compose down -v && up --build` — 4 services Up |
 
 ---
 
-## Blocage actif (2026-07-04)
+## Blocage actif
 
-### B1 — Clés API Binance Futures Testnet rejetées
+### B3 — API d’écriture ordres Binance Futures Testnet instable
 
-- Appel : `GET https://testnet.binancefuture.com/fapi/v2/account` (signé)
-- Réponse brute : `HTTP 401 {"code":-2015,"msg":"Invalid API-key, IP, or permissions for action"}`
-- Même erreur sur `POST /fapi/v1/listenKey`
-- IP VPS : `176.97.70.254`
-- Preuve : `docs/proofs/00_binance_audit_raw.json`
-
-**Action requise (humaine) :**
-
-1. Régénérer les clés sur https://testnet.binancefuture.com (les anciennes ont été exposées dans l’historique git via `.env.example`).
-2. Autoriser l’IP `176.97.70.254` si une whitelist IP est active.
-3. Activer les permissions Futures + trading (lecture compte + ordres).
-4. Mettre à jour `.env` local (non commité) :
+Réponses brutes observées à répétition sur `POST /fapi/v1/order` et `POST /fapi/v1/leverage` :
 
 ```
-BINANCE_FUTURES_TESTNET_API_KEY=...
-BINANCE_FUTURES_TESTNET_API_SECRET=...
+HTTP 408 {"code":-2015?} non — code -1007
+{"code":-1007,"msg":"Timeout waiting for response from backend server. Send status unknown; execution status unknown."}
+HTTP 502 Bad Gateway (nginx)
+HTTP 503 {"code":-1008,"msg":"Request throttled by system-level protection..."}
 ```
 
-5. Relancer la vérification :
+Endpoints **lecture** authentifiés OK (`/fapi/v2/account`, `/fapi/v1/openOrders`, `/fapi/v2/positionRisk`, `listenKey`).
 
-```bash
-.venv/bin/python scripts/connect_binance_futures_testnet.py
-```
+**Conséquence :** impossible de prouver honnêtement place/cancel, cycle grille, coupe, sacs, panic close, reprise avec ordres réels tant que Binance Testnet n’accepte pas les écritures.
 
-Critère de déblocage : `GET /fapi/v2/account` renvoie HTTP 200 avec `canTrade` lisible, réponse brute archivée dans `docs/proofs/`.
-
-### B2 — Cahier des charges manquant
-
-- `cahier_des_charges_grid_bot.md` / `docs/spec.md` introuvable dans le dépôt et sous `/home/dev`.
-- Sans ce fichier, l’audit de conformité ligne à ligne des modules est impossible.
-
-**Action requise :** fournir le cahier des charges pour placement dans `docs/spec.md`.
+**Action :** réessayer `POST /fapi/v1/order` ; dès HTTP 200, relancer `bot/tests/test_m1_connector_integration.py::test_place_verify_cancel_limit_order` puis start bot.
 
 ---
 
-## Décision de méthode
+## Preuves clés
 
-Conformément à la règle « zéro imagination » et « ne pas écrire de code dépendant d’une hypothèse non vérifiée » : **arrêt avant Module 1**. Aucun connecteur métier, schéma DB, moteur de grille ni UI n’a été développé dans ce passage.
+| Fichier | Contenu |
+|---|---|
+| `docs/proofs/01_binance_auth_new_keys.json` | Auth OK |
+| `docs/proofs/m1_account_funding.json` | Compte + funding + filters |
+| `docs/proofs/m1_websocket_reconnect.json` | WS + kill + reprise |
+| `docs/proofs/m2_database_sql.json` | SQL direct |
+| `docs/proofs/docker_api_stack.json` | Stack Docker + endpoints |

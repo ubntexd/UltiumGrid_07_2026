@@ -1,0 +1,35 @@
+{
+  "audit_timestamp_utc": "2026-07-04T08:29:16.121063+00:00",
+  "calls": [
+    {
+      "method": "GET",
+      "path": "/fapi/v1/ping",
+      "http_status": 200,
+      "raw_body": "{}"
+    },
+    {
+      "method": "GET",
+      "path": "/fapi/v2/account",
+      "http_status": 200,
+      "raw_body": "{\"canTrade\": true, \"canDeposit\": true, \"canWithdraw\": true, \"feeTier\": 0, \"totalWalletBalance\": \"5000.00000000\", \"availableBalance\": \"5000.00000000\", \"totalUnrealizedProfit\": \"0.00000000\", \"assets_nonzero\": [{\"asset\": \"BTC\", \"walletBalance\": \"0.01000000\", \"unrealizedProfit\": \"0.00000000\", \"marginBalance\": \"0.01000000\", \"maintMargin\": \"0.00000000\", \"initialMargin\": \"0.00000000\", \"positionInitialMargin\": \"0.00000000\", \"openOrderInitialMargin\": \"0.00000000\", \"maxWithdrawAmount\": \"0.01000000\", \"crossWalletBalance\": \"0.01000000\", \"crossUnPnl\": \"0.00000000\", \"availableBalance\": \"0.01000000\", \"marginAvailable\": true, \"updateTime\": 1770435661468}, {\"asset\": \"USDT\", \"walletBalance\": \"5000.00000000\", \"unrealizedProfit\": \"0.00000000\", \"marginBalance\": \"5000.00000000\", \"maintMargin\": \"0.00000000\", \"initialMargin\": \"0.00000000\", \"positionInitialMargin\": \"0.00000000\", \"openOrderInitialMargin\": \"0.00000000\", \"maxWithdrawAmount\": \"5000.00000000\", \"crossWalletBalance\": \"5000.00000000\", \"crossUnPnl\": \"0.00000000\", \"availableBalance\": \"5000.00000000\", \"marginAvailable\": true, \"updateTime\": 1783147742706}, {\"asset\": \"USDC\", \"walletBalance\": \"5000.00000000\", \"unrealizedProfit\": \"0.00000000\", \"marginBalance\": \"5000.00000000\", \"maintMargin\": \"0.00000000\", \"initialMargin\": \"0.00000000\", \"positionInitialMargin\": \"0.00000000\", \"openOrderInitialMargin\": \"0.00000000\", \"maxWithdrawAmount\": \"5000.00000000\", \"crossWalletBalance\": \"5000.00000000\", \"crossUnPnl\": \"0.00000000\", \"availableBalance\": \"5000.00000000\", \"marginAvailable\": true, \"updateTime\": 1770435661463}]}"
+    },
+    {
+      "method": "POST",
+      "path": "/fapi/v1/listenKey",
+      "http_status": 200,
+      "raw_body_redacted": "{\"listenKey\": \"UNdUiFoW...XrQI\", \"listenKey_len\": 64}"
+    },
+    {
+      "method": "GET",
+      "path": "/fapi/v2/positionRisk",
+      "http_status": 200,
+      "raw_body": "{\"total_entries\": 1446, \"open_positions\": []}"
+    },
+    {
+      "method": "GET",
+      "path": "/fapi/v1/openOrders",
+      "http_status": 200,
+      "raw_body": "[]"
+    }
+  ]
+}

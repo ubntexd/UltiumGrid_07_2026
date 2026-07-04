@@ -1,0 +1,26 @@
+{
+  "cycle_after_update": {
+    "status": "closed",
+    "net_pnl": 12.5
+  },
+  "trades": [
+    [
+      "BUY",
+      62000.0,
+      0.01
+    ]
+  ],
+  "bags": [
+    [
+      0.05,
+      61000.0,
+      "open"
+    ]
+  ],
+  "bot_state": [
+    {
+      "key": "main",
+      "value_json": "{\"running\": false, \"cycle_id\": 1}"
+    }
+  ]
+}

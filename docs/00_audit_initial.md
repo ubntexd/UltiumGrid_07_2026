@@ -210,9 +210,9 @@ Docker moteur et Compose sont installés et opérationnels (versions ci-dessus),
 | `docs/spec.md` présent | **absent** |
 | Docker projet prêt | **absent** |
 
-**Blocage réel :** les modules 1 à 10 exigent des opérations authentifiées (ordres, positions, solde) et une spécification fonctionnelle. Aucun code métier supplémentaire ne sera écrit tant que :
+**Blocage réel (levé ensuite le même jour) :** les clés initiales étaient rejetées (`-2015`).  
+Nouvelles clés fournies → auth OK, preuve `docs/proofs/01_binance_auth_new_keys.json`.
 
-1. de nouvelles clés API Futures Testnet valides acceptent `GET /fapi/v2/account` depuis l’IP `176.97.70.254`, et
-2. le fichier `docs/spec.md` (cahier des charges) est fourni.
+**Blocage suivant :** écriture d’ordres Binance Testnet en timeout (`-1007`) — voir `docs/progression.md` B3.
 
-Voir `docs/progression.md`.
+`docs/spec.md` a été rédigé à partir du prompt de développement (cahier des charges fichier absent).

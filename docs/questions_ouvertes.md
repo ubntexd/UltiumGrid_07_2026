@@ -6,11 +6,17 @@
 - **Décision par défaut :** ne pas inventer les paramètres manquants ; bloquer les modules métier.
 - **Pourquoi :** la règle impose `docs/spec.md` comme source de vérité ; combler le vide violerait « zéro imagination ».
 
-## Q2 — Cause exacte de l’erreur Binance `-2015` (bloquant)
+## Q2 — Erreur Binance `-2015` (résolu)
 
-- **Constat :** clés présentes (longueur 64) mais rejetées pour toute action authentifiée.
-- **Décision par défaut :** traiter les clés comme invalides / non autorisées pour cette IP, exiger régénération + whitelist IP `176.97.70.254`.
-- **Pourquoi :** l’API ne distingue pas clé invalide / IP / permissions dans le message `-2015` ; la seule action sûre est de fournir des clés fraîches explicitement autorisées pour ce VPS.
+- **Constat initial :** clés rejetées.
+- **Résolution :** nouvelles clés fournies le 2026-07-04 → `GET /fapi/v2/account` HTTP 200, `canTrade=true`.
+- **Preuve :** `docs/proofs/01_binance_auth_new_keys.json`.
+
+## Q2b — Erreur Binance `-1007` sur écriture d’ordres (bloquant trading)
+
+- **Constat :** `POST /fapi/v1/order` et `POST /fapi/v1/leverage` renvoient timeout backend / 502 / throttle.
+- **Décision :** ne pas déclarer les modules trading live comme terminés ; code prêt, preuves lecture OK.
+- **Pourquoi :** impossible de prouver place/cancel sans réponse Binance.
 
 ## Q3 — Seuil circuit breaker journalier (non tranché dans le prompt)
 
