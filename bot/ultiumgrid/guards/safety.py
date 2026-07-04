@@ -65,10 +65,9 @@ class SafetyGuards:
         self.state.daily_pnl += pnl
 
     def check_hard_stop(self, entry_avg: float, mark_price: float, position_qty: float) -> bool:
-        """Stop dur à hard_stop_pct sous le prix d'entrée moyen de la position totale."""
+        """Stop dur sur position/PnL RÉELS uniquement (jamais reconstruction théorique grille)."""
         if position_qty == 0 or entry_avg <= 0:
             return False
-        # Pour long : (mark - entry) / entry * 100
         pct = ((mark_price - entry_avg) / entry_avg) * 100.0
         if position_qty < 0:
             pct = -pct
@@ -97,9 +96,17 @@ class SafetyGuards:
         return False
 
     def panic_close(self, bag_manager, grid_engine) -> dict[str, Any]:
-        """Clôture immédiate grille + sacs."""
+        """Clôture immédiate de la position RÉELLE (lecture positionRisk juste avant)."""
         self.state.panic = True
         self.on_alert("critical", "panic_close", "Panic close demandé", None)
+        symbol = grid_engine.cfg.symbol
+        # Lecture fraîche — ignore l'état théorique / paliers incomplets en DB
+        try:
+            positions_before = self.client.position_risk(symbol)
+        except Exception as exc:
+            positions_before = []
+            logger.error("panic positionRisk failed: %s", exc)
+        real_before = sum(float(p.get("positionAmt", 0)) for p in positions_before)
         grid_result = grid_engine.close_cycle()
         bags_closed = []
         for bag in list(bag_manager.open_bags()):
@@ -107,4 +114,17 @@ class SafetyGuards:
                 bags_closed.append(bag_manager.sell_bag(bag.id, order_type="MARKET"))
             except Exception as exc:
                 logger.error("panic sell bag %s: %s", bag.id, exc)
-        return {"grid": grid_result, "bags": bags_closed, "at": utcnow().isoformat()}
+        try:
+            positions_after = self.client.position_risk(symbol)
+            real_after = sum(float(p.get("positionAmt", 0)) for p in positions_after)
+        except Exception:
+            positions_after = []
+            real_after = None
+        return {
+            "grid": grid_result,
+            "bags": bags_closed,
+            "position_before": real_before,
+            "position_after": real_after,
+            "positions_before_raw": positions_before,
+            "at": utcnow().isoformat(),
+        }

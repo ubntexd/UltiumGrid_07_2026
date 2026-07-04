@@ -6,12 +6,12 @@ Légende : `terminé` uniquement si développement + audit conformité + tests r
 |---|---|---|
 | Audit initial | **terminé** | `docs/00_audit_initial.md`, `docs/proofs/00_binance_audit_raw.json` |
 | Auth clés renouvelées | **terminé** | `docs/proofs/01_binance_auth_new_keys.json` — `canTrade=true`, wallet 5000 USDT |
-| Module 1 — Connecteur | **partiel** | Lecture/WS OK ; anti-doublon post-`-1007` **prouvé** (`m1_antiduze_post_1007.json`) ; placement live toujours en timeout Binance |
+| Module 1 — Connecteur | **partiel** | Lecture/WS OK ; anti-doublon **unit** + vérif **integration** (`m1_antiduze_post_1007.json`) ; `retry_exhausted` forcé (`m1_retry_exhausted.json`) ; placement live toujours timeout Binance |
 | Module 2 — Base de données | **terminé** | `docs/proofs/m2_database_sql.json` + test SQL direct |
 | Module 3 — Moteur de grille | **partiel** | Calcul 20 niveaux **OK** (unit) ; cycle live **non vérifié** (ordres Binance en timeout) |
-| Module 4 — Coupe progressive | **partiel** | Logique unit **OK** ; scénario live **non vérifié** |
-| Module 5 — Sacs | **partiel** | Code + schéma DB prêts ; vente live **non vérifiée** |
-| Module 6 — Garde-fous | **partiel** | Logique unit **OK** ; déclenchement live **non vérifié** |
+| Module 4 — Coupe progressive | **partiel** | Unit OK (qty réelle + incomplets) ; live **non vérifié** |
+| Module 5 — Sacs | **partiel** | Qty réelle / `reconciliation_unavailable` codés ; live **non vérifié** |
+| Module 6 — Garde-fous | **partiel** | Panic/stop sur `positionRisk` frais ; live **non vérifié** |
 | Module 7 — Backend API | **terminé** (lecture) | Endpoints prouvés dans `docs/proofs/docker_api_stack.json` |
 | Module 7bis — Config UI | **terminé** (hors cycle live) | 3 params appliqués en DB ; rejet levier 99 prouvé |
 | Module 7ter — Marché | **terminé** (prix) | BTC/ETH prix API = Binance direct (même instant, session précédente) |

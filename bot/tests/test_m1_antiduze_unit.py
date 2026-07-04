@@ -108,8 +108,9 @@ def test_1007_not_found_retries_with_new_client_ids():
         mod.BACKOFF_BASE_S = original
 
     outcomes = [a["outcome"] for a in client.attempt_log]
-    assert outcomes == ["timeout_not_found", "timeout_not_found", "timeout_not_found"]
-    ids_used = [a["client_order_id"] for a in client.attempt_log]
+    assert outcomes[:3] == ["timeout_not_found", "timeout_not_found", "timeout_not_found"]
+    assert outcomes[-1] == "retry_exhausted"
+    ids_used = [a["client_order_id"] for a in client.attempt_log if a["outcome"] == "timeout_not_found"]
     assert ids_used == ["idA", "idB", "idC"]
     assert len(set(ids_used)) == 3
 

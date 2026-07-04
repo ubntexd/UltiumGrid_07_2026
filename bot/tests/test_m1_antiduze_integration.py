@@ -188,12 +188,26 @@ def test_antiduze_post_1007_real_binance():
         assert client.attempt_log, "le journal de tentatives doit être rempli"
         outcomes = [a["outcome"] for a in client.attempt_log]
         proof["outcomes"] = outcomes
-        assert all(o in ("timeout_not_found", "throttled", "error", "anomaly_1008_priority") for o in outcomes)
+        assert all(
+            o
+            in (
+                "timeout_not_found",
+                "retry_exhausted",
+                "throttled",
+                "error",
+                "anomaly_1008_priority",
+            )
+            for o in outcomes
+        )
         assert any(o == "timeout_not_found" for o in outcomes) or any(
             a.get("binance_code") == -1007 for a in client.attempt_log
         )
 
-        client_ids = [a["client_order_id"] for a in client.attempt_log]
+        client_ids = [
+            a["client_order_id"]
+            for a in client.attempt_log
+            if a["outcome"] == "timeout_not_found"
+        ]
         proof["client_order_ids"] = client_ids
         assert len(client_ids) == len(set(client_ids)), "chaque tentative doit avoir un id unique"
 

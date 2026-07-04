@@ -7,10 +7,14 @@ Référence : `docs/spec.md`.
 | Exigence | Statut | Preuve |
 |---|---|---|
 | Prix temps réel WebSocket | conforme | `m1_websocket_reconnect.json` |
-| Placement / annulation ordres | **non vérifié** (live fill) | Binance `-1007`/`502` ; anti-doublon post-timeout **prouvé** |
-| Anti-doublon post `-1007` | conforme | `docs/proofs/m1_antiduze_post_1007.json` + tests unit/intégration |
-| Journal `order_attempts` | conforme | table DB + SQL dans la preuve |
-| `-1008` sur fermeture = anomalie HP | conforme (unit) | `test_1008_on_priority_close_is_anomaly` |
+| Placement / annulation ordres | **non vérifié** (live fill) | Binance `-1007`/`502` persistants |
+| Anti-doublon `duplicate_avoided` (**unit**) | conforme | `test_1007_duplicate_avoided_does_not_resend` — `-1007` **injecté/mocké** |
+| Anti-doublon vérif réelle (**integration**) | conforme (timeout_not_found) | `m1_antiduze_post_1007.json` — `-1007` **réel** testnet + openOrders/allOrders réels |
+| `duplicate_avoided` avec ordre **réellement accepté** puis `-1007` | **non vérifié** | impossible tant que POST n'accepte aucun ordre ; démo hybrid (openOrders réel + entrée injectée) dans la même preuve, **non présentée comme integration pure** |
+| `retry_exhausted` + `grid_level_incomplete` | conforme (forcé) | `m1_retry_exhausted.json` — POST forcé `-1007`, verify réel |
+| Journal `order_attempts` | conforme | table DB + SQL dans les preuves |
+| `-1008` sur fermeture = anomalie HP | conforme (**unit**) | `test_1008_on_priority_close_is_anomaly` |
+| Badge UI « non placé » | conforme (source + API) | `app.js` `badge-missing` + `incomplete_levels` dans status |
 | Lecture position | conforme (API répond) | `open_positions=0` dans auth proof |
 | Solde / marge | conforme | `availableBalance=5000` |
 | Funding rate | conforme | `m1_account_funding.json` |
@@ -37,9 +41,11 @@ Référence : `docs/spec.md`.
 
 | Exigence | Statut | Preuve |
 |---|---|---|
-| Palier 10 → 50 % | conforme (unit) | `test_cut_at_level_10_and_14` |
-| Palier 14 → 100 % + recentrage | conforme (unit) | idem |
-| Réarmement 2 paliers / délai | conforme (unit) | réarmement délai testé |
+| Palier 10 → 50 % | conforme (**unit**) | `test_cut_at_level_10_and_14` |
+| Palier 14 → 100 % + recentrage | conforme (**unit**) | idem |
+| Réarmement 2 paliers / délai | conforme (**unit**) | réarmement délai testé |
+| Coupe sur qty **réelle** si paliers incomplets | conforme (**unit**) | `test_cut_uses_real_qty_with_incomplete` |
+| `cut_with_incomplete_grid` + alerte écart >10 % | code présent | **non vérifié** live (dépend position réelle) |
 
 ## Module 5 — Sacs
 

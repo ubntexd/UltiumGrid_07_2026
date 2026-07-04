@@ -3,24 +3,32 @@
 Formules documentées pour reproductibilité :
 
 - Niveaux arithmétiques (num_levels), centrés sur center_price :
-  level_i = center_price * (1 - step_pct/100 * (num_levels/2 - i))
+  level_i = center_price * (1 + step_pct/100 * offset)
   pour i = 0..num_levels-1 (i < mid = BUY, i >= mid = SELL)
 
 - Grid Profit = somme des PnL réalisés des paires buy/sell de la grille active
-- Floating Profit = (mark_price - entry_avg) * position_qty  (signe selon sens)
+- Floating Profit = (mark_price - entry_avg) * position_qty  (position RÉELLE uniquement)
 - Funding PnL = cumul des funding payments observés sur la période du cycle
 - Gross PnL = Grid Profit + Floating Profit + Funding PnL
 - Déclenchement cycle si Gross PnL >= cycle_trigger_usd
+
+Les paliers `grid_level_incomplete` ne sont JAMAIS comptés comme placés
+dans le PnL, la marge ou la position théorique.
 """
 
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Any
+from typing import Any, Callable
 
-from ultiumgrid.connector.binance_futures import BinanceFuturesClient, SymbolFilters
+from ultiumgrid.connector.binance_futures import (
+    BinanceFuturesClient,
+    RetryExhaustedError,
+    SymbolFilters,
+)
 from ultiumgrid.engine.config import StrategyConfig
 
 logger = logging.getLogger(__name__)
@@ -33,7 +41,9 @@ class GridLevel:
     side: str  # BUY | SELL
     quantity: Decimal
     order_id: int | None = None
-    status: str = "pending"  # pending|open|filled|cancelled
+    status: str = "pending"
+    # pending|open|filled|cancelled|grid_level_incomplete|error
+    incomplete_since: str | None = None
 
 
 @dataclass
@@ -44,14 +54,20 @@ class GridState:
     grid_profit: float = 0.0
     floating_profit: float = 0.0
     funding_pnl: float = 0.0
-    position_qty: float = 0.0
+    position_qty: float = 0.0  # position RÉELLE grille (fills), jamais théorique
     entry_avg: float = 0.0
     active: bool = False
-    deepest_buy_index: int = -1  # plus bas niveau BUY fillé (pour coupe)
+    deepest_buy_index: int = -1
 
     @property
     def gross_pnl(self) -> float:
         return self.grid_profit + self.floating_profit + self.funding_pnl
+
+    def incomplete_indices(self) -> list[int]:
+        return [lv.index for lv in self.levels if lv.status == "grid_level_incomplete"]
+
+    def placed_levels(self) -> list[GridLevel]:
+        return [lv for lv in self.levels if lv.status in ("open", "filled")]
 
 
 def compute_levels(
@@ -60,15 +76,12 @@ def compute_levels(
     filters: SymbolFilters,
     qty_per_level: Decimal,
 ) -> list[GridLevel]:
-    """20 niveaux arithmétiques, pas = step_pct %."""
     levels: list[GridLevel] = []
     n = cfg.num_levels
     mid = n // 2
     step = Decimal(str(cfg.step_pct)) / Decimal("100")
     for i in range(n):
-        # i=0 plus bas, i=n-1 plus haut
         offset = i - mid + (Decimal("0.5") if n % 2 == 0 else 0)
-        # offset négatif sous le centre
         price = center_price * (Decimal("1") + step * Decimal(offset))
         price = filters.round_price(price)
         side = "BUY" if i < mid else "SELL"
@@ -78,12 +91,10 @@ def compute_levels(
 
 
 def qty_per_level(cfg: StrategyConfig, center_price: Decimal, filters: SymbolFilters) -> Decimal:
-    """Répartit le capital notionnel (capital * levier) sur les niveaux BUY."""
     notional = Decimal(str(cfg.capital_usdt)) * Decimal(str(cfg.leverage))
     buy_levels = max(cfg.num_levels // 2, 1)
     per = notional / Decimal(buy_levels) / center_price
     qty = filters.round_qty(per)
-    # Respect MIN_NOTIONAL
     if qty * center_price < filters.min_notional:
         qty = filters.round_qty(filters.min_notional / center_price * Decimal("1.05"))
     if qty < filters.min_qty:
@@ -92,10 +103,16 @@ def qty_per_level(cfg: StrategyConfig, center_price: Decimal, filters: SymbolFil
 
 
 class GridEngine:
-    def __init__(self, client: BinanceFuturesClient, cfg: StrategyConfig):
+    def __init__(
+        self,
+        client: BinanceFuturesClient,
+        cfg: StrategyConfig,
+        on_level_incomplete: Callable[[GridLevel, RetryExhaustedError], None] | None = None,
+    ):
         self.client = client
         self.cfg = cfg
         self.state = GridState(symbol=cfg.symbol, center_price=Decimal("0"))
+        self.on_level_incomplete = on_level_incomplete
 
     def open_grid(self, center_price: Decimal | None = None) -> GridState:
         symbol = self.cfg.symbol
@@ -113,20 +130,37 @@ class GridEngine:
         self.state = GridState(symbol=symbol, center_price=center_price, levels=levels, active=True)
 
         for level in levels:
-            try:
-                order = self.client.place_order(
-                    symbol=symbol,
-                    side=level.side,
-                    order_type="LIMIT",
-                    quantity=level.quantity,
-                    price=level.price,
-                )
-                level.order_id = int(order["orderId"])
-                level.status = "open"
-            except Exception as exc:
-                logger.error("place level %s failed: %s", level.index, exc)
-                level.status = "error"
+            self._place_level_order(level)
         return self.state
+
+    def _place_level_order(self, level: GridLevel) -> None:
+        try:
+            order = self.client.place_order(
+                symbol=self.cfg.symbol,
+                side=level.side,
+                order_type="LIMIT",
+                quantity=level.quantity,
+                price=level.price,
+                grid_level=level.index,
+                purpose="normal",
+            )
+            level.order_id = int(order["orderId"])
+            level.status = "open"
+            level.incomplete_since = None
+        except RetryExhaustedError as exc:
+            level.order_id = None
+            level.status = "grid_level_incomplete"
+            level.incomplete_since = datetime.now(timezone.utc).isoformat()
+            logger.critical(
+                "Palier %s de la grille non placé après 5 tentatives — grille incomplète depuis %s",
+                level.index,
+                level.incomplete_since,
+            )
+            if self.on_level_incomplete:
+                self.on_level_incomplete(level, exc)
+        except Exception as exc:
+            logger.error("place level %s failed: %s", level.index, exc)
+            level.status = "error"
 
     def cancel_all_grid_orders(self) -> None:
         symbol = self.cfg.symbol
@@ -143,36 +177,39 @@ class GridEngine:
         return self.client.open_orders(self.cfg.symbol)
 
     def update_floating(self, mark_price: float) -> float:
+        """Floating sur position RÉELLE uniquement (pas de paliers incomplets inventés)."""
         qty = self.state.position_qty
         entry = self.state.entry_avg
         if qty == 0 or entry == 0:
             self.state.floating_profit = 0.0
         else:
-            # Long si qty > 0
             self.state.floating_profit = (mark_price - entry) * qty
         return self.state.floating_profit
 
+    def theoretical_buy_qty(self) -> float:
+        """Quantité théorique si tous les paliers BUY étaient placés (audit écart coupe)."""
+        mid = self.cfg.num_levels // 2
+        return sum(float(lv.quantity) for lv in self.state.levels if lv.index < mid)
+
     def on_fill(self, level_index: int, fill_price: float, fill_qty: float) -> GridLevel | None:
-        """Après fill : place l'ordre opposé au niveau adjacent."""
         levels = self.state.levels
         if level_index < 0 or level_index >= len(levels):
             return None
         level = levels[level_index]
+        if level.status == "grid_level_incomplete":
+            return None
         level.status = "filled"
         filters = self.client.get_symbol_filters(self.cfg.symbol)
 
-        # MAJ position
         signed_qty = fill_qty if level.side == "BUY" else -fill_qty
         prev_qty = self.state.position_qty
         new_qty = prev_qty + signed_qty
         if prev_qty == 0:
             self.state.entry_avg = fill_price
         elif (prev_qty > 0 and signed_qty > 0) or (prev_qty < 0 and signed_qty < 0):
-            # ajout même sens
             self.state.entry_avg = (
                 abs(prev_qty) * self.state.entry_avg + fill_qty * fill_price
             ) / (abs(prev_qty) + fill_qty)
-        # réduction : PnL réalisé
         elif prev_qty != 0 and ((prev_qty > 0 and signed_qty < 0) or (prev_qty < 0 and signed_qty > 0)):
             closed = min(abs(prev_qty), fill_qty)
             direction = 1 if prev_qty > 0 else -1
@@ -183,20 +220,19 @@ class GridEngine:
         if level.side == "BUY":
             self.state.deepest_buy_index = max(self.state.deepest_buy_index, level_index)
 
-        # Replacement : BUY fillé → SELL au-dessus ; SELL fillé → BUY en-dessous
         if level.side == "BUY" and level_index + 1 < len(levels):
             target = levels[level_index + 1]
             if target.status in ("pending", "cancelled", "filled", "error"):
-                self._place_level(target, "SELL", filters)
+                self._place_replacement(target, "SELL", filters)
                 return target
         elif level.side == "SELL" and level_index - 1 >= 0:
             target = levels[level_index - 1]
             if target.status in ("pending", "cancelled", "filled", "error"):
-                self._place_level(target, "BUY", filters)
+                self._place_replacement(target, "BUY", filters)
                 return target
         return None
 
-    def _place_level(self, level: GridLevel, side: str, filters: SymbolFilters) -> None:
+    def _place_replacement(self, level: GridLevel, side: str, filters: SymbolFilters) -> None:
         level.side = side
         level.price = filters.round_price(level.price)
         try:
@@ -206,9 +242,17 @@ class GridEngine:
                 order_type="LIMIT",
                 quantity=level.quantity,
                 price=level.price,
+                grid_level=level.index,
             )
             level.order_id = int(order["orderId"])
             level.status = "open"
+            level.incomplete_since = None
+        except RetryExhaustedError as exc:
+            level.order_id = None
+            level.status = "grid_level_incomplete"
+            level.incomplete_since = datetime.now(timezone.utc).isoformat()
+            if self.on_level_incomplete:
+                self.on_level_incomplete(level, exc)
         except Exception as exc:
             logger.error("replacement level %s failed: %s", level.index, exc)
             level.status = "error"
@@ -216,8 +260,16 @@ class GridEngine:
     def should_close_cycle(self) -> bool:
         return self.state.gross_pnl >= self.cfg.cycle_trigger_usd
 
+    def real_position_qty(self) -> float:
+        """Lecture fraîche positionRisk — source de vérité Binance."""
+        positions = self.client.position_risk(self.cfg.symbol)
+        total = 0.0
+        for pos in positions:
+            total += float(pos.get("positionAmt", 0))
+        return total
+
     def close_cycle(self) -> dict[str, Any]:
-        """Ferme toutes les positions grille (market reduce) et annule ordres."""
+        """Ferme la position RÉELLE lue juste avant l'action (pas de reconstruction théorique)."""
         self.cancel_all_grid_orders()
         symbol = self.cfg.symbol
         positions = self.client.position_risk(symbol)
@@ -247,6 +299,7 @@ class GridEngine:
             "funding_pnl": self.state.funding_pnl,
             "gross_pnl": self.state.gross_pnl,
             "closed_orders": closed,
+            "real_position_before_close": sum(float(p.get("positionAmt", 0)) for p in positions),
         }
         self.state.active = False
         self.state.position_qty = 0.0
@@ -261,6 +314,7 @@ class GridEngine:
                 "quantity": str(lv.quantity),
                 "order_id": lv.order_id,
                 "status": lv.status,
+                "incomplete_since": lv.incomplete_since,
             }
             for lv in self.state.levels
         ]

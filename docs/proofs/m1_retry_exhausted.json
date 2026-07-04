@@ -1,0 +1,201 @@
+{
+  "scenario": "forced_post_always_1007",
+  "steps": [
+    {
+      "action": "LEVELS_AFTER_OPEN",
+      "levels": [
+        {
+          "index": 0,
+          "price": "62267.80",
+          "side": "BUY",
+          "quantity": "0.0031",
+          "order_id": null,
+          "status": "grid_level_incomplete",
+          "incomplete_since": "2026-07-04T09:30:16.425263+00:00"
+        },
+        {
+          "index": 1,
+          "price": "62424.00",
+          "side": "BUY",
+          "quantity": "0.0031",
+          "order_id": null,
+          "status": "grid_level_incomplete",
+          "incomplete_since": "2026-07-04T09:30:16.820623+00:00"
+        },
+        {
+          "index": 2,
+          "price": "62580.30",
+          "side": "SELL",
+          "quantity": "0.0031",
+          "order_id": null,
+          "status": "grid_level_incomplete",
+          "incomplete_since": "2026-07-04T09:30:17.187304+00:00"
+        },
+        {
+          "index": 3,
+          "price": "62736.50",
+          "side": "SELL",
+          "quantity": "0.0031",
+          "order_id": null,
+          "status": "grid_level_incomplete",
+          "incomplete_since": "2026-07-04T09:30:17.530824+00:00"
+        }
+      ],
+      "incomplete_count": 4
+    },
+    {
+      "action": "DB_ORDER_ATTEMPTS",
+      "timeout_not_found": 20,
+      "retry_exhausted": 4,
+      "sample_exhausted": [
+        {
+          "outcome": "retry_exhausted",
+          "request_json": {
+            "symbol": "BTCUSDT",
+            "side": "BUY",
+            "price": "62267.80",
+            "quantity": "0.0031",
+            "grid_level": 0,
+            "last_attempt_at": "2026-07-04T09:30:16.421550+00:00"
+          },
+          "verify_json": {
+            "used_client_ids": [
+              "ug8cb2e3b9ab03478da8a7b2adea14066f",
+              "ug3daac8d9b760408bba003d4b99565435",
+              "ugd189f51e59c94d50a9fc46567061cb25",
+              "ugac74acc23648459bab409e15dead035c",
+              "ugf550f436326741bba1a8dbf25c31e033"
+            ],
+            "timeout_not_found_count": 5
+          }
+        },
+        {
+          "outcome": "retry_exhausted",
+          "request_json": {
+            "symbol": "BTCUSDT",
+            "side": "BUY",
+            "price": "62424.00",
+            "quantity": "0.0031",
+            "grid_level": 1,
+            "last_attempt_at": "2026-07-04T09:30:16.818613+00:00"
+          },
+          "verify_json": {
+            "used_client_ids": [
+              "ug6901ba260d0942279cc219eae201ed95",
+              "ug02bc3ecebc2147509bc3f4a73713676a",
+              "ug7c744935cbc34b1e84f4a57002b31342",
+              "ugd9ce9f9b5a9743349f4fa105ad1dd56e",
+              "ug3ba69da4ce3b4f01afbfaf638d517fa3"
+            ],
+            "timeout_not_found_count": 5
+          }
+        }
+      ]
+    },
+    {
+      "action": "ALERTS",
+      "count": 4,
+      "messages": [
+        "Palier 0 de la grille non plac\u00e9 apr\u00e8s 5 tentatives \u2014 grille incompl\u00e8te depuis 2026-07-04T09:30:16.425263+00:00",
+        "Palier 1 de la grille non plac\u00e9 apr\u00e8s 5 tentatives \u2014 grille incompl\u00e8te depuis 2026-07-04T09:30:16.820623+00:00",
+        "Palier 2 de la grille non plac\u00e9 apr\u00e8s 5 tentatives \u2014 grille incompl\u00e8te depuis 2026-07-04T09:30:17.187304+00:00",
+        "Palier 3 de la grille non plac\u00e9 apr\u00e8s 5 tentatives \u2014 grille incompl\u00e8te depuis 2026-07-04T09:30:17.530824+00:00"
+      ]
+    },
+    {
+      "action": "BOT_STATE",
+      "incomplete_in_state": [
+        {
+          "index": 0,
+          "price": "62267.80",
+          "side": "BUY",
+          "quantity": "0.0031",
+          "order_id": null,
+          "status": "grid_level_incomplete",
+          "incomplete_since": "2026-07-04T09:30:16.425263+00:00"
+        },
+        {
+          "index": 1,
+          "price": "62424.00",
+          "side": "BUY",
+          "quantity": "0.0031",
+          "order_id": null,
+          "status": "grid_level_incomplete",
+          "incomplete_since": "2026-07-04T09:30:16.820623+00:00"
+        },
+        {
+          "index": 2,
+          "price": "62580.30",
+          "side": "SELL",
+          "quantity": "0.0031",
+          "order_id": null,
+          "status": "grid_level_incomplete",
+          "incomplete_since": "2026-07-04T09:30:17.187304+00:00"
+        },
+        {
+          "index": 3,
+          "price": "62736.50",
+          "side": "SELL",
+          "quantity": "0.0031",
+          "order_id": null,
+          "status": "grid_level_incomplete",
+          "incomplete_since": "2026-07-04T09:30:17.530824+00:00"
+        }
+      ]
+    },
+    {
+      "action": "STATUS",
+      "incomplete_count": 4,
+      "range_low": null,
+      "range_high": null,
+      "position_qty": 0.0,
+      "gross_pnl": 0.0
+    },
+    {
+      "action": "UI_BADGE_SOURCE",
+      "badge_missing_in_app_js": true,
+      "api_incomplete_levels": [
+        {
+          "index": 0,
+          "price": "62267.80",
+          "side": "BUY",
+          "quantity": "0.0031",
+          "order_id": null,
+          "status": "grid_level_incomplete",
+          "incomplete_since": "2026-07-04T09:30:16.425263+00:00"
+        },
+        {
+          "index": 1,
+          "price": "62424.00",
+          "side": "BUY",
+          "quantity": "0.0031",
+          "order_id": null,
+          "status": "grid_level_incomplete",
+          "incomplete_since": "2026-07-04T09:30:16.820623+00:00"
+        },
+        {
+          "index": 2,
+          "price": "62580.30",
+          "side": "SELL",
+          "quantity": "0.0031",
+          "order_id": null,
+          "status": "grid_level_incomplete",
+          "incomplete_since": "2026-07-04T09:30:17.187304+00:00"
+        },
+        {
+          "index": 3,
+          "price": "62736.50",
+          "side": "SELL",
+          "quantity": "0.0031",
+          "order_id": null,
+          "status": "grid_level_incomplete",
+          "incomplete_since": "2026-07-04T09:30:17.530824+00:00"
+        }
+      ]
+    },
+    {
+      "action": "BINANCE_OPEN_ORDERS",
+      "raw": []
+    }
+  ]
+}

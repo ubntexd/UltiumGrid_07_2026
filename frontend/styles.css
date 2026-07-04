@@ -65,6 +65,17 @@ table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 th, td { border-bottom: 1px solid var(--border); padding: 0.4rem; text-align: left; }
 .pos { color: var(--ok); }
 .neg { color: var(--bad); }
+.badge-missing {
+  display: inline-block;
+  background: #7f1d1d;
+  color: #fecaca;
+  border: 1px solid var(--bad);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.row-incomplete { background: rgba(214, 69, 69, 0.12); }
 .range-bar {
   position: relative;
   height: 18px;

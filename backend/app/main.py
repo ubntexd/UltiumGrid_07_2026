@@ -50,7 +50,12 @@ def build_status() -> dict[str, Any]:
         cfg = StrategyConfig.from_dict(state.get("config") or StrategyConfig().to_dict())
         g = state.get("grid") or {}
         levels = g.get("levels") or []
-        prices = [float(lv["price"]) for lv in levels] if levels else []
+        incomplete = [lv for lv in levels if lv.get("status") == "grid_level_incomplete"]
+        placed_prices = [
+            float(lv["price"])
+            for lv in levels
+            if lv.get("status") not in ("grid_level_incomplete", "error", "pending")
+        ]
         mark = None
         try:
             mark = float(client.ticker_price(cfg.symbol)["price"])
@@ -81,8 +86,8 @@ def build_status() -> dict[str, Any]:
             "grid": {
                 "active": g.get("active"),
                 "center_price": float(g["center_price"]) if g.get("center_price") else None,
-                "range_low": min(prices) if prices else None,
-                "range_high": max(prices) if prices else None,
+                "range_low": min(placed_prices) if placed_prices else None,
+                "range_high": max(placed_prices) if placed_prices else None,
                 "position_qty": g.get("position_qty"),
                 "entry_avg": g.get("entry_avg"),
                 "grid_profit": g.get("grid_profit"),
@@ -92,6 +97,8 @@ def build_status() -> dict[str, Any]:
                 + (g.get("floating_profit") or 0)
                 + (g.get("funding_pnl") or 0),
                 "levels": levels,
+                "incomplete_levels": incomplete,
+                "incomplete_count": len(incomplete),
             },
             "bags": [
                 {

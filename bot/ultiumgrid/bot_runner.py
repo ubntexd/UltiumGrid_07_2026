@@ -13,7 +13,9 @@ from sqlalchemy.orm import Session
 
 from ultiumgrid.bags.manager import BagManager
 from ultiumgrid.connector.binance_futures import BinanceFuturesClient
+from ultiumgrid.connector.binance_futures import RetryExhaustedError
 from ultiumgrid.db.models import (
+    AlertEvent,
     BotState,
     Configuration,
     Cycle,
@@ -23,7 +25,7 @@ from ultiumgrid.db.models import (
     utcnow,
 )
 from ultiumgrid.engine.config import StrategyConfig
-from ultiumgrid.engine.grid import GridEngine
+from ultiumgrid.engine.grid import GridEngine, GridLevel
 from ultiumgrid.guards.safety import SafetyGuards
 from ultiumgrid.risk.cuts import ProgressiveCutManager
 
@@ -36,7 +38,7 @@ class BotRunner:
         self.session = session
         self.cfg = cfg or self._load_active_config()
         self.client.set_order_log_callback(self._persist_order_attempt)
-        self.engine = GridEngine(client, self.cfg)
+        self.engine = GridEngine(client, self.cfg, on_level_incomplete=self._on_level_incomplete)
         self.cuts = ProgressiveCutManager(self.engine, self.cfg)
         self.bags = BagManager(client, session, self.cfg)
         self.guards = SafetyGuards(client, session, self.cfg)
@@ -64,6 +66,32 @@ class BotRunner:
         )
         self.session.add(row)
         self.session.commit()
+
+    def _critical_alert(self, kind: str, message: str, payload: dict | None = None) -> None:
+        ev = AlertEvent(level="critical", kind=kind, message=message, payload_json=payload)
+        self.session.add(ev)
+        self.session.commit()
+        logger.critical("[%s] %s", kind, message)
+
+    def _on_level_incomplete(self, level: GridLevel, exc: RetryExhaustedError) -> None:
+        ts = level.incomplete_since or utcnow().isoformat()
+        msg = (
+            f"Palier {level.index} de la grille non placé après 5 tentatives "
+            f"— grille incomplète depuis {ts}"
+        )
+        self._critical_alert(
+            "grid_level_incomplete",
+            msg,
+            {
+                "level": level.index,
+                "price": str(level.price),
+                "quantity": str(level.quantity),
+                "side": level.side,
+                "used_client_ids": exc.used_client_ids,
+                "since": ts,
+            },
+        )
+        self.save_state()
 
     def _load_active_config(self) -> StrategyConfig:
         row = (
@@ -136,7 +164,9 @@ class BotRunner:
             return False
         data = row.value_json
         self.cfg = StrategyConfig.from_dict(data.get("config") or {})
-        self.engine = GridEngine(self.client, self.cfg)
+        self.engine = GridEngine(
+            self.client, self.cfg, on_level_incomplete=self._on_level_incomplete
+        )
         self.cuts = ProgressiveCutManager(self.engine, self.cfg)
         self.bags = BagManager(self.client, self.session, self.cfg)
         self.guards = SafetyGuards(self.client, self.session, self.cfg)
@@ -149,9 +179,6 @@ class BotRunner:
         self.engine.state.funding_pnl = float(g.get("funding_pnl") or 0)
         self.engine.state.active = bool(g.get("active"))
         self.engine.state.deepest_buy_index = int(g.get("deepest_buy_index") or -1)
-        # Reconstruire niveaux depuis DB ; ordres réels via reconcile Binance
-        from ultiumgrid.engine.grid import GridLevel
-
         levels = []
         for lv in g.get("levels") or []:
             levels.append(
@@ -162,6 +189,7 @@ class BotRunner:
                     quantity=Decimal(lv["quantity"]),
                     order_id=lv.get("order_id"),
                     status=lv.get("status", "open"),
+                    incomplete_since=lv.get("incomplete_since"),
                 )
             )
         self.engine.state.levels = levels
@@ -231,27 +259,80 @@ class BotRunner:
             return {"running": False}
         symbol = self.cfg.symbol
         mark = float(self.client.ticker_price(symbol)["price"])
+        # Position réelle Binance pour floating / garde-fous (pas de théorique)
+        try:
+            real_pos = self.engine.real_position_qty()
+            # La part grille = réel - sacs (sacs déjà isolés virtuellement)
+            bags_q = self.bags.bags_qty()
+            # Si sacs long, position réelle inclut sacs ; grille = réel - sacs
+            self.engine.state.position_qty = real_pos - bags_q
+        except Exception as exc:
+            logger.warning("real_position_qty unavailable: %s", exc)
         self.engine.update_floating(mark)
 
         # Sync fills via open orders delta
         self._sync_fills()
 
-        # Coupe progressive
-        if self.engine.state.deepest_buy_index >= 0:
-            self.cuts.observe_level(self.engine.state.deepest_buy_index)
-        cut = self.cuts.evaluate(self.engine.state.position_qty, self.engine.state.entry_avg)
+        # Coupe progressive — franchissement par PRIX, qty = position RÉELLE
+        self.cuts.observe_mark_price(mark)
+        incomplete = self.engine.state.incomplete_indices()
+        cut = self.cuts.evaluate(
+            real_position_qty=self.engine.state.position_qty,
+            entry_avg=self.engine.state.entry_avg,
+            incomplete_indices=incomplete,
+        )
         if cut and cut["qty"] > 0:
-            bag = self.bags.create_bag(cut["qty"], cut["entry_price"], cut["level"])
-            # Réduire position grille virtuelle (la position réelle reste, transférée en sac)
+            if cut.get("tag") == "cut_with_incomplete_grid":
+                self.client._log_attempt(
+                    {
+                        "symbol": symbol,
+                        "side": "CUT",
+                        "order_type": "TRANSFER",
+                        "purpose": "risk_cut",
+                        "client_order_id": f"cut-{cut['level']}-{cut['at']}",
+                        "attempt_no": 1,
+                        "outcome": "cut_with_incomplete_grid",
+                        "http_status": None,
+                        "binance_code": None,
+                        "binance_msg": None,
+                        "order_id": None,
+                        "request_json": cut,
+                        "response_json": None,
+                        "verify_json": {
+                            "incomplete_levels": cut.get("incomplete_levels"),
+                            "real_qty": cut.get("qty"),
+                            "theoretical_cut": cut.get("theoretical_cut"),
+                            "gap_pct": cut.get("gap_pct"),
+                        },
+                        "grid_level": cut["level"],
+                    }
+                )
+            if cut.get("alert_gap"):
+                self._critical_alert(
+                    "cut_gap_over_10pct",
+                    (
+                        f"Écart coupe théorique/réel {cut['gap_pct']:.1f}% > 10% "
+                        f"(réel={cut['qty']}, théorique={cut['theoretical_cut']})"
+                    ),
+                    cut,
+                )
+            self.bags.create_bag(
+                cut["qty"],
+                cut["entry_price"],
+                cut["level"],
+                incomplete_levels=cut.get("incomplete_levels"),
+            )
             sign = 1 if self.engine.state.position_qty >= 0 else -1
             self.engine.state.position_qty -= sign * cut["qty"]
             if cut["level"] == self.cfg.cut_level_2:
-                # Recentrage après coupe totale
                 self.engine.cancel_all_grid_orders()
                 self.engine.open_grid(Decimal(str(mark)))
 
-        # Garde-fous
-        total_qty = self.engine.state.position_qty + self.bags.bags_qty()
+        # Garde-fous sur position totale RÉELLE
+        try:
+            total_qty = self.engine.real_position_qty()
+        except Exception:
+            total_qty = self.engine.state.position_qty + self.bags.bags_qty()
         total_entry = self._total_entry_avg()
         if self.guards.check_hard_stop(total_entry, mark, total_qty):
             self.guards.panic_close(self.bags, self.engine)
@@ -383,7 +464,9 @@ class BotRunner:
         if not self._pending_config:
             return
         self.cfg = self._pending_config
-        self.engine = GridEngine(self.client, self.cfg)
+        self.engine = GridEngine(
+            self.client, self.cfg, on_level_incomplete=self._on_level_incomplete
+        )
         self.cuts = ProgressiveCutManager(self.engine, self.cfg)
         self.bags = BagManager(self.client, self.session, self.cfg)
         self.guards = SafetyGuards(self.client, self.session, self.cfg)
@@ -409,7 +492,13 @@ class BotRunner:
         except Exception as exc:
             account = {"error": str(exc)}
         levels = self.engine.levels_as_dict()
-        prices = [float(lv["price"]) for lv in levels] if levels else []
+        # Range / marge : ignorer les paliers incomplets (pas d'ordre = pas de réservation)
+        placed_prices = [
+            float(lv["price"])
+            for lv in levels
+            if lv.get("status") not in ("grid_level_incomplete", "error", "pending")
+        ]
+        incomplete = [lv for lv in levels if lv.get("status") == "grid_level_incomplete"]
         return {
             "running": self.running,
             "symbol": self.cfg.symbol,
@@ -417,8 +506,8 @@ class BotRunner:
             "grid": {
                 "active": self.engine.state.active,
                 "center_price": float(self.engine.state.center_price) if self.engine.state.center_price else None,
-                "range_low": min(prices) if prices else None,
-                "range_high": max(prices) if prices else None,
+                "range_low": min(placed_prices) if placed_prices else None,
+                "range_high": max(placed_prices) if placed_prices else None,
                 "position_qty": self.engine.state.position_qty,
                 "entry_avg": self.engine.state.entry_avg,
                 "grid_profit": self.engine.state.grid_profit,
@@ -426,6 +515,8 @@ class BotRunner:
                 "funding_pnl": self.engine.state.funding_pnl,
                 "gross_pnl": self.engine.state.gross_pnl,
                 "levels": levels,
+                "incomplete_levels": incomplete,
+                "incomplete_count": len(incomplete),
             },
             "bags": [
                 {

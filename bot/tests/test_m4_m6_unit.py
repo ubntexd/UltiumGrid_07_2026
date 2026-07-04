@@ -23,21 +23,21 @@ def test_cut_at_level_10_and_14():
     mid = cfg.num_levels // 2
     # profondeur 10 : buy index = mid - 10
     mgr.observe_level(mid - 10)
-    action = mgr.evaluate(position_qty=1.0, entry_avg=60000.0)
+    action = mgr.evaluate(real_position_qty=1.0, entry_avg=60000.0)
     assert action is not None
     assert action["level"] == 10
     assert action["qty"] == 0.5  # 50%
     assert mgr.state.armed is False
 
     # pas de re-coupe tant que non réarmé
-    assert mgr.evaluate(1.0, 60000.0) is None
+    assert mgr.evaluate(real_position_qty=1.0, entry_avg=60000.0) is None
 
     # réarmement par délai
     mgr.state.pending_rearm_after = datetime.now(timezone.utc) - timedelta(seconds=1)
     assert mgr.check_rearm() is True
 
     mgr.observe_level(mid - 14)
-    action2 = mgr.evaluate(position_qty=0.5, entry_avg=60000.0)
+    action2 = mgr.evaluate(real_position_qty=0.5, entry_avg=60000.0)
     assert action2 is not None
     assert action2["level"] == 14
     assert action2["qty"] == 0.5  # 100% de 0.5

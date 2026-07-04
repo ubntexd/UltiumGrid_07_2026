@@ -35,6 +35,33 @@ DEFAULT_WS = "wss://stream.binancefuture.com"
 BACKOFF_BASE_S = 0.2
 MAX_ORDER_ATTEMPTS = 5
 
+
+class RetryExhaustedError(Exception):
+    """5 tentatives timeout_not_found — palier non placé, ne pas abandonner silencieusement."""
+
+    def __init__(
+        self,
+        *,
+        symbol: str,
+        side: str,
+        price: str | None,
+        quantity: str | None,
+        grid_level: int | None,
+        used_client_ids: list[str],
+        last_error: Exception | None,
+    ):
+        self.symbol = symbol
+        self.side = side
+        self.price = price
+        self.quantity = quantity
+        self.grid_level = grid_level
+        self.used_client_ids = used_client_ids
+        self.last_error = last_error
+        super().__init__(
+            f"retry_exhausted symbol={symbol} level={grid_level} "
+            f"price={price} qty={quantity} attempts={len(used_client_ids)}"
+        )
+
 # Purposes prioritaires (fermeture) — censés être exempts de -1008
 PRIORITY_CLOSE_PURPOSES = frozenset(
     {"panic_close", "risk_cut", "hard_stop", "cycle_close", "bag_sell"}
@@ -367,14 +394,17 @@ class BinanceFuturesClient:
         purpose: str = "normal",
         close_position: bool = False,
         max_attempts: int = MAX_ORDER_ATTEMPTS,
+        grid_level: int | None = None,
     ) -> dict:
         """Place un ordre avec anti-doublon post -1007 et backoff exponentiel.
 
         Chaque tentative a un newClientOrderId unique.
         Après -1007 : vérifier Binance avant tout renvoi.
+        Si 5× timeout_not_found → retry_exhausted (jamais abandon silencieux).
         """
         filters = self.get_symbol_filters(symbol)
-        qty_str = filters.format_qty(quantity)
+        qty_str = filters.format_qty(quantity) if not close_position else None
+        price_str: str | None = None
         hedge = self.is_hedge_mode()
         if position_side is None and hedge:
             position_side = "LONG" if side.upper() == "BUY" else "SHORT"
@@ -393,7 +423,8 @@ class BinanceFuturesClient:
         if order_type.upper() == "LIMIT":
             if price is None:
                 raise ValueError("LIMIT order requires price")
-            base_params["price"] = filters.format_price(price)
+            price_str = filters.format_price(price)
+            base_params["price"] = price_str
             base_params["timeInForce"] = time_in_force
         if position_side:
             base_params["positionSide"] = position_side
@@ -404,6 +435,7 @@ class BinanceFuturesClient:
 
         used_client_ids: list[str] = []
         last_error: Exception | None = None
+        timeout_not_found_count = 0
 
         for attempt_no in range(1, max_attempts + 1):
             client_order_id = self.new_client_order_id()
@@ -468,6 +500,7 @@ class BinanceFuturesClient:
                     # Rattacher à l'état interne : retourner l'ordre existant, NE PAS renvoyer
                     return found
 
+                timeout_not_found_count += 1
                 self._log_attempt(
                     {
                         "symbol": symbol,
@@ -485,6 +518,7 @@ class BinanceFuturesClient:
                         "response_json": body if isinstance(body, dict) else {"raw": raw[:500]},
                         "verify_json": trace,
                         "used_client_ids": list(used_client_ids),
+                        "grid_level": grid_level,
                     }
                 )
                 last_error = requests.HTTPError(f"{status} {raw[:300]}")
@@ -564,6 +598,50 @@ class BinanceFuturesClient:
                 }
             )
             raise requests.HTTPError(f"{status} {raw}")
+
+        # Épuisement des retries timeout : jamais abandon silencieux
+        if timeout_not_found_count >= max_attempts:
+            from datetime import datetime, timezone
+
+            ts = datetime.now(timezone.utc).isoformat()
+            self._log_attempt(
+                {
+                    "symbol": symbol,
+                    "side": side.upper(),
+                    "order_type": order_type.upper(),
+                    "purpose": purpose,
+                    "client_order_id": used_client_ids[-1] if used_client_ids else "",
+                    "attempt_no": max_attempts,
+                    "outcome": "retry_exhausted",
+                    "http_status": None,
+                    "binance_code": -1007,
+                    "binance_msg": f"Palier {grid_level} non placé après {max_attempts} tentatives",
+                    "order_id": None,
+                    "request_json": {
+                        "symbol": symbol,
+                        "side": side.upper(),
+                        "price": price_str,
+                        "quantity": qty_str,
+                        "grid_level": grid_level,
+                        "last_attempt_at": ts,
+                    },
+                    "response_json": None,
+                    "verify_json": {
+                        "used_client_ids": list(used_client_ids),
+                        "timeout_not_found_count": timeout_not_found_count,
+                    },
+                    "grid_level": grid_level,
+                }
+            )
+            raise RetryExhaustedError(
+                symbol=symbol,
+                side=side.upper(),
+                price=price_str,
+                quantity=qty_str,
+                grid_level=grid_level,
+                used_client_ids=list(used_client_ids),
+                last_error=last_error,
+            )
 
         assert last_error is not None
         raise last_error

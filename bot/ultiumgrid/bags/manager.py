@@ -1,8 +1,12 @@
-"""Système de sacs — registres virtuels + réconciliation Binance."""
+"""Système de sacs — registres virtuels + réconciliation Binance.
+
+Quantités toujours RÉELLES (positionRisk / transfert mesuré), jamais théoriques.
+"""
 
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -19,8 +23,17 @@ class BagManager:
         self.client = client
         self.session = session
         self.cfg = cfg
+        self.last_reconciliation: dict[str, Any] | None = None
 
-    def create_bag(self, quantity: float, entry_price: float, cut_level: int | None, source: str = "cut") -> Bag:
+    def create_bag(
+        self,
+        quantity: float,
+        entry_price: float,
+        cut_level: int | None,
+        source: str = "cut",
+        incomplete_levels: list[int] | None = None,
+    ) -> Bag:
+        """quantity = quantité RÉELLE transférée (jamais théorique grille pleine)."""
         bag = Bag(
             symbol=self.cfg.symbol,
             quantity=quantity,
@@ -32,6 +45,13 @@ class BagManager:
         self.session.add(bag)
         self.session.commit()
         self.session.refresh(bag)
+        if incomplete_levels:
+            logger.info(
+                "Bag %s créé avec qty réelle=%s (paliers incomplets=%s)",
+                bag.id,
+                quantity,
+                incomplete_levels,
+            )
         return bag
 
     def open_bags(self, symbol: str | None = None) -> list[Bag]:
@@ -74,33 +94,44 @@ class BagManager:
         return {"bag": bag, "order": order}
 
     def reconcile(self, grid_position_qty: float, symbol: str | None = None) -> dict[str, Any]:
-        """position Binance = sacs + grille active."""
+        """position Binance = sacs + grille active — quantités RÉELLES uniquement."""
         symbol = symbol or self.cfg.symbol
-        positions = self.client.position_risk(symbol)
-        binance_qty = 0.0
-        for p in positions:
-            # En hedge mode, sommer LONG (positif) et SHORT (négatif)
-            amt = float(p.get("positionAmt", 0))
-            binance_qty += amt
+        try:
+            positions = self.client.position_risk(symbol)
+        except Exception as exc:
+            result = {
+                "symbol": symbol,
+                "status": "reconciliation_unavailable",
+                "at": datetime.now(timezone.utc).isoformat(),
+                "error": str(exc),
+                "ok": False,
+            }
+            self.last_reconciliation = result
+            logger.warning("reconciliation_unavailable: %s", result)
+            return result
+
+        binance_qty = sum(float(p.get("positionAmt", 0)) for p in positions)
         bags_qty = self.bags_qty(symbol)
         expected = bags_qty + grid_position_qty
         delta = binance_qty - expected
         ok = abs(delta) < 1e-8
         result = {
             "symbol": symbol,
+            "status": "ok" if ok else "mismatch",
             "binance_qty": binance_qty,
             "bags_qty": bags_qty,
             "grid_qty": grid_position_qty,
             "expected": expected,
             "delta": delta,
             "ok": ok,
+            "at": datetime.now(timezone.utc).isoformat(),
         }
+        self.last_reconciliation = result
         if not ok:
             logger.warning("Reconciliation mismatch: %s", result)
         return result
 
     def bags_margin_ratio(self, available_balance: float, mark_price: float) -> float:
-        """Marge notionnelle des sacs / balance disponible, en %."""
         notional = self.bags_qty() * mark_price / max(self.cfg.leverage, 1)
         if available_balance <= 0:
             return 100.0

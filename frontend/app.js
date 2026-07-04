@@ -90,6 +90,7 @@ function renderRunning(s) {
     <p>Guards: hard_stop=${s.guards?.hard_stop} breaker=${s.guards?.circuit_breaker} panic=${s.guards?.panic}</p>
   `;
 
+  const incompleteCount = g.incomplete_count || (g.incomplete_levels || []).length;
   document.getElementById("grid-details").innerHTML = `
     <p>Active: ${g.active}</p>
     <p>Center: ${fmt(g.center_price)}</p>
@@ -99,6 +100,7 @@ function renderRunning(s) {
     <p>Floating: <span class="${pnlClass(g.floating_profit)}">${fmt(g.floating_profit)}</span></p>
     <p>Funding: <span class="${pnlClass(g.funding_pnl)}">${fmt(g.funding_pnl)}</span></p>
     <p>Gross: <span class="${pnlClass(g.gross_pnl)}">${fmt(g.gross_pnl)}</span></p>
+    <p>Paliers incomplets: <strong class="${incompleteCount ? "neg" : ""}">${incompleteCount}</strong></p>
   `;
 
   const low = Number(g.range_low);
@@ -112,12 +114,16 @@ function renderRunning(s) {
 
   const tbody = document.querySelector("#levels-table tbody");
   tbody.innerHTML = (g.levels || [])
-    .map(
-      (lv) => `<tr>
+    .map((lv) => {
+      const incomplete = lv.status === "grid_level_incomplete";
+      const statusCell = incomplete
+        ? `<span class="badge-missing" title="${lv.incomplete_since || ""}">non placé</span>`
+        : lv.status;
+      return `<tr class="${incomplete ? "row-incomplete" : ""}">
       <td>${lv.index}</td><td>${lv.side}</td><td>${lv.price}</td>
-      <td>${lv.quantity}</td><td>${lv.status}</td><td>${lv.order_id ?? "—"}</td>
-    </tr>`
-    )
+      <td>${lv.quantity}</td><td>${statusCell}</td><td>${lv.order_id ?? "—"}</td>
+    </tr>`;
+    })
     .join("");
 }
 
