@@ -1,0 +1,48 @@
+{
+  "timestamp_utc": "2026-07-05T18:16:00+00:00",
+  "purpose": "Comparaison viabilité ancien vs nouveau paramétrage cible (Module 7bis) — avant tout nouveau run",
+  "data_source": "POST /api/config/viability (compte Spot Demo actuel)",
+  "bnb_blocking": {
+    "bnb_free_account": 0.0,
+    "status": "BLOQUANT",
+    "note": "Nouveau mode exige bnb_fee_discount=true ; démarrage refusé tant que BNB=0. Faucet portail demo.binance.com à vérifier."
+  },
+  "configs": {
+    "current_cancelled_run": {
+      "step_pct": 0.25,
+      "bnb_fee_discount": false,
+      "cycle_trigger_usd": 15,
+      "capital_usdt": 5000,
+      "num_levels": 20,
+      "grids_to_cycle": 120,
+      "net_at_gross_threshold": 12.5,
+      "net_per_grid": 0.125,
+      "ratio_gross_to_fees": 1.25,
+      "estimated_cycle_frequency": "~1 cycle / 6-7 jours (120 grilles à fréquence observée run annulé)"
+    },
+    "target_next_run": {
+      "step_pct": 0.4,
+      "bnb_fee_discount": true,
+      "cycle_trigger_usd": 15,
+      "capital_usdt": 5000,
+      "num_levels": 20,
+      "grids_to_cycle": 24,
+      "net_at_gross_threshold": 13.125,
+      "net_per_grid": 0.625,
+      "ratio_gross_to_fees": 2.67,
+      "bnb_sufficient": false,
+      "estimated_cycle_frequency": "~5× plus rapide en grilles (24 vs 120) — run réel requis pour valider"
+    }
+  },
+  "delta_target_vs_current": {
+    "grids_to_cycle": -96,
+    "net_per_grid": "+0.50 USDT",
+    "net_at_gross_threshold": "+0.625 USDT"
+  },
+  "next_steps_before_real_run": [
+    "1. Obtenir BNB sur compte Spot Demo (bloquant)",
+    "2. Appliquer config cible via Module 7bis (mode close_now) après feu vert utilisateur",
+    "3. Run court de validation puis éventuel run longue durée — pas de lancement automatique"
+  ],
+  "feu_vert_requis": true
+}

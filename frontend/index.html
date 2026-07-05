@@ -32,6 +32,29 @@
 
   <main>
     <section id="tab-running" class="tab active">
+      <div class="card">
+        <h2>Grille active — récapitulatif</h2>
+        <div class="table-scroll">
+          <table id="grid-recap-table" class="recap-table">
+            <thead>
+              <tr>
+                <th>Pair</th>
+                <th>Time Created</th>
+                <th>Total Investment</th>
+                <th>Total Profit</th>
+                <th>Grid Profit</th>
+                <th>Floating Profit</th>
+                <th>Total Matched Trades</th>
+                <th>Price Range</th>
+                <th>Duration</th>
+                <th>Number of Grids</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
       <div class="grid-2">
         <div class="card">
           <h2>État</h2>
@@ -43,10 +66,12 @@
           <div id="grid-details"></div>
         </div>
       </div>
-      <div class="card">
-        <h2>Prix + fourchette de grille</h2>
+      <div class="card chart-card">
+        <h2>Graphique prix + niveaux de grille</h2>
         <div id="price-chart-msg" class="chart-msg"></div>
-        <canvas id="price-chart" height="120"></canvas>
+        <div class="chart-wrap">
+          <canvas id="price-chart" height="280"></canvas>
+        </div>
       </div>
       <div class="card">
         <h2>Niveaux</h2>

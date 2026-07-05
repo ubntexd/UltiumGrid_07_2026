@@ -1,0 +1,64 @@
+{
+  "timestamp_utc": "2026-07-05T17:42:48.138089+00:00",
+  "fix_deployed_utc": "2026-07-05T17:33:55+00:00",
+  "method": "MatchedGridLedger depuis trades DB; gross_pnl inchang\u00e9; floating=gross-grid",
+  "cycles_checked": 2,
+  "cycles_corrected": 1,
+  "corrections": [
+    {
+      "cycle_id": 1,
+      "close_reason": "open_failed",
+      "closed_at": "2026-07-04T16:22:55Z",
+      "closed_before_grid_profit_fix": true,
+      "fix_deployed_utc": "2026-07-05T17:33:55+00:00",
+      "grid_trade_count": 0,
+      "roundtrip_count": 0,
+      "before": {
+        "grid_profit": 0.0,
+        "floating_profit": 0.0,
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0
+      },
+      "after": {
+        "grid_profit": 0.0,
+        "floating_profit": 0.0,
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0
+      },
+      "delta": {
+        "grid_profit": 0.0,
+        "floating_profit": 0.0,
+        "net_pnl": 0.0
+      },
+      "action": "non_concerne"
+    },
+    {
+      "cycle_id": 2,
+      "close_reason": "trigger_15",
+      "closed_at": "2026-07-04T17:50:22Z",
+      "closed_before_grid_profit_fix": true,
+      "fix_deployed_utc": "2026-07-05T17:33:55+00:00",
+      "grid_trade_count": 3,
+      "roundtrip_count": 0,
+      "before": {
+        "grid_profit": 2.774116900000016,
+        "floating_profit": 12.530476777950016,
+        "gross_pnl": 15.304593677950031,
+        "net_pnl": 14.54817491995003
+      },
+      "after": {
+        "grid_profit": 0.0,
+        "floating_profit": 15.30459367795,
+        "gross_pnl": 15.304593677950031,
+        "net_pnl": 14.54817491995
+      },
+      "delta": {
+        "grid_profit": -2.7741169,
+        "floating_profit": 2.7741169,
+        "net_pnl": 0.0
+      },
+      "action": "recalculated"
+    }
+  ],
+  "organic_run_note": "Cycle 2 du run 48h recalcul\u00e9 en cours de route \u2014 voir corrections[]."
+}

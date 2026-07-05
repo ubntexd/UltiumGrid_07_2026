@@ -6,7 +6,8 @@ Formules documentées pour reproductibilité :
   level_i = center_price * (1 + step_pct/100 * offset)
   pour i = 0..num_levels-1 (i < mid = BUY, i >= mid = SELL)
 
-- Grid Profit = somme des PnL réalisés des paires buy/sell de la grille active
+- Grid Profit = somme des profits des paires BUY(i)+SELL(i+1) **complètes** uniquement
+  (formule Binance : sell*q*(1-fee) - buy*q*(1+fee) sur qty appariée)
 - Floating Profit = (mark_price - entry_avg) * position_qty  (solde base RÉEL uniquement)
 - Gross PnL = Grid Profit + Floating Profit  (pas de funding en Spot)
 - Déclenchement cycle si Gross PnL >= cycle_trigger_usd
@@ -29,6 +30,7 @@ from ultiumgrid.connector.binance_spot import (
     SymbolFilters,
 )
 from ultiumgrid.engine.config import StrategyConfig
+from ultiumgrid.engine.grid_profit import MatchedGridLedger, compute_grid_profit_from_trades
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +60,7 @@ class GridState:
     deepest_buy_index: int = -1
     # Achat marché initial (inventaire pour les SELL) — traçabilité frais/slippage
     initial_buy: dict | None = None
+    matched_ledger: MatchedGridLedger = field(default_factory=MatchedGridLedger)
 
     @property
     def gross_pnl(self) -> float:
@@ -148,7 +151,7 @@ class GridEngine:
 
         if need >= filters.min_qty:
             # Buffer frais éventuels en base asset + minNotional
-            need = filters.round_qty(need + filters.step_size)
+            need = filters.round_qty(need + filters.step_size * 3)
             if need * center_price < filters.min_notional:
                 need = filters.round_qty(
                     filters.min_notional / center_price * Decimal("1.05")
@@ -205,10 +208,12 @@ class GridEngine:
             free_after = Decimal(
                 str(self.client.balance_free(filters.base_asset, force=True))
             )
-            if free_after < sell_qty_total:
+            if free_after + filters.step_size * 2 < sell_qty_total:
                 raise RuntimeError(
                     f"inventaire insuffisant après buy: free={free_after} need={sell_qty_total}"
                 )
+            if free_after < sell_qty_total:
+                sell_qty_total = filters.round_qty(free_after)
             initial_buy = {
                 "orderId": order.get("orderId"),
                 "clientOrderId": order.get("clientOrderId"),
@@ -247,6 +252,7 @@ class GridEngine:
             entry_avg=entry_avg,
             initial_buy=initial_buy,
         )
+        self.state.matched_ledger = MatchedGridLedger()
 
         # Étape 3 — limites BUY et SELL (inventaire garanti pour les SELL)
         for level in levels:
@@ -347,13 +353,17 @@ class GridEngine:
             self.state.entry_avg = (
                 abs(prev_qty) * self.state.entry_avg + fill_qty * fill_price
             ) / (abs(prev_qty) + fill_qty)
-        elif prev_qty != 0 and ((prev_qty > 0 and signed_qty < 0) or (prev_qty < 0 and signed_qty > 0)):
-            closed = min(abs(prev_qty), fill_qty)
-            direction = 1 if prev_qty > 0 else -1
-            realized = direction * (fill_price - self.state.entry_avg) * closed
-            self.state.grid_profit += realized
+        if abs(new_qty) < 1e-12:
+            self.state.entry_avg = 0.0
 
         self.state.position_qty = new_qty
+        # Grid Profit : appariement Binance BUY(level) + SELL(level+1), pas entry_avg global
+        fee_rate = 0.001
+        if hasattr(self.cfg, "bnb_fee_discount") and self.cfg.bnb_fee_discount:
+            fee_rate = 0.00075
+        self.state.matched_ledger.fee_rate = fee_rate
+        self.state.matched_ledger.on_fill(level.side, level_index, fill_price, fill_qty)
+        self.state.grid_profit = self.state.matched_ledger.grid_profit
         if level.side == "BUY":
             self.state.deepest_buy_index = max(self.state.deepest_buy_index, level_index)
 
@@ -434,6 +444,17 @@ class GridEngine:
         self.state.active = False
         self.state.position_qty = 0.0
         return result
+
+    def recompute_grid_profit_from_trades(self, trades: list[dict]) -> float:
+        """Recalcule grid_profit (appariement Binance) depuis les fills DB."""
+        fee_rate = 0.00075 if getattr(self.cfg, "bnb_fee_discount", False) else 0.001
+        result = compute_grid_profit_from_trades(trades, fee_rate=fee_rate)
+        self.state.matched_ledger.reset()
+        for rt in result["matched_roundtrips"]:
+            self.state.matched_ledger.matched_roundtrips.append(rt)
+        self.state.matched_ledger.grid_profit = result["grid_profit"]
+        self.state.grid_profit = result["grid_profit"]
+        return result["grid_profit"]
 
     def levels_as_dict(self) -> list[dict]:
         return [

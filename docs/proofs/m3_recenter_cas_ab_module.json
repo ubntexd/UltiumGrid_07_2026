@@ -1,0 +1,81 @@
+{
+  "timestamp_utc": "2026-07-04T16:57:44.974365+00:00",
+  "module": "M3bis \u2014 recentrage hors fourchette (Cas A / Cas B)",
+  "implementation": {
+    "cas_a_idle_recenter_no_fill": {
+      "file": "bot/ultiumgrid/bot_runner.py",
+      "method": "_check_idle_recenter",
+      "called_from": "BotRunner.tick() apr\u00e8s should_close_cycle",
+      "conditions": [
+        "mark < range_low OR mark > range_high",
+        "elapsed >= idle_recenter_min (20.0 min prod)",
+        "_last_fill_at IS NULL (aucun fill grille)",
+        "balance_total v\u00e9rifi\u00e9 via GET /api/v3/account"
+      ],
+      "actions": [
+        "close_cycle + _close_cycle_db(idle_recenter_no_fill)",
+        "flatten inventaire r\u00e9siduel (MARKET) si > minQty",
+        "order_attempts purpose=idle_recenter_no_fill",
+        "_open_new_cycle() s\u00e9quence compl\u00e8te"
+      ]
+    },
+    "cas_b_forced_sell_stuck_level": {
+      "file": "bot/ultiumgrid/bot_runner.py",
+      "method": "_check_stuck_sells",
+      "conditions": [
+        "SELL status=open avec order_id",
+        "mark >= sell_price",
+        "elapsed >= stuck_sell_min (15.0 min prod)"
+      ],
+      "actions": [
+        "cancel limite + MARKET SELL",
+        "Trade(level_index=lv.index) + fees_paid",
+        "order_attempts outcome=forced_sell_stuck_level"
+      ]
+    }
+  },
+  "production_config_live": {
+    "idle_recenter_min": 20.0,
+    "stuck_sell_min": 15.0,
+    "expected_idle": 20.0,
+    "expected_stuck": 15.0,
+    "idle_matches_production": true,
+    "stuck_matches_production": true
+  },
+  "running_snapshot": {
+    "bot_running": true,
+    "cycle_id": 2,
+    "mark_price": 62918.305,
+    "range_low": 61360.56,
+    "range_high": 64346.09,
+    "grid_active": true
+  },
+  "unit_tests": {
+    "file": "bot/tests/test_m3_idle_recenter_unit.py",
+    "cases": [
+      "test_idle_recenter_triggers_when_out_of_range_no_fill",
+      "test_idle_recenter_skips_when_in_range_despite_expired_timer",
+      "test_idle_recenter_skips_when_fill_occurred"
+    ],
+    "note": "unit \u2014 logique Cas A ; timers r\u00e9duits en unit uniquement"
+  },
+  "integration_proofs_prior": {
+    "file": "docs/proofs/m3_open_sequence_clarifications.json",
+    "t2_idle_recenter_price_condition": "conforme \u2014 prix hors fourchette prouv\u00e9",
+    "t2_negative_in_range_no_recenter": "conforme \u2014 minuteur seul insuffisant",
+    "t3_stuck_sell_ws_proof": "conforme \u2014 WS r\u00e9el + MARKET forced_sell_stuck_level",
+    "caveat": "Tests d'int\u00e9gration T2/T3 utilisaient idle/stuck=0.05 min (document\u00e9). Seuils production 20/15 min actifs sur le bot live ; d\u00e9clenchement \u00e0 ces seuils = observ\u00e9 pendant le run organique 24-48h."
+  },
+  "db_history": {
+    "idle_recenter_cycles": "(aucun)",
+    "order_attempts_recenter": "(aucun)",
+    "trigger_15_cycles": "(aucun)"
+  },
+  "production_timer_live_observation": {
+    "status": "pending_organic_long_run",
+    "reason": "Pas de raccourci acc\u00e9l\u00e9r\u00e9 demand\u00e9 pour le trigger +15 ; Cas A/B \u00e0 20/15 min n\u00e9cessite conditions march\u00e9 r\u00e9elles sur 24-48h"
+  },
+  "conforme_implementation": true,
+  "conforme_production_config": true,
+  "conforme": true
+}

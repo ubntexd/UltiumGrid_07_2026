@@ -220,8 +220,34 @@ class BotRunner:
         self._ensure_single_open_cycle(reason="orphan_on_restore")
         # Réconciliation ordres ouverts Binance vs DB
         self._reconcile_orders_after_crash()
+        self._recompute_grid_profit_from_db()
         logger.info("State restored cycle_id=%s running=%s", self.cycle_id, self.running)
         return True
+
+    def _recompute_grid_profit_from_db(self) -> None:
+        """Aligne grid_profit sur les trades DB (appariement Binance)."""
+        if not self.cycle_id:
+            return
+        rows = (
+            self.session.query(Trade)
+            .filter(Trade.cycle_id == self.cycle_id, Trade.level_index.isnot(None))
+            .order_by(Trade.created_at.asc())
+            .all()
+        )
+        if not rows:
+            return
+        trades = [
+            {
+                "id": t.id,
+                "side": t.side,
+                "price": t.price,
+                "quantity": t.quantity,
+                "level_index": t.level_index,
+                "created_at": t.created_at.isoformat() if t.created_at else None,
+            }
+            for t in rows
+        ]
+        self.engine.recompute_grid_profit_from_trades(trades)
 
     def _reconcile_orders_after_crash(self) -> None:
         try:
@@ -251,6 +277,19 @@ class BotRunner:
     def start(self) -> dict[str, Any]:
         if self.guards.state.circuit_breaker_triggered:
             return {"ok": False, "error": "Bot bloqué par circuit breaker"}
+        if getattr(self.cfg, "bnb_fee_discount", False):
+            try:
+                bnb = self.client.balance_free("BNB")
+                if bnb <= 0:
+                    return {
+                        "ok": False,
+                        "error": (
+                            "bnb_fee_discount activé : solde BNB requis pour démarrer "
+                            f"(actuel={bnb})"
+                        ),
+                    }
+            except Exception as exc:
+                return {"ok": False, "error": f"impossible de vérifier BNB: {exc}"}
         # Panic précédent : autoriser un redémarrage explicite (clear du flag)
         if self.guards.state.panic:
             self.guards.state.panic = False
@@ -447,6 +486,18 @@ class BotRunner:
             initial_buy = state.initial_buy
             if initial_buy and initial_buy.get("orderId"):
                 self._record_fees_for_order(int(initial_buy["orderId"]))
+                self.session.add(
+                    Trade(
+                        cycle_id=cycle.id,
+                        symbol=self.cfg.symbol,
+                        side="BUY",
+                        price=float(initial_buy.get("avg_price") or state.center_price),
+                        quantity=float(initial_buy.get("executedQty") or 0),
+                        order_id=str(initial_buy["orderId"]),
+                        level_index=None,
+                    )
+                )
+                self.session.commit()
                 # Persister le détail d'achat initial
                 meta = self.session.query(BotState).filter(
                     BotState.key == f"cycle_meta_{cycle.id}"
@@ -627,7 +678,7 @@ class BotRunner:
                     self.session.commit()
                     self._record_fees_for_order(lv.order_id)
 
-    def _grid_price_bounds(self) -> tuple[float | None, float | None]:
+        self._recompute_grid_profit_from_db()
         prices = [float(lv.price) for lv in self.engine.state.levels]
         if not prices:
             return None, None

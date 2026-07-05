@@ -189,14 +189,33 @@ Le prompt de développement liste des exigences (cycle +15/+10, coupe paliers 10
 
 ## 6. Infrastructure Docker
 
-| Exigence | État |
-|---|---|
-| Dockerfile par service | absent |
-| `docker-compose.yml` | absent |
-| Volumes DB persistants | absent |
-| Test `docker compose down -v && up --build` | **non vérifié** (rien à lancer) |
+| Exigence | État initial (matin) | État actuel (2026-07-04 16:15 UTC) |
+|---|---|---|
+| Dockerfile par service | absent | **présent** (bot, backend, frontend, supervisor) |
+| `docker-compose.yml` | absent | **présent** (5 services + volume `pgdata`) |
+| Volumes DB persistants | absent | **présent** (`pgdata` ; conservé sur `down`, effacé sur `down -v`) |
+| Test `docker compose down -v && up --build` | **non vérifié** | **conforme** — `docs/proofs/docker_cold_start.json` |
 
-Docker moteur et Compose sont installés et opérationnels (versions ci-dessus), mais aucun service projet n’est containerisé.
+### Re-validation cold start (2026-07-04T16:15 UTC)
+
+Commandes exécutées :
+
+```bash
+docker compose down -v
+docker compose up --build -d
+```
+
+Résultats constatés (preuve JSON ci-dessus) :
+
+- 5 conteneurs **Up** sans intervention manuelle (db healthy, bot, backend, frontend, supervisor).
+- Frontend `http://127.0.0.1:18080/` → **HTTP 200**.
+- Backend `/health` → **HTTP 200**, heartbeat bot < 2 s.
+- `/api/running` → `mark_source=ws`, `mark_price` réel, `canTrade` via compte.
+- Bot logs : `WS connecting wss://demo-stream.binance.com/ws/btcusdt@bookTicker`.
+- Binance depuis container bot : `GET /api/v3/ping` OK, `canTrade=true`, USDT free ≈ 4994.86.
+- DB vierge recréée : 13 tables (`cycles`, `trades`, `bags`, `order_attempts`, etc.).
+
+**Note URL :** le projet utilise `https://demo-api.binance.com` (clés demo.binance.com), pas `testnet.binance.vision` — voir `docs/migration_futures_to_spot.md`.
 
 ---
 

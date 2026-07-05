@@ -56,6 +56,38 @@ def test_idle_recenter_triggers_when_out_of_range_no_fill():
     assert cycle_row.close_reason == "idle_recenter_no_fill"
 
 
+def test_idle_recenter_skips_when_in_range_despite_expired_timer():
+    """Minuteur expiré mais prix dans la fourchette → pas de recentrage."""
+    client = MagicMock()
+    session = MagicMock()
+    cfg = StrategyConfig(idle_recenter_min=0.05)
+    bot = BotRunner(client, session, cfg)
+    bot.running = True
+    bot.cycle_id = 2
+    bot._last_fill_at = None
+    bot._out_of_range_since = datetime.now(timezone.utc) - timedelta(minutes=30)
+    bot.engine.state = GridState(
+        symbol="BTCUSDT",
+        center_price=Decimal("100"),
+        active=True,
+        levels=[
+            GridLevel(0, Decimal("90"), "BUY", Decimal("0.001"), status="open", order_id=1),
+            GridLevel(1, Decimal("110"), "SELL", Decimal("0.001"), status="open", order_id=2),
+        ],
+    )
+    bot.engine.close_cycle = MagicMock()
+    bot._open_new_cycle = MagicMock()
+    cycles_before = bot.cycle_id
+
+    # mark inside [90, 110] — timer should reset, no recenter
+    bot._check_idle_recenter(100.0)
+
+    bot.engine.close_cycle.assert_not_called()
+    bot._open_new_cycle.assert_not_called()
+    assert bot.cycle_id == cycles_before
+    assert bot._out_of_range_since is None
+
+
 def test_idle_recenter_skips_when_fill_occurred():
     client = MagicMock()
     client.get_symbol_filters.return_value = MagicMock(

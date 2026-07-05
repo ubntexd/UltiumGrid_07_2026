@@ -96,7 +96,19 @@ th, td { border-bottom: 1px solid var(--border); padding: 0.4rem; text-align: le
   100% { background: #18233a; }
 }
 .chart-msg { color: var(--muted); font-size: 0.9rem; margin-bottom: 0.5rem; }
+.chart-card { overflow: visible; }
+.chart-wrap { position: relative; width: 100%; min-height: 280px; }
 canvas { max-width: 100%; }
+.table-scroll { overflow-x: auto; }
+.recap-table th { font-size: 0.75rem; white-space: nowrap; color: var(--muted); }
+.recap-table td { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.recap-actions { display: flex; gap: 0.35rem; }
+.icon-btn {
+  padding: 0.25rem 0.45rem;
+  font-size: 0.85rem;
+  line-height: 1;
+  min-width: 2rem;
+}
 .range-bar {
   position: relative;
   height: 18px;

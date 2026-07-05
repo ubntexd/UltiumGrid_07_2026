@@ -1,0 +1,251 @@
+{
+  "timestamp_utc": "2026-07-04T16:07:45.249294+00:00",
+  "prior_proof": "docs/proofs/m3_open_sequence.json",
+  "prior_config": {
+    "num_levels": 4,
+    "capital_usdt": 100.0,
+    "step_pct": 0.3,
+    "note": "T1\u2013T4 originaux utilisaient une mini-grille 4 paliers pour vitesse"
+  },
+  "tests": {
+    "t1_production_20_levels": {
+      "config": {
+        "symbol": "BTCUSDT",
+        "capital_usdt": 500.0,
+        "num_levels": 20,
+        "step_pct": 0.25,
+        "cycle_trigger_usd": 15.0,
+        "cut_level_1": 10,
+        "cut_pct_1": 50.0,
+        "cut_level_2": 14,
+        "cut_pct_2": 100.0,
+        "rearm_levels": 2,
+        "rearm_delay_min": 20,
+        "hard_stop_pct": -8.0,
+        "daily_circuit_breaker_usd": -40.0,
+        "bags_capital_threshold_pct": 40.0,
+        "bnb_fee_discount": false,
+        "idle_recenter_min": 20.0,
+        "stuck_sell_min": 15.0
+      },
+      "config_label": "production_20_levels",
+      "start": {
+        "ok": true,
+        "cycle_id": 32,
+        "already_running": false,
+        "message": "D\u00e9marr\u00e9",
+        "initial_buy": {
+          "orderId": 45965801273,
+          "clientOrderId": "ug75c31c2614d64eb7b20f9728c363f0c6",
+          "executedQty": 0.0039,
+          "cummulativeQuoteQty": 245.277669,
+          "avg_price": 62891.71,
+          "theoretical_center": 62891.7,
+          "slippage_pct": 1.5900349333914125e-05,
+          "fees_usdt": 0.245277669,
+          "confirm_source": "myTrades",
+          "myTrades_count": 1,
+          "purpose": "initial_inventory_buy"
+        }
+      },
+      "initial_buy": {
+        "orderId": 45965801273,
+        "clientOrderId": "ug75c31c2614d64eb7b20f9728c363f0c6",
+        "executedQty": 0.0039,
+        "cummulativeQuoteQty": 245.277669,
+        "avg_price": 62891.71,
+        "theoretical_center": 62891.7,
+        "slippage_pct": 1.5900349333914125e-05,
+        "fees_usdt": 0.245277669,
+        "confirm_source": "myTrades",
+        "myTrades_count": 1,
+        "purpose": "initial_inventory_buy"
+      },
+      "num_levels": 20,
+      "buys_open": 10,
+      "sells_open": 10,
+      "buys_n": 10,
+      "sells_n": 10,
+      "incomplete_n": 0,
+      "binance_buys": 10,
+      "binance_sells": 10,
+      "fees": 1,
+      "cycles_open": 1,
+      "conforme": true
+    },
+    "t2_idle_recenter_price_condition": {
+      "config": {
+        "symbol": "BTCUSDT",
+        "capital_usdt": 100.0,
+        "num_levels": 4,
+        "step_pct": 0.3,
+        "cycle_trigger_usd": 15.0,
+        "cut_level_1": 10,
+        "cut_pct_1": 50.0,
+        "cut_level_2": 14,
+        "cut_pct_2": 100.0,
+        "rearm_levels": 2,
+        "rearm_delay_min": 20,
+        "hard_stop_pct": -8.0,
+        "daily_circuit_breaker_usd": -40.0,
+        "bags_capital_threshold_pct": 40.0,
+        "bnb_fee_discount": false,
+        "idle_recenter_min": 0.05,
+        "stuck_sell_min": 0.05
+      },
+      "trigger": {
+        "mark_at_trigger": 66329.55,
+        "range_low": 62605.01,
+        "range_high": 63171.0,
+        "price_out_of_range": true,
+        "out_direction": "above_high",
+        "timer_elapsed_sec": 10,
+        "idle_recenter_min": 0.05
+      },
+      "old_cycle": 33,
+      "new_cycle": 34,
+      "new_initial_buy": {
+        "orderId": 45965806987,
+        "clientOrderId": "ug842c8d7db2204867bd63c67f2e993f85",
+        "executedQty": 0.00078,
+        "cummulativeQuoteQty": 49.0526478,
+        "avg_price": 62888.01,
+        "theoretical_center": 62888.0,
+        "slippage_pct": 1.5901284827053282e-05,
+        "fees_usdt": 0.0490526478,
+        "confirm_source": "myTrades",
+        "myTrades_count": 1,
+        "purpose": "initial_inventory_buy"
+      },
+      "idle_closed": 7,
+      "db_verify_json": {
+        "mark": 66329.55,
+        "range_low": 62605.01,
+        "range_high": 63171.0,
+        "out_of_range_min": 0.1666669,
+        "base_total": 0.00078309,
+        "note": "inventaire SELL initial autoris\u00e9; recentrage si aucun fill grille",
+        "flatten_qty": 0.00078
+      },
+      "conforme": true
+    },
+    "t2_negative_in_range_no_recenter": {
+      "trigger": {
+        "mark_at_trigger": 62883.994999999995,
+        "range_low": 62601.02,
+        "range_high": 63166.97,
+        "price_out_of_range": false,
+        "timer_elapsed_min": 30,
+        "idle_recenter_min": 0.05
+      },
+      "cycle_before": 35,
+      "cycle_after": 35,
+      "out_of_range_since_after": null,
+      "recentered": false,
+      "conforme": true
+    },
+    "t3_stuck_sell_ws_proof": {
+      "ws_snapshot_at_trigger": {
+        "ws_url": "wss://demo-stream.binance.com/ws/btcusdt@bookTicker",
+        "bid": "62882.00000000",
+        "ask": "62882.01000000",
+        "mid": 62882.005,
+        "event_time": null,
+        "captured_at_utc": "2026-07-04T16:07:55.636557+00:00",
+        "raw": {
+          "u": 4952966051,
+          "s": "BTCUSDT",
+          "b": "62882.00000000",
+          "B": "0.03430000",
+          "a": "62882.01000000",
+          "A": "10.16384000"
+        }
+      },
+      "ws_mark_mid": 62882.005,
+      "sell_level": {
+        "index": 2,
+        "price": 62976.33,
+        "order_id_before": 45965823773,
+        "qty": 0.00039
+      },
+      "comparison_ws_vs_sell": {
+        "ws_mark": 62882.005,
+        "sell_price": 62976.33,
+        "ws_gte_sell": false,
+        "delta_usd": -94.325
+      },
+      "mark_passed_to_check_stuck_sells": 63606.0933,
+      "mark_gte_sell": true,
+      "natural_limit_fill_at_ws_price": false,
+      "interpretation": "WS r\u00e9el < sell \u2192 le march\u00e9 n'a pas atteint le palier SELL au moment T; le m\u00e9canisme utilise mark>=sell (ici sell*1.01) pour d\u00e9tecter un SELL bloqu\u00e9; la cl\u00f4ture est un MARKET SELL forc\u00e9 (forced_sell_stuck_level), pas un fill limite.",
+      "status_after": "filled",
+      "order_attempt_at": "2026-07-04 16:08:03.407757+00:00",
+      "order_attempt_verify_json": {
+        "level": 2,
+        "sell_price": 62976.33,
+        "mark": 63606.0933,
+        "stuck_min": 0.16666698333333332,
+        "qty": 0.00039,
+        "order_id": 45965823773,
+        "market_order": {
+          "symbol": "BTCUSDT",
+          "orderId": 45965845931,
+          "orderListId": -1,
+          "clientOrderId": "ugbeadfed39f374ec6839cd396c0dd1128",
+          "transactTime": 1783181283389,
+          "price": "0.00000000",
+          "origQty": "0.00039000",
+          "executedQty": "0.00039000",
+          "origQuoteOrderQty": "0.00000000",
+          "cummulativeQuoteQty": "24.52464300",
+          "status": "FILLED",
+          "timeInForce": "GTC",
+          "type": "MARKET",
+          "side": "SELL",
+          "workingTime": 1783181283389,
+          "fills": [
+            {
+              "price": "62883.70000000",
+              "qty": "0.00039000",
+              "commission": "0.02452464",
+              "commissionAsset": "USDT",
+              "tradeId": 254303269
+            }
+          ],
+          "selfTradePreventionMode": "EXPIRE_MAKER"
+        }
+      },
+      "order_attempt_response_json": {
+        "symbol": "BTCUSDT",
+        "orderId": 45965845931,
+        "orderListId": -1,
+        "clientOrderId": "ugbeadfed39f374ec6839cd396c0dd1128",
+        "transactTime": 1783181283389,
+        "price": "0.00000000",
+        "origQty": "0.00039000",
+        "executedQty": "0.00039000",
+        "origQuoteOrderQty": "0.00000000",
+        "cummulativeQuoteQty": "24.52464300",
+        "status": "FILLED",
+        "timeInForce": "GTC",
+        "type": "MARKET",
+        "side": "SELL",
+        "workingTime": 1783181283389,
+        "fills": [
+          {
+            "price": "62883.70000000",
+            "qty": "0.00039000",
+            "commission": "0.02452464",
+            "commissionAsset": "USDT",
+            "tradeId": 254303269
+          }
+        ],
+        "selfTradePreventionMode": "EXPIRE_MAKER"
+      },
+      "fill_type": "MARKET",
+      "natural_limit_fill_ruled_out": true,
+      "conforme": true
+    }
+  },
+  "all_conforme": true
+}

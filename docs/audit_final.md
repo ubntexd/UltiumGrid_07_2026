@@ -21,12 +21,13 @@ Environnement : `https://demo-api.binance.com` / `wss://demo-stream.binance.com/
 | Panic close réel | `m6_panic_spot.json` |
 | API capital/running/pnl vs Binance | `m7_api_crosscheck.json` |
 | Config 3 params + reject bornes | `m7bis_config_spot.json` |
-| Viabilité économique formules | `test_viability_formula_manual` + API viability |
+| Viabilité économique formules | `test_viability_formula_manual` (notionnel 250 = moteur) + API viability |
 | Reprise crash sans doublon ordres | `m9_crash_recovery.json` |
 | Audit UI valeurs = sources | `m8_audit_ui.json` |
 | Courbes prix/PnL/cycles/latence (points = DB) | `m8_charts.json` |
 | Prix permanent header + flash WS | DOM `#live-price`, Chart.js |
 | Docker compose 5 services (+ supervisor) | `docker compose ps` Up |
+| Cold start `down -v && up --build` | `docker_cold_start.json` (2026-07-04) |
 | Superviseur heartbeat / recon / exchange | `m10bis_normal_cycle.json`, `m10bis_bot_unresponsive.json`, `m10bis_recon_mismatch.json` |
 | Onglet UI Supervision | `/api/supervision` + tab DOM |
 
@@ -37,7 +38,9 @@ Environnement : `https://demo-api.binance.com` / `wss://demo-stream.binance.com/
 | Spec dérivée du prompt Spot v2 (fichier cahier séparé absent) | `docs/spec.md` |
 | `GET /api/v3/order` parfois `-2013` sur demo alors que openOrders OK | Vérif via openOrders |
 | Dust BTC résiduel après panic (commissions) | Notional sous min après frais |
-| Cycle +15 live non déroulé jusqu’au trigger | Nécessite fills marché ; grille + logique prouvées |
+| Cycle +15 live non déroulé jusqu’au trigger | ~120 grilles config défaut ; séquence ouverture + M3 prouvés |
+| `duplicate_avoided` ordre accepté puis `-1007` réel | Non reproduit sur demo-api ; unit + timeout_not_found seulement |
+| Notionnel viabilité 500 vs 250 (moteur) | **Corrigé** 2026-07-04 — `m7bis_viability_notional_fix.json` |
 
 ## Non vérifiable / hors scope
 

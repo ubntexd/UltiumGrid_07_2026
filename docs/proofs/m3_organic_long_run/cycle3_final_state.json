@@ -1,0 +1,24 @@
+{
+  "timestamp_utc": "2026-07-05T18:16:06.832748+00:00",
+  "action": "user_stop_not_panic",
+  "stop_reason": "Annulation run organique 48h \u2014 d\u00e9cision utilisateur",
+  "panic_not_used_reason": "Stop choisi : annule ordres LIMIT, ferme cycle en DB, conserve position BTC (0.051170 BTC \u2248 3207 USDT au mark). Panic vendrait au march\u00e9 sans n\u00e9cessit\u00e9 op\u00e9rationnelle.",
+  "cycle_id": 3,
+  "pre_stop": {
+    "mark_price": 62669.995,
+    "grid_profit": 1.5314823734004084,
+    "floating_profit": -15.48874555451466,
+    "gross_pnl": -13.957263181114252,
+    "position_qty": 0.051170280000000005,
+    "entry_avg": 62972.68526385071,
+    "total_matched_trades": 12,
+    "running": true,
+    "grid_active": true
+  },
+  "post_stop": {
+    "running": false,
+    "grid_active": false,
+    "cycle_id": 3
+  },
+  "close_reason_expected": "user_stop"
+}

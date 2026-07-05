@@ -1,0 +1,65 @@
+{
+  "timestamp_utc": "2026-07-05T17:36:25.774667+00:00",
+  "cycle_id": 3,
+  "trade_count": 27,
+  "buy_count": 15,
+  "sell_count": 12,
+  "bug_before": {
+    "method": "on_fill: grid_profit += (sell_price - entry_avg_global) * qty",
+    "problem": "SELLs imput\u00e9s au co\u00fbt moyen incluant inventaire initial, pas au BUY du palier i",
+    "simulated_grid_profit": -0.125391,
+    "ui_was_approx": -5.37
+  },
+  "fix_after": {
+    "method": "MatchedGridLedger: FIFO BUY(level i) + SELL(level i+1)",
+    "formula": "sell*q*(1-fee) - buy*q*(1+fee) sur qty appari\u00e9e",
+    "grid_profit": 1.531482,
+    "roundtrip_count": 12,
+    "orphan_buy_qty": 0.01182,
+    "orphan_sell_qty": 0,
+    "roundtrips_sample": [
+      {
+        "buy_level": 9,
+        "sell_level": 10,
+        "qty": 0.00394,
+        "buy_price": 63227.19,
+        "sell_price": 63385.46,
+        "profit": 0.12472995900003385
+      },
+      {
+        "buy_level": 9,
+        "sell_level": 10,
+        "qty": 0.00394,
+        "buy_price": 63227.19,
+        "sell_price": 63385.46,
+        "profit": 0.12472995900003385
+      },
+      {
+        "buy_level": 9,
+        "sell_level": 10,
+        "qty": 0.00394,
+        "buy_price": 63227.19,
+        "sell_price": 63385.46,
+        "profit": 0.12472995900003385
+      },
+      {
+        "buy_level": 8,
+        "sell_level": 9,
+        "qty": 0.00394,
+        "buy_price": 63068.93,
+        "sell_price": 63227.19,
+        "profit": 0.12593768720004037
+      },
+      {
+        "buy_level": 5,
+        "sell_level": 6,
+        "qty": 0.00394,
+        "buy_price": 62594.13,
+        "sell_price": 62752.39,
+        "profit": 0.12967911120004005
+      }
+    ]
+  },
+  "delta_ui_vs_correct": -6.901482,
+  "conforme_binance_definition": true
+}

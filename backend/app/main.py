@@ -29,9 +29,11 @@ from ultiumgrid.db.models import (  # noqa: E402
     FeePaid,
     PnlSnapshot,
     PriceTick,
+    Trade,
     make_session_factory,
 )
 from ultiumgrid.engine.config import StrategyConfig  # noqa: E402
+from ultiumgrid.engine.grid_profit import total_matched_trades_from_trades  # noqa: E402
 from ultiumgrid.engine.viability import compute_viability  # noqa: E402
 
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{ROOT / 'data' / 'ultiumgrid.db'}")
@@ -56,6 +58,104 @@ def _client():
 
 def get_session():
     return SessionLocal()
+
+
+def _level_visual_state(lv: dict[str, Any]) -> str:
+    """active | inactive — pour rendu graphique (pending sans order_id = inactive)."""
+    st = lv.get("status") or ""
+    if st in ("grid_level_incomplete", "error"):
+        return "inactive"
+    if st == "pending" and not lv.get("order_id"):
+        return "inactive"
+    if st in ("open", "filled") and lv.get("order_id"):
+        return "active"
+    if st == "pending" and lv.get("order_id"):
+        return "active"
+    return "inactive"
+
+
+def _build_grid_recap(
+    session,
+    cfg: StrategyConfig,
+    g: dict[str, Any],
+    cycle_id: int | None,
+    grid_profit: float,
+    floating_profit: float,
+    gross_pnl: float,
+) -> dict[str, Any] | None:
+    """Une ligne récap par cycle actif — données DB + état bot (pas de recalcul parallèle)."""
+    if not g.get("active") or not cycle_id:
+        return None
+    cycle = session.get(Cycle, cycle_id)
+    if not cycle or cycle.status != "open":
+        return None
+    levels = g.get("levels") or []
+    all_prices = [float(lv["price"]) for lv in levels if lv.get("price") is not None]
+    grid_trade_rows = (
+        session.query(Trade)
+        .filter(Trade.cycle_id == cycle_id, Trade.level_index.isnot(None))
+        .order_by(Trade.created_at.asc(), Trade.id.asc())
+        .all()
+    )
+    grid_trades = [
+        {
+            "id": t.id,
+            "side": t.side,
+            "price": t.price,
+            "quantity": t.quantity,
+            "level_index": t.level_index,
+            "created_at": t.created_at.isoformat() if t.created_at else None,
+        }
+        for t in grid_trade_rows
+    ]
+    grid_matched = total_matched_trades_from_trades(grid_trades)
+    initial_buy_row = (
+        session.query(Trade)
+        .filter(Trade.cycle_id == cycle_id, Trade.level_index.is_(None))
+        .first()
+    )
+    meta = (
+        session.query(BotState)
+        .filter(BotState.key == f"cycle_meta_{cycle_id}")
+        .first()
+    )
+    initial_buy_meta = (meta.value_json or {}).get("initial_buy") if meta else None
+    from datetime import datetime, timezone
+
+    opened = cycle.opened_at
+    if opened and opened.tzinfo is None:
+        opened = opened.replace(tzinfo=timezone.utc)
+    duration_sec = (
+        (datetime.now(timezone.utc) - opened).total_seconds() if opened else None
+    )
+    range_lo = min(all_prices) if all_prices else g.get("range_low")
+    range_hi = max(all_prices) if all_prices else g.get("range_high")
+    return {
+        "pair": cfg.symbol,
+        "time_created": opened.isoformat() if opened else None,
+        "total_investment": float(cfg.capital_usdt),
+        "total_profit": gross_pnl,
+        "grid_profit": grid_profit,
+        "floating_profit": floating_profit,
+        "total_matched_trades": grid_matched,
+        "grid_matched_trades": grid_matched,
+        "initial_inventory_buy": {
+            "order_id": str(initial_buy_meta.get("orderId"))
+            if initial_buy_meta and initial_buy_meta.get("orderId")
+            else (initial_buy_row.order_id if initial_buy_row else None),
+            "recorded_in_trades": initial_buy_row is not None,
+            "excluded_from_matched_trades": True,
+            "note": (
+                "Total Matched Trades = round-trips complets (BUY@i+SELL@i+1) via matched_ledger ; "
+                "exclut achat initial et SELL d'inventaire initial sans BUY grille apparié"
+            ),
+        },
+        "price_range_low": range_lo,
+        "price_range_high": range_hi,
+        "duration_sec": duration_sec,
+        "number_of_grids": int(cfg.num_levels),
+        "cycle_id": cycle_id,
+    }
 
 
 def build_status() -> dict[str, Any]:
@@ -113,6 +213,10 @@ def build_status() -> dict[str, Any]:
         else:
             floating_profit = 0.0
         gross_pnl = grid_profit + floating_profit
+        cycle_id = state.get("cycle_id")
+        grid_recap = _build_grid_recap(
+            session, cfg, g, cycle_id, grid_profit, floating_profit, gross_pnl
+        )
         # openOrders (cache client via account TTL pattern — un seul appel si pas en cache)
         open_orders: list[dict[str, Any]] = []
         open_orders_error = None
@@ -214,7 +318,8 @@ def build_status() -> dict[str, Any]:
                 "panic": guards.get("panic"),
             },
             "config": cfg.to_dict(),
-            "cycle_id": state.get("cycle_id"),
+            "cycle_id": cycle_id,
+            "grid_recap": grid_recap,
         }
     finally:
         session.close()
@@ -306,6 +411,24 @@ def start():
     session = get_session()
     try:
         state = read_main_state(session)
+        cfg = StrategyConfig.from_dict(state.get("config") or StrategyConfig().to_dict())
+        if cfg.bnb_fee_discount:
+            try:
+                bnb = _client().balance_free("BNB")
+                if bnb <= 0:
+                    raise HTTPException(
+                        400,
+                        detail={
+                            "errors": [
+                                "bnb_fee_discount activé : solde BNB requis pour démarrer "
+                                f"(actuel={bnb}). Approvisionner le compte Spot Demo avant tout nouveau cycle."
+                            ]
+                        },
+                    )
+            except HTTPException:
+                raise
+            except Exception as exc:
+                raise HTTPException(400, detail={"errors": [f"impossible de vérifier BNB: {exc}"]})
         already = bool(state.get("running")) and bool((state.get("grid") or {}).get("active"))
         push_command(session, "start")
         return {
@@ -693,6 +816,63 @@ def chart_price(symbol: str | None = None, limit: int = 200):
             .all()
         )
         rows = list(reversed(rows))
+        cycle_id = status.get("cycle_id")
+        levels = status.get("grid", {}).get("levels") or []
+        levels_chart = [
+            {
+                "index": lv.get("index"),
+                "side": lv.get("side"),
+                "price": float(lv["price"]) if lv.get("price") is not None else None,
+                "quantity": float(lv["quantity"]) if lv.get("quantity") is not None else None,
+                "status": lv.get("status"),
+                "order_id": lv.get("order_id"),
+                "visual": _level_visual_state(lv),
+            }
+            for lv in levels
+            if lv.get("price") is not None
+        ]
+        fills_chart: list[dict[str, Any]] = []
+        if cycle_id:
+            trades = (
+                session.query(Trade)
+                .filter(Trade.cycle_id == cycle_id)
+                .order_by(Trade.created_at.asc())
+                .all()
+            )
+            fills_chart = [
+                {
+                    "id": t.id,
+                    "side": t.side,
+                    "price": t.price,
+                    "quantity": t.quantity,
+                    "ts": t.created_at.isoformat() if t.created_at else None,
+                    "level_index": t.level_index,
+                    "source": "trades",
+                }
+                for t in trades
+            ]
+            if not fills_chart:
+                cycle_row = session.get(Cycle, cycle_id)
+                meta = (
+                    session.query(BotState)
+                    .filter(BotState.key == f"cycle_meta_{cycle_id}")
+                    .first()
+                )
+                ib = (meta.value_json or {}).get("initial_buy") if meta else None
+                if ib and cycle_row:
+                    fills_chart.append(
+                        {
+                            "id": f"initial-{ib.get('orderId')}",
+                            "side": "BUY",
+                            "price": float(ib.get("avg_price") or 0),
+                            "quantity": float(ib.get("executedQty") or 0),
+                            "ts": cycle_row.opened_at.isoformat()
+                            if cycle_row.opened_at
+                            else None,
+                            "level_index": None,
+                            "source": "initial_inventory_buy",
+                        }
+                    )
         if len(rows) < 2:
             return {
                 "symbol": symbol,
@@ -702,6 +882,8 @@ def chart_price(symbol: str | None = None, limit: int = 200):
                 "range_low": status["grid"].get("range_low"),
                 "range_high": status["grid"].get("range_high"),
                 "mark": status.get("mark_price"),
+                "levels": levels_chart,
+                "fills": fills_chart,
             }
         return {
             "symbol": symbol,
@@ -719,6 +901,8 @@ def chart_price(symbol: str | None = None, limit: int = 200):
             "range_low": status["grid"].get("range_low"),
             "range_high": status["grid"].get("range_high"),
             "mark": status.get("mark_price"),
+            "levels": levels_chart,
+            "fills": fills_chart,
         }
     finally:
         session.close()

@@ -1,0 +1,52 @@
+{
+  "timestamp_utc": "2026-07-05T17:10:00+00:00",
+  "cycle_id": 3,
+  "matched_trades_count": 26,
+  "classification": {
+    "LIMIT_natural_grid_fills": 26,
+    "MARKET_forced_sell_stuck_level": 0,
+    "source": "GET /api/v3/allOrders — type field per order_id",
+    "order_attempts_forced_sell": 0
+  },
+  "by_side": {
+    "BUY": 15,
+    "SELL": 11,
+    "imbalance": "4 BUY de plus que SELL — accumulation nette, pas des ventes forcées"
+  },
+  "fees_analysis": {
+    "account_commissionRates": {
+      "maker": 0.001,
+      "taker": 0.001
+    },
+    "viability_assumes": "taker * 2 per roundtrip (0.1% each leg on demo)",
+    "grid_trades_total_fee_real_usdt": 6.4477,
+    "grid_trades_total_fee_theo_taker_usdt": 6.4477,
+    "delta_real_minus_theo": 0.0,
+    "avg_fee_per_fill_usdt": 0.248,
+    "avg_notional_per_fill_usdt": 247.99,
+    "effective_rate_pct": 0.1,
+    "initial_inventory_fee_usdt": 0.7337,
+    "conclusion": "Les frais réels = théorique taker à 0,1% sur chaque fill LIMIT. Pas de surcoût MARKET/taker forcé."
+  },
+  "guards_proximity": {
+    "mark_usdt": 62722.26,
+    "entry_avg": 62972.69,
+    "position_pnl_pct": -0.398,
+    "hard_stop_threshold_pct": -8.0,
+    "distance_to_hard_stop_pct": 7.602,
+    "hard_stop_triggered": false,
+    "daily_pnl_realized_usd": 0.0,
+    "circuit_breaker_threshold_usd": -40.0,
+    "distance_to_breaker_usd": 40.0,
+    "circuit_breaker_triggered": false,
+    "gross_pnl_unrealized_usd": -20.06,
+    "note": "daily_pnl guards ne compte pas le flottant ; gross -20 n'alimente pas le breaker",
+    "alert_events_count": 0,
+    "ui_guards_display": "hard_stop=null breaker=null panic=false"
+  },
+  "pnl_context": {
+    "grid_profit_usd": -5.37,
+    "floating_profit_usd": -14.7,
+    "likely_cause": "Dérive baissière + déséquilibre 15 BUY / 11 SELL (inventaire long), pas frais anormaux"
+  }
+}

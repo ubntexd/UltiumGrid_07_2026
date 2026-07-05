@@ -31,14 +31,18 @@ def test_viability_formula_manual():
         cycle_trigger_usd=15,
         bnb_fee_discount=False,
     )
-    # Manual: buy_levels=10, notional=500, fees=500*0.001*2=1, gross=500*0.0025=1.25, net=0.25
-    assert v["notional_per_level"] == 500.0
-    assert v["fees_per_roundtrip"] == pytest.approx(1.0)
-    assert v["gross_per_grid"] == pytest.approx(1.25)
-    assert v["net_per_grid"] == pytest.approx(0.25)
+    # Manual: buy_levels=10, notional=250 (5000/2/10), fees_rt=250*0.001*2=0.5, gross=0.625, net=0.125
+    # initial inventory = 2500*0.001=2.5 ; 120 grilles × 0.125 − 2.5 = 12.5 net au seuil brut +15
+    assert v["notional_per_level"] == 250.0
+    assert v["fees_initial_inventory"] == pytest.approx(2.5)
+    assert v["fees_per_roundtrip"] == pytest.approx(0.5)
+    assert v["gross_per_grid"] == pytest.approx(0.625)
+    assert v["net_per_grid"] == pytest.approx(0.125)
     assert v["ratio_gross_to_fees"] == pytest.approx(1.25)
     assert v["alert_ratio_below_2x"] is True
-    assert v["grids_to_cycle"] == 60
+    assert v["grids_to_cycle"] == 120
+    assert v["net_at_gross_threshold"] == pytest.approx(12.5)
+    assert v["total_fees_at_gross_threshold"] == pytest.approx(62.5)
 
 
 @pytest.mark.integration
@@ -89,7 +93,8 @@ def test_m7bis_config_params_and_reject():
     cfg_cap = body["config"]["capital_usdt"]
     manual2 = compute_viability(cfg_cap, 16, 0.3, 12, False, None, 0)
     # fee_source may use account rates — compare structure
-    assert viab["notional_per_level"] == pytest.approx(cfg_cap / 8)
+    buy_lv = body["config"]["num_levels"] // 2
+    assert viab["notional_per_level"] == pytest.approx((cfg_cap / 2) / buy_lv)
 
     # wait bot apply
     import time

@@ -46,6 +46,104 @@ function flashEl(el, delta) {
 let _lastMark = null;
 let _lastGross = null;
 const charts = { price: null, pnl: null, cycles: null, latency: null };
+let _gridOverlayRegistered = false;
+
+function formatDuration(sec) {
+  if (sec == null || Number.isNaN(Number(sec))) return "—";
+  const s = Math.floor(Number(sec));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const r = s % 60;
+  if (h) return `${h}h ${m}m`;
+  if (m) return `${m}m ${r}s`;
+  return `${r}s`;
+}
+
+function findNearestPointIndex(points, isoTs) {
+  if (!isoTs || !points?.length) return 0;
+  const t = new Date(isoTs).getTime();
+  if (Number.isNaN(t)) return 0;
+  let best = 0;
+  let bestD = Infinity;
+  points.forEach((p, i) => {
+    const pt = new Date(p.ts).getTime();
+    if (Number.isNaN(pt)) return;
+    const d = Math.abs(pt - t);
+    if (d < bestD) {
+      bestD = d;
+      best = i;
+    }
+  });
+  return best;
+}
+
+function registerGridOverlayPlugin() {
+  if (_gridOverlayRegistered || typeof Chart === "undefined") return;
+  _gridOverlayRegistered = true;
+  Chart.register({
+    id: "ultiumGridOverlay",
+    afterDraw(chart, _args, opts) {
+      const levels = opts.levels || [];
+      const fills = opts.fills || [];
+      const points = opts.points || [];
+      const { ctx, chartArea, scales } = chart;
+      if (!chartArea || !scales?.y) return;
+
+      for (const lv of levels) {
+        if (lv.price == null) continue;
+        const y = scales.y.getPixelForValue(lv.price);
+        if (y < chartArea.top - 4 || y > chartArea.bottom + 4) continue;
+        const active = lv.visual === "active";
+        const isSell = lv.side === "SELL";
+        ctx.save();
+        ctx.strokeStyle = active
+          ? isSell
+            ? "#ef4444"
+            : "#22c55e"
+          : "rgba(148, 163, 184, 0.5)";
+        ctx.lineWidth = active ? 1.5 : 1;
+        ctx.setLineDash(active ? [] : [5, 4]);
+        ctx.beginPath();
+        ctx.moveTo(chartArea.left, y);
+        ctx.lineTo(chartArea.right, y);
+        ctx.stroke();
+        const qty =
+          lv.quantity != null ? Number(lv.quantity).toFixed(5).replace(/\.?0+$/, "") : "—";
+        const label = `${isSell ? "Limit" : "Buy"} ${Number(lv.price).toFixed(2)} — ${qty}`;
+        ctx.font = `${active ? "600" : "400"} 10px ui-sans-serif, system-ui, sans-serif`;
+        ctx.fillStyle = active ? (isSell ? "#fca5a5" : "#86efac") : "#94a3b8";
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        ctx.fillText(label, chartArea.right - 6, y);
+        ctx.restore();
+      }
+
+      for (const f of fills) {
+        if (f.price == null) continue;
+        const xi = findNearestPointIndex(points, f.ts);
+        const x = scales.x.getPixelForValue(xi);
+        const y = scales.y.getPixelForValue(f.price);
+        if (x < chartArea.left - 12 || x > chartArea.right + 12) continue;
+        const letter = f.side === "BUY" ? "B" : "S";
+        const col = f.side === "BUY" ? "#22c55e" : "#ef4444";
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(x, y, 9, 0, Math.PI * 2);
+        ctx.fillStyle = col;
+        ctx.fill();
+        ctx.strokeStyle = "#0b1220";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 10px ui-sans-serif, system-ui, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(letter, x, y);
+        ctx.restore();
+      }
+    },
+  });
+}
 
 function ensureChart(key, canvasId, config) {
   const canvas = document.getElementById(canvasId);
@@ -64,22 +162,40 @@ function insufficientMsg(elId, msg) {
 
 async function refreshCharts(status) {
   const symbol = status?.symbol || "BTCUSDT";
-  // Prix + range
+  registerGridOverlayPlugin();
+  // Prix + niveaux grille (20 lignes) + marqueurs fills
   try {
     const data = await api(`/api/charts/price?symbol=${symbol}&limit=120`);
     const msg = document.getElementById("price-chart-msg");
-    if (data.insufficient_data) {
+    const levels = data.levels || [];
+    const fills = data.fills || [];
+    if (data.insufficient_data && !levels.length) {
       insufficientMsg("price-chart-msg", data.message);
       if (charts.price) {
         charts.price.destroy();
         charts.price = null;
       }
     } else {
-      if (msg) msg.textContent = "";
-      const labels = data.points.map((p) => p.ts?.slice(11, 19) || p.id);
-      const prices = data.points.map((p) => p.price);
-      const low = data.range_low;
-      const high = data.range_high;
+      if (msg) {
+        msg.textContent =
+          levels.length > 0
+            ? `${levels.length} niveaux tracés · ${fills.length} fill(s) · survol = prix/qty DB`
+            : data.message || "En attente de niveaux de grille actifs";
+      }
+      const points = data.points || [];
+      const labels =
+        points.length > 0
+          ? points.map((p) => p.ts?.slice(11, 19) || String(p.id))
+          : ["—"];
+      const prices = points.length > 0 ? points.map((p) => p.price) : [data.mark || 0];
+      const levelPrices = levels.map((l) => l.price).filter((p) => p != null);
+      const allY = [...prices, ...levelPrices];
+      let yMin = Math.min(...allY);
+      let yMax = Math.max(...allY);
+      const pad = (yMax - yMin) * 0.06 || yMax * 0.001 || 1;
+      yMin -= pad;
+      yMax += pad;
+
       ensureChart("price", "price-chart", {
         type: "line",
         data: {
@@ -89,48 +205,47 @@ async function refreshCharts(status) {
               label: "Prix",
               data: prices,
               borderColor: "#3b82f6",
-              pointRadius: 2,
-              tension: 0.1,
-              rawPoints: data.points,
+              borderWidth: 2,
+              pointRadius: points.length > 1 ? 0 : 2,
+              tension: 0.15,
+              rawPoints: points,
             },
-            ...(low != null
-              ? [
-                  {
-                    label: "Range bas",
-                    data: prices.map(() => low),
-                    borderColor: "#22c55e",
-                    borderDash: [4, 4],
-                    pointRadius: 0,
-                  },
-                ]
-              : []),
-            ...(high != null
-              ? [
-                  {
-                    label: "Range haut",
-                    data: prices.map(() => high),
-                    borderColor: "#ef4444",
-                    borderDash: [4, 4],
-                    pointRadius: 0,
-                  },
-                ]
-              : []),
           ],
         },
         options: {
           animation: false,
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: { right: 8, top: 8, bottom: 4, left: 4 } },
           plugins: {
+            legend: { display: false },
+            ultiumGridOverlay: {
+              levels,
+              fills,
+              points,
+            },
             tooltip: {
               callbacks: {
+                label(item) {
+                  return `Prix ${item.formattedValue}`;
+                },
                 afterBody(items) {
                   const i = items[0]?.dataIndex;
-                  const pt = data.points[i];
-                  return pt ? `id=${pt.id} price=${pt.price} ts=${pt.ts}` : "";
+                  const pt = points[i];
+                  return pt ? `id=${pt.id} ts=${pt.ts}` : "";
                 },
               },
             },
           },
-          scales: { x: { display: true }, y: { display: true } },
+          scales: {
+            x: { display: true, ticks: { maxTicksLimit: 10 } },
+            y: {
+              display: true,
+              min: yMin,
+              max: yMax,
+              ticks: { callback: (v) => Number(v).toFixed(2) },
+            },
+          },
         },
       });
     }
@@ -370,6 +485,42 @@ document.getElementById("btn-stop").onclick = () => controlAction("/api/stop");
 document.getElementById("btn-panic").onclick = () =>
   controlAction("/api/panic", { confirmMsg: "Panic close : vendre tout le solde base + clôturer sacs ?" });
 
+function renderGridRecap(s) {
+  const tbody = document.querySelector("#grid-recap-table tbody");
+  if (!tbody) return;
+  const r = s.grid_recap;
+  if (!r) {
+    tbody.innerHTML =
+      '<tr><td colspan="11">Aucun cycle actif — Start pour afficher le récapitulatif (une ligne par cycle actif).</td></tr>';
+    return;
+  }
+  const range =
+    r.price_range_low != null && r.price_range_high != null
+      ? `${fmt(r.price_range_low)} — ${fmt(r.price_range_high)}`
+      : "—";
+  tbody.innerHTML = `<tr>
+    <td>${r.pair}</td>
+    <td>${r.time_created ? r.time_created.slice(0, 19).replace("T", " ") : "—"}</td>
+    <td>${fmt(r.total_investment)}</td>
+    <td class="${pnlClass(r.total_profit)}">${fmt(r.total_profit)}</td>
+    <td class="${pnlClass(r.grid_profit)}">${fmt(r.grid_profit)}</td>
+    <td class="${pnlClass(r.floating_profit)}">${fmt(r.floating_profit)}</td>
+    <td>${r.total_matched_trades}</td>
+    <td>${range}</td>
+    <td>${formatDuration(r.duration_sec)}</td>
+    <td>${r.number_of_grids}</td>
+    <td class="recap-actions">
+      <button type="button" class="icon-btn ok" title="Start / Reprise" aria-label="Start">▶</button>
+      <button type="button" class="icon-btn" title="Stop / Pause" aria-label="Stop">⏸</button>
+      <button type="button" class="icon-btn danger" title="Panic Close" aria-label="Panic">⏹</button>
+    </td>
+  </tr>`;
+  const [btnStart, btnStop, btnPanic] = tbody.querySelectorAll(".icon-btn");
+  if (btnStart) btnStart.onclick = () => document.getElementById("btn-start")?.click();
+  if (btnStop) btnStop.onclick = () => document.getElementById("btn-stop")?.click();
+  if (btnPanic) btnPanic.onclick = () => document.getElementById("btn-panic")?.click();
+}
+
 function renderRunning(s) {
   const g = s.grid || {};
   const m = s.capital || s.margin || {};
@@ -426,6 +577,7 @@ function renderRunning(s) {
     flashEl(grossEl, (g.gross_pnl || 0) - _lastGross);
   }
   _lastGross = g.gross_pnl;
+  renderGridRecap(s);
   refreshCharts(s);
 
   const low = Number(g.range_low);
@@ -614,9 +766,12 @@ function renderViability(v) {
   return `<div class="card" id="viability-box" style="border-color:${alert ? "var(--bad)" : "var(--ok)"}">
     <h3>Viabilité économique</h3>
     <p>Notionnel/palier: ${fmt(v.notional_per_level)}</p>
-    <p>Frais aller-retour: ${fmt(v.fees_per_roundtrip, 4)} (taux ${fmt(v.fee_rate * 100, 4)}% — ${v.fee_source})</p>
+    <p>Frais achat initial (fixe/cycle): ${fmt(v.fees_initial_inventory, 4)}</p>
+    <p>Frais aller-retour/grille: ${fmt(v.fees_per_roundtrip, 4)} (taux ${fmt(v.fee_rate * 100, 4)}% — ${v.fee_source})</p>
     <p>Gain brut/grille: ${fmt(v.gross_per_grid, 4)}</p>
     <p>Net/grille: <span class="${pnlClass(v.net_per_grid)}">${fmt(v.net_per_grid, 4)}</span></p>
+    <p>Net au seuil brut (${v.grids_to_cycle ?? "—"} grilles): <span class="${pnlClass(v.net_at_gross_threshold)}">${fmt(v.net_at_gross_threshold, 2)}</span>
+      (frais totaux théor. ${fmt(v.total_fees_at_gross_threshold, 2)})</p>
     <p>Ratio brut/frais: <strong class="${alert ? "neg" : "pos"}">${fmt(v.ratio_gross_to_fees, 2)}x</strong>
       ${alert ? "⚠ sous 2x" : "OK"}</p>
     <p>Grilles pour seuil cycle: ${v.grids_to_cycle ?? "∞ (net ≤ 0)"}</p>

@@ -1,5 +1,13 @@
 {
   "timestamp_utc": "2026-07-04T15:50:12.457801+00:00",
+  "test_config": {
+    "num_levels": 4,
+    "capital_usdt": 100.0,
+    "step_pct": 0.3,
+    "idle_recenter_min": 0.05,
+    "stuck_sell_min": 0.05,
+    "note": "Mini-grille 4 paliers pour vitesse — production 20 paliers : voir m3_open_sequence_clarifications.json"
+  },
   "tests": {
     "t1_open_sequence": {
       "initial_buy": {

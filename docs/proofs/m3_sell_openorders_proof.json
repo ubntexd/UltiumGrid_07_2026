@@ -1,0 +1,157 @@
+{
+  "timestamp_utc": "2026-07-04T16:31:56.442173+00:00",
+  "cycle_id": 2,
+  "running": true,
+  "element1_chart_on_page": {
+    "api_levels_count": 20,
+    "api_fills_count": 1,
+    "chart_endpoint": "http://127.0.0.1:18000/api/charts/price",
+    "ui_url": "http://127.0.0.1:18080",
+    "screenshot": "docs/proofs/m3_element1_full_page_screenshot.png",
+    "note": "20 lignes H dans le plugin ultiumGridOverlay si levels>=20"
+  },
+  "element2_sell_openorders": {
+    "sell_levels_db": 10,
+    "sell_with_order_id_db": 10,
+    "openOrders_total": 20,
+    "openOrders_sell_count": 10,
+    "openOrders_buy_count": 10,
+    "per_sell_level": [
+      {
+        "index": 10,
+        "price_db": "62931.89000000",
+        "qty_db": "0.00397000",
+        "status_db": "open",
+        "order_id_db": 45968631100,
+        "in_openOrders": true,
+        "openOrders_status": "NEW",
+        "openOrders_side": "SELL",
+        "openOrders_price": "62931.89000000",
+        "openOrders_qty": "0.00397000"
+      },
+      {
+        "index": 11,
+        "price_db": "63089.02000000",
+        "qty_db": "0.00397000",
+        "status_db": "open",
+        "order_id_db": 45968631101,
+        "in_openOrders": true,
+        "openOrders_status": "NEW",
+        "openOrders_side": "SELL",
+        "openOrders_price": "63089.02000000",
+        "openOrders_qty": "0.00397000"
+      },
+      {
+        "index": 12,
+        "price_db": "63246.16000000",
+        "qty_db": "0.00397000",
+        "status_db": "open",
+        "order_id_db": 45968631102,
+        "in_openOrders": true,
+        "openOrders_status": "NEW",
+        "openOrders_side": "SELL",
+        "openOrders_price": "63246.16000000",
+        "openOrders_qty": "0.00397000"
+      },
+      {
+        "index": 13,
+        "price_db": "63403.29000000",
+        "qty_db": "0.00397000",
+        "status_db": "open",
+        "order_id_db": 45968631103,
+        "in_openOrders": true,
+        "openOrders_status": "NEW",
+        "openOrders_side": "SELL",
+        "openOrders_price": "63403.29000000",
+        "openOrders_qty": "0.00397000"
+      },
+      {
+        "index": 14,
+        "price_db": "63560.42000000",
+        "qty_db": "0.00397000",
+        "status_db": "open",
+        "order_id_db": 45968631104,
+        "in_openOrders": true,
+        "openOrders_status": "NEW",
+        "openOrders_side": "SELL",
+        "openOrders_price": "63560.42000000",
+        "openOrders_qty": "0.00397000"
+      },
+      {
+        "index": 15,
+        "price_db": "63717.56000000",
+        "qty_db": "0.00397000",
+        "status_db": "open",
+        "order_id_db": 45968631105,
+        "in_openOrders": true,
+        "openOrders_status": "NEW",
+        "openOrders_side": "SELL",
+        "openOrders_price": "63717.56000000",
+        "openOrders_qty": "0.00397000"
+      },
+      {
+        "index": 16,
+        "price_db": "63874.69000000",
+        "qty_db": "0.00397000",
+        "status_db": "open",
+        "order_id_db": 45968631106,
+        "in_openOrders": true,
+        "openOrders_status": "NEW",
+        "openOrders_side": "SELL",
+        "openOrders_price": "63874.69000000",
+        "openOrders_qty": "0.00397000"
+      },
+      {
+        "index": 17,
+        "price_db": "64031.82000000",
+        "qty_db": "0.00397000",
+        "status_db": "open",
+        "order_id_db": 45968631107,
+        "in_openOrders": true,
+        "openOrders_status": "NEW",
+        "openOrders_side": "SELL",
+        "openOrders_price": "64031.82000000",
+        "openOrders_qty": "0.00397000"
+      },
+      {
+        "index": 18,
+        "price_db": "64188.96000000",
+        "qty_db": "0.00397000",
+        "status_db": "open",
+        "order_id_db": 45968631108,
+        "in_openOrders": true,
+        "openOrders_status": "NEW",
+        "openOrders_side": "SELL",
+        "openOrders_price": "64188.96000000",
+        "openOrders_qty": "0.00397000"
+      },
+      {
+        "index": 19,
+        "price_db": "64346.09000000",
+        "qty_db": "0.00397000",
+        "status_db": "open",
+        "order_id_db": 45968631110,
+        "in_openOrders": true,
+        "openOrders_status": "NEW",
+        "openOrders_side": "SELL",
+        "openOrders_price": "64346.09000000",
+        "openOrders_qty": "0.00397000"
+      }
+    ],
+    "all_10_sell_in_openOrders": true
+  },
+  "matched_trades_semantics": {
+    "total_matched_trades_ui": 0,
+    "grid_matched_trades": 0,
+    "initial_inventory_buy": {
+      "order_id": "45968631089",
+      "recorded_in_trades": true,
+      "excluded_from_matched_trades": true,
+      "note": "Total Matched Trades = fills de paliers grille uniquement (level_index non null)"
+    },
+    "trades_sql_raw": "2|BUY|62856.1|0.0397|45968631089|",
+    "interpretation": "total_matched_trades=0 attendu si seul l'achat initial est enregistr\u00e9 (level_index NULL, exclu du compteur grille)",
+    "grid_matched_is_zero_not_initial_buy": true
+  },
+  "conforme": true
+}

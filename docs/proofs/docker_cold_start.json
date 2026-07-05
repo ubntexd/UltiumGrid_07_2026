@@ -1,0 +1,68 @@
+{
+  "timestamp_utc": "2026-07-04T16:15:28+00:00",
+  "test": "docker compose down -v && docker compose up --build -d",
+  "host": "a976765959.local",
+  "docker_version": "29.6.1",
+  "compose_version": "v5.3.0",
+  "steps": [
+    {
+      "cmd": "docker compose down -v",
+      "result": "ok",
+      "volume_removed": "ultiumgrid_07_2026_pgdata"
+    },
+    {
+      "cmd": "docker compose up --build -d",
+      "result": "ok",
+      "images_built": ["bot", "backend", "frontend", "supervisor"]
+    }
+  ],
+  "services_after_up": {
+    "db": {"status": "Up (healthy)", "image": "postgres:16-alpine"},
+    "bot": {"status": "Up", "image": "ultiumgrid_07_2026-bot"},
+    "backend": {"status": "Up", "port": "127.0.0.1:18000->8000/tcp"},
+    "frontend": {"status": "Up", "port": "127.0.0.1:18080->80/tcp"},
+    "supervisor": {"status": "Up", "image": "ultiumgrid_07_2026-supervisor"}
+  },
+  "ui": {
+    "url": "http://127.0.0.1:18080/",
+    "http_status": 200
+  },
+  "backend_health": {
+    "url": "http://127.0.0.1:18000/health",
+    "http_status": 200,
+    "body": {
+      "ok": true,
+      "service": "backend",
+      "bot_heartbeat_age_s": 1.93
+    }
+  },
+  "api_running_sample": {
+    "running": false,
+    "symbol": "BTCUSDT",
+    "mark_price": 62786.005,
+    "mark_source": "ws",
+    "mark_stale": false
+  },
+  "binance_from_bot_container": {
+    "rest_base": "https://demo-api.binance.com",
+    "ping": {},
+    "server_time": 1783181728228,
+    "account": {
+      "canTrade": true,
+      "USDT_free": "4994.86441866",
+      "BTC_free": "0.00000075"
+    }
+  },
+  "bot_logs": [
+    "WS price stream thread started for BTCUSDT",
+    "WS connecting wss://demo-stream.binance.com/ws/btcusdt@bookTicker",
+    "Bot started, running=False"
+  ],
+  "db_tables_created": [
+    "alert_events", "bags", "bot_state", "configurations", "cycles",
+    "fees_paid", "order_attempts", "pnl_snapshots", "price_ticks",
+    "supervisor_alerts", "supervisor_metrics", "supervisor_state", "trades"
+  ],
+  "conforme": true,
+  "note": "down -v efface le volume pgdata (état vierge volontaire). Un simple 'docker compose down' sans -v conserve les données (volume nommé pgdata)."
+}

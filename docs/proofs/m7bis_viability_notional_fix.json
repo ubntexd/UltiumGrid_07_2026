@@ -1,0 +1,30 @@
+{
+  "timestamp_utc": "2026-07-04T16:55:00+00:00",
+  "fix": "notional_per_level aligné moteur grid.qty_per_level",
+  "formula": "(capital_usdt / 2) / (num_levels / 2)",
+  "config_default": {
+    "capital_usdt": 5000,
+    "num_levels": 20,
+    "step_pct": 0.25,
+    "cycle_trigger_usd": 15
+  },
+  "expected": {
+    "notional_per_level": 250.0,
+    "gross_per_grid": 0.625,
+    "fees_per_roundtrip": 0.5,
+    "net_per_grid": 0.125,
+    "grids_to_cycle": 120,
+    "fees_initial_inventory": 2.5,
+    "net_at_gross_threshold": 12.5
+  },
+  "api_live": {
+    "source": "GET /api/config viability",
+    "notional_per_level": 250.0,
+    "net_per_grid": 0.125,
+    "grids_to_cycle": 120,
+    "net_at_gross_threshold": 12.5,
+    "fees_initial_inventory": 2.5
+  },
+  "unit_test": "test_viability_formula_manual PASSED",
+  "conforme": true
+}

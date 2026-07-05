@@ -1,0 +1,153 @@
+{
+  "timestamp_utc": "2026-07-04T16:51:32.253762+00:00",
+  "cycle_id_open": 2,
+  "1_pnl_analysis_module_7ter": {
+    "source": "GET /api/pnl",
+    "uses_trades_table": false,
+    "query_cycles": "Cycle WHERE symbol=X AND status='closed'",
+    "formulas_api": {
+      "win_rate": "cycles_won / cycles_total",
+      "avg_win": "sum(net_pnl where net_pnl>0) / cycles_won",
+      "avg_loss": "sum(net_pnl where net_pnl<=0) / cycles_lost",
+      "avg_cycle_duration_sec": "mean(closed_at - opened_at)",
+      "net_pnl": "sum(cycle.net_pnl)",
+      "theoretical_pnl": "10 * cycles_total",
+      "cumulative_pnl": "closed_cycles_pnl + grid_pnl + bags_pnl (snapshot)"
+    },
+    "win_rate": 0.0,
+    "avg_win": 0.0,
+    "avg_loss": 0.0,
+    "avg_cycle_duration_sec": 0.053106,
+    "cycles_total": 1,
+    "interpretation": "Indicateurs d\u00e9riv\u00e9s de cycle.net_pnl / dur\u00e9es \u2014 pas de table trades",
+    "initial_buy_not_counted_as_trade": true
+  },
+  "2_histogram_module_8": {
+    "source": "GET /api/charts/cycles",
+    "query": "Cycle WHERE status='closed' ORDER BY id DESC",
+    "bars": [
+      {
+        "id": 1,
+        "net_pnl": 0.0,
+        "gross_pnl": 0.0,
+        "close_reason": "open_failed",
+        "closed_at": "2026-07-04T16:22:55.716556+00:00"
+      }
+    ],
+    "uses_trades_table": false,
+    "price_chart_fills": [
+      {
+        "id": 2,
+        "side": "BUY",
+        "price": 62856.1,
+        "quantity": 0.0397,
+        "ts": "2026-07-04T16:24:53.139361+00:00",
+        "level_index": null,
+        "source": "trades"
+      },
+      {
+        "id": 3,
+        "side": "SELL",
+        "price": 62931.89,
+        "quantity": 0.00397,
+        "ts": "2026-07-04T16:34:27.636056+00:00",
+        "level_index": 10,
+        "source": "trades"
+      }
+    ],
+    "initial_buy_marker_only_on_price_chart": true,
+    "grid_fill_has_level_index": true,
+    "histogram_excludes_individual_trades": true
+  },
+  "3_fees_module_7quater": {
+    "source": "GET /api/fees + fees_paid SQL",
+    "fees_paid_sql": "2|45968631089|0.005028488\n2|45968631100|0.2498396",
+    "cycle_open_fees_sum_usdt": 0.254868088,
+    "initial_buy_order_id": "45968631089",
+    "initial_buy_fee_usdt": 0.005028488,
+    "initial_buy_fee_included_in_cycle_total": true,
+    "fee_query_no_level_index_filter": "FeePaid WHERE cycle_id=X (tous ordres)",
+    "rows_api_sample": [
+      {
+        "id": 2,
+        "trade_id": "254311106",
+        "order_id": "45968631100",
+        "commission": 0.2498396,
+        "commission_asset": "USDT",
+        "commission_usdt": 0.2498396,
+        "cycle_id": 2,
+        "price": 62931.89,
+        "qty": 0.00397,
+        "created_at": "2026-07-04T16:34:27.651677+00:00"
+      },
+      {
+        "id": 1,
+        "trade_id": "254308190",
+        "order_id": "45968631089",
+        "commission": 8e-08,
+        "commission_asset": "BTC",
+        "commission_usdt": 0.005028488,
+        "cycle_id": 2,
+        "price": 62856.1,
+        "qty": 8e-05,
+        "created_at": "2026-07-04T16:24:53.381276+00:00"
+      }
+    ]
+  },
+  "4_viability_module_7bis": {
+    "source": "GET /api/config viability",
+    "fees_initial_inventory": 2.5,
+    "fees_fixed_per_cycle": 2.5,
+    "fees_per_roundtrip": 0.5,
+    "grids_to_cycle": 120,
+    "net_at_gross_threshold": 12.5,
+    "total_fees_at_gross_threshold": 62.5,
+    "formulas": {
+      "notional_per_level": "(capital_usdt / 2) / (num_levels / 2)",
+      "fees_initial_inventory": "(capital_usdt / 2) * fee_rate",
+      "fees_per_roundtrip": "notional_per_level * fee_rate * 2",
+      "gross_per_grid": "notional_per_level * (step_pct / 100)",
+      "net_per_grid": "gross_per_grid - fees_per_roundtrip",
+      "ratio": "gross_per_grid / fees_per_roundtrip",
+      "grids_to_cycle": "ceil(cycle_trigger_usd / net_per_grid)",
+      "net_at_gross_threshold": "grids_to_cycle * net_per_grid - fees_initial_inventory",
+      "total_fees_at_gross_threshold": "fees_initial_inventory + grids_to_cycle * fees_per_roundtrip"
+    },
+    "includes_initial_buy_as_fixed_cost": true
+  },
+  "5_trades_table_audit": {
+    "trades_sql_raw": "2|BUY|62856.1|0.0397|45968631089|\n3|SELL|62931.89|0.00397|45968631100|10",
+    "grid_matched_count": 1,
+    "initial_buy_rows": 1,
+    "ui_total_matched_trades": 1,
+    "grid_recap_initial_inventory_buy": {
+      "order_id": "45968631089",
+      "recorded_in_trades": true,
+      "excluded_from_matched_trades": true,
+      "note": "Total Matched Trades = fills de paliers grille uniquement (level_index non null)"
+    },
+    "occurrences": [
+      {
+        "location": "backend/app/main.py _build_grid_recap",
+        "filter": "level_index IS NOT NULL",
+        "rule": "exclure achat initial (matched trades)"
+      },
+      {
+        "location": "backend/app/main.py chart_price fills",
+        "filter": "all trades + fallback cycle_meta initial_buy",
+        "rule": "inclure achat initial (marqueur B visuel)"
+      },
+      {
+        "location": "bot/ultiumgrid/bot_runner.py _record_fees_for_order",
+        "filter": "myTrades par order_id",
+        "rule": "inclure achat initial (frais r\u00e9els)"
+      },
+      {
+        "location": "bot/ultiumgrid/bot_runner.py _close_cycle_db",
+        "filter": "FeePaid WHERE cycle_id",
+        "rule": "inclure tous frais dont achat initial dans net_pnl cycle"
+      }
+    ]
+  },
+  "conforme": true
+}

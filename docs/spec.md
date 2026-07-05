@@ -13,9 +13,18 @@
 
 ## 1bis. Viabilité économique (écran config)
 
-À partir du notionnel par palier, du pas et des frais (avec/sans BNB) : profit net estimé par grille et nombre de grilles pour atteindre le seuil de cycle. Alerte si gain brut / frais < 2×.
+Notionnel par palier = **(capital / 2) / (num_levels / 2)** — ex. 5 000 USDT, 20 paliers → **250 USDT/palier** (aligné sur `grid.qty_per_level`).
 
-## 2. Grille — étage 1 (cycle +15 / +10)
+Calcul indicatif (pas 0,25 %, sans BNB) :
+- Gain brut/grille : 250 × 0,25 % = **0,625 USD**
+- Frais aller-retour (0,2 %) : **0,50 USD** → net ≈ **0,125 USD/grille**
+- Frais achat initial (fixe/cycle) : (capital/2) × taker ≈ **2,50 USD** sur config défaut
+- Grilles pour seuil **+15 USD brut** : ≈ **120** (sans BNB) ; net au seuil ≈ **+12,50 USD** après coût fixe d'ouverture
+- Alerte si ratio gain brut / frais A/R < **2×**
+
+Coût fixe d'ouverture inclus dans `fees_initial_inventory` et `net_at_gross_threshold` (Module 7bis).
+
+## 2. Grille — étage 1 (cycle +15 / objectif net ≈ +12,50)
 
 - 20 niveaux arithmétiques, pas **0,25 %** (bornes 0,05–2 %).
 - Capital défaut **5 000 USDT** (Spot pur) : **moitié** inventaire SELL (achat marché), **moitié** limites BUY.
@@ -26,8 +35,8 @@
   4. Cycle `open` + coût d’achat initial (`cycle_meta_*`, `fees_paid`)
 - Anti-doublon **avant** l’achat marché (réservation DB + lock `_opening_cycle`).
 - PnL : Grid Profit + Floating Profit ; floating recalculé à **chaque tick WS**.
-- Déclenchement +15 USD brut puis **même séquence** pour le cycle suivant.
-- Objectif UI : **+10 USD net** / cycle.
+- Déclenchement **+15 USD brut** (Grid + Floating, hors sacs) puis **même séquence** pour le cycle suivant.
+- Objectif net visé : **≈ +12,50 USD** / cycle (v2.1 — après frais achat initial ~2,50 USD et frais grilles ; remplace l'estimation +10).
 
 ## 2bis. Recentrage hors fourchette
 
