@@ -1,0 +1,53 @@
+# UltiumGrid Observatory + n8n — collecte horaire & dashboard
+# Usage: docker compose -p ultiumgrid_obs -f docker-compose.observatory.yml up -d
+
+name: ultiumgrid_obs
+
+services:
+  observatory:
+    build:
+      context: ./observatory
+      dockerfile: Dockerfile
+    network_mode: host
+    volumes:
+      - observatory_data:/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /usr/bin/docker:/usr/bin/docker:ro
+    environment:
+      OBSERVATORY_DATA_DIR: /data
+      ULTIUM_HOST_API: http://127.0.0.1
+      OBSERVATORY_PORT: "18780"
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "18780"]
+    restart: unless-stopped
+
+  n8n:
+    image: n8nio/n8n:1.70.3
+    ports:
+      - "127.0.0.1:5678:5678"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      GENERIC_TIMEZONE: UTC
+      TZ: UTC
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: ultium
+      N8N_BASIC_AUTH_PASSWORD: ${N8N_PASSWORD:-ultiumgrid2026}
+      N8N_SECURE_COOKIE: "false"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - observatory
+    restart: unless-stopped
+    networks:
+      - obsnet
+
+volumes:
+  observatory_data:
+  n8n_data:
+
+networks:
+  obsnet:
+    driver: bridge

@@ -1,0 +1,87 @@
+{
+  "name": "UltiumGrid — Analyse horaire trades",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "schedule-hourly",
+      "name": "Toutes les heures",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:18780/api/collect",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "http-collect",
+      "name": "Collecter analyse trades",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "log",
+              "name": "message",
+              "value": "=Collecte OK {{ $json.hour_key }} — net total {{ $json.summary.total_net_realized }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-result",
+      "name": "Résultat",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [440, 0]
+    }
+  ],
+  "connections": {
+    "Toutes les heures": {
+      "main": [
+        [
+          {
+            "node": "Collecter analyse trades",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collecter analyse trades": {
+      "main": [
+        [
+          {
+            "node": "Résultat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

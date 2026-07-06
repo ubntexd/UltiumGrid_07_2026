@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UltiumGrid Observatory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">◈</span>
+      <div>
+        <h1>UltiumGrid Observatory</h1>
+        <p class="sub">Analyse trades · VPS temps réel · collecte horaire n8n</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span id="clock" class="mono"></span>
+      <button type="button" id="btn-refresh" class="btn primary">Collecter maintenant</button>
+    </div>
+  </header>
+
+  <main class="grid-layout">
+  <section class="panel vps-panel span-12">
+    <h2>VPS — temps réel</h2>
+    <div class="vps-grid" id="vps-cards"></div>
+    <div class="chart-wrap"><canvas id="chart-vps-cpu"></canvas></div>
+    <details class="docker-details">
+      <summary>Containers Docker (<span id="docker-count">0</span>)</summary>
+      <div class="table-scroll"><table id="docker-table"><thead><tr><th>Container</th><th>Stack</th><th>CPU</th><th>RAM</th></tr></thead><tbody></tbody></table></div>
+    </details>
+  </section>
+
+  <section class="panel span-12 kpi-row" id="kpi-row"></section>
+
+  <section class="panel span-8">
+    <h2>Historique gains (collectes horaires)</h2>
+    <div class="chart-wrap tall"><canvas id="chart-history"></canvas></div>
+  </section>
+
+  <section class="panel span-4">
+    <h2>Résumé dernière collecte</h2>
+    <div id="summary-box" class="summary-box">En attente de la première collecte…</div>
+  </section>
+
+  <section class="panel span-12" id="instances-section">
+    <h2>Instances — détail trades</h2>
+    <div id="instances-grid" class="instances-grid"></div>
+  </section>
+  </main>
+
+  <footer class="footer mono">API <span id="api-status">—</span> · refresh VPS 15s · rapport horaire via n8n</footer>
+  <script src="/static/app.js"></script>
+</body>
+</html>
