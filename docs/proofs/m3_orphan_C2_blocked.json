@@ -1,0 +1,9 @@
+{
+  "test": "C2_start_blocked_untracked",
+  "start_result": {
+    "ok": false,
+    "blocked": true,
+    "error": "untracked_inventory",
+    "message": "myTrades ne couvre que 0.00000000 / 0.05000000 BTC \u2014 entry_avg non fiable. Stock BTC pr\u00e9existant sans co\u00fbt tra\u00e7able : vendre (Panic) avant Start ou s'assurer que myTrades / entry_avg cycle pr\u00e9c\u00e9dent est disponible."
+  }
+}

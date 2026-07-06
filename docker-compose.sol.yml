@@ -1,0 +1,123 @@
+# Instance SOL/USDT — stack isolée (aucun partage avec docker-compose.yml BTC).
+# Usage: docker compose -p ultiumgrid_sol -f docker-compose.sol.yml --env-file .env.sol up -d
+
+name: ultiumgrid_sol
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ultium
+      POSTGRES_PASSWORD: ultium
+      POSTGRES_DB: ultiumgrid_sol
+    volumes:
+      - pgdata_sol:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ultium -d ultiumgrid_sol"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - ultiumnet_sol
+
+  bot:
+    build:
+      context: .
+      dockerfile: bot/Dockerfile
+    env_file:
+      - .env.sol
+    environment:
+      DATABASE_URL: postgresql+psycopg2://ultium:ultium@db:5432/ultiumgrid_sol
+      ULTIUM_INSTANCE_ID: sol
+      ULTIUM_INSTANCE_LABEL: "UltiumGrid — Instance SOL"
+      ULTIUM_ACCENT: "#a855f7"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - ultiumnet_sol
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file:
+      - .env.sol
+    environment:
+      DATABASE_URL: postgresql+psycopg2://ultium:ultium@db:5432/ultiumgrid_sol
+      ULTIUM_INSTANCE_ID: sol
+      ULTIUM_INSTANCE_LABEL: "UltiumGrid — Instance SOL"
+      ULTIUM_ACCENT: "#a855f7"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:18100:8000"
+    restart: unless-stopped
+    networks:
+      - ultiumnet_sol
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    depends_on:
+      - backend
+    ports:
+      - "127.0.0.1:18180:80"
+    restart: unless-stopped
+    networks:
+      - ultiumnet_sol
+
+  supervisor:
+    build:
+      context: .
+      dockerfile: supervisor/Dockerfile
+    env_file:
+      - .env.sol
+    environment:
+      DATABASE_URL: postgresql+psycopg2://ultium:ultium@db:5432/ultiumgrid_sol
+      SUPERVISOR_BOT_HEALTH_URL: http://backend:8000/health
+      SUPERVISOR_HEARTBEAT_TIMEOUT_S: "90"
+      SUPERVISOR_RECON_THRESHOLD_USDT: "1.0"
+      SUPERVISOR_MARKET_ANOMALY_PCT: "0.5"
+      SUPERVISOR_POLL_S: "15"
+      SUPERVISOR_EMERGENCY_ACTION: "false"
+      ULTIUM_INSTANCE_ID: sol
+    depends_on:
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_started
+      bot:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - ultiumnet_sol
+
+  egaliseur:
+    build:
+      context: .
+      dockerfile: egaliseur/Dockerfile
+    env_file:
+      - .env.sol
+    environment:
+      DATABASE_URL: postgresql+psycopg2://ultium:ultium@db:5432/ultiumgrid_sol
+      EGALISEUR_RESTRICTED_MODE: "true"
+      EGALISEUR_OPERATION_MODE: "test_only"
+      EGALISEUR_POLL_S: "5"
+      ULTIUM_INSTANCE_ID: sol
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - ultiumnet_sol
+
+volumes:
+  pgdata_sol:
+
+networks:
+  ultiumnet_sol:
+    driver: bridge

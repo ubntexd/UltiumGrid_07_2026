@@ -1,0 +1,148 @@
+{
+  "ts_utc": "2026-07-05T23:03:41.556972+00:00",
+  "method": "docker stats --no-stream every 30s for 720s (23 samples), bots running normally post-rebuild",
+  "vps_specs": {
+    "cpu_cores": 3,
+    "cpu_model": "Intel Xeon Gold 6226R @ 2.90GHz",
+    "ram_total_bytes": 8327299072,
+    "ram_total_gib": 7.76,
+    "disk_total_bytes": 47373488128,
+    "disk_avail_bytes": 31454576640,
+    "disk_used_pct": 29.4
+  },
+  "sampling_window": {
+    "duration_s": 720,
+    "interval_s": 30,
+    "samples_n": 23,
+    "samples_file": "/home/dev/dev/UltiumGrid_07_2026/docs/proofs/m_vps_capacity_analysis_samples.jsonl",
+    "note": "Fonctionnement normal \u2014 pas de rebuild pendant la fen\u00eatre"
+  },
+  "host_during_sampling": {
+    "load_1m": {
+      "mean": 0.625,
+      "max": 1.1,
+      "min": 0.3,
+      "samples": 23
+    },
+    "mem_available_gib": {
+      "mean": 4.442,
+      "max": 4.475,
+      "min": 4.417,
+      "samples": 23
+    },
+    "mem_used_at_analysis_bytes": 3539767296
+  },
+  "per_instance_measured": {
+    "btc": {
+      "cpu_pct_sum": {
+        "mean": 15.27,
+        "max": 31.69,
+        "min": 3.64,
+        "samples": 23
+      },
+      "ram_bytes": {
+        "mean": 261901140.68,
+        "max": 271313797.12,
+        "min": 243552747.52,
+        "samples": 23
+      },
+      "ram_mib_mean": 249.8
+    },
+    "sol": {
+      "cpu_pct_sum": {
+        "mean": 8.67,
+        "max": 21.59,
+        "min": 0.31,
+        "samples": 23
+      },
+      "ram_bytes": {
+        "mean": 297614043.581,
+        "max": 298114351.104,
+        "min": 297428582.4,
+        "samples": 23
+      },
+      "ram_mib_mean": 283.8
+    }
+  },
+  "combined_stacks": {
+    "cpu_pct_sum": {
+      "mean": 23.94,
+      "max": 52.0,
+      "min": 8.23,
+      "samples": 23
+    },
+    "ram_mib": {
+      "mean": 533.6,
+      "max": 543.0,
+      "min": 515.9
+    },
+    "containers_per_instance_btc": 5,
+    "containers_per_instance_sol": 6
+  },
+  "marginal_cost_per_instance": {
+    "cpu_pct_sum_mean": 11.97,
+    "cpu_pct_sum_max": 26.64,
+    "ram_mib_mean": 266.8,
+    "ram_mib_max": 271.5,
+    "load_1m_mean_share": 0.312
+  },
+  "non_instance_overhead_estimate": {
+    "ram_total_used_gib": 3.3,
+    "ram_stacks_2_instances_mib_mean": 533.6,
+    "ram_other_gib_estimate": 2.78,
+    "note": "OS, Docker daemon, beacon :8080, agents Cursor, cache disque \u2014 pas mesure avant 1er d\u00e9ploiement disponible"
+  },
+  "capacity_budget_75pct": {
+    "cpu_docker_pct_budget": 225.0,
+    "ram_bytes_budget": 6245474304,
+    "load_1m_budget": 2.25
+  },
+  "headroom": {
+    "cpu_docker_pct_vs_mean": 201.1,
+    "cpu_docker_pct_vs_peak": 173.0,
+    "ram_bytes": 2705707008,
+    "ram_gib": 2.52,
+    "load_1m_vs_mean": 1.62,
+    "load_1m_vs_peak": 1.15
+  },
+  "max_additional_instances_by_resource": {
+    "cpu_basis_peak": 6,
+    "cpu_basis_mean": 16,
+    "ram_basis_peak_mib": 9,
+    "load_basis_peak": 2,
+    "load_basis_mean": 5
+  },
+  "binance_api_ip_quota": {
+    "limit_per_ip_per_minute_weight": 6000,
+    "source": "Binance Spot REST default REQUEST_WEIGHT limit per IP (demo-api.binance.com partage quota IP sortante VPS)",
+    "shared_ip": true,
+    "per_instance_steady_state_estimate": {
+      "bot_poll_5s": {
+        "openOrders_x12": 72,
+        "account_cache_8s_x7_5": 150.0,
+        "get_order_misc_x12": 24,
+        "subtotal_weight_per_min": 246.0
+      },
+      "backend_ui_poll_5s_if_open": {
+        "running_status_x12": 321.0,
+        "note": "Backend client s\u00e9par\u00e9 du bot \u2014 m\u00eame IP, poids cumul\u00e9",
+        "subtotal_weight_per_min_approx": 246.0
+      },
+      "total_per_instance_with_ui_open": 492
+    },
+    "two_instances_estimated_weight_per_min": 984,
+    "three_instances_estimated_weight_per_min": 1476,
+    "historical_incident": "HTTP 418 / code -1003 document\u00e9 audit_ui_bugfix.md \u2014 quota IP, pas par compte"
+  },
+  "conclusion": {
+    "current_instances": 2,
+    "recommended_additional_instances_conservative": 1,
+    "recommended_total_instances_conservative": 3,
+    "optimistic_additional_instances": 2,
+    "optimistic_total_instances": 4,
+    "limiting_factor_conservative": "CPU/load (3 c\u0153urs, load pic 1.1 avec 2 instances) \u2014 marge 75% atteinte avec ~3-4 instances totales",
+    "limiting_factor_if_ui_always_open": "Binance REQUEST_WEIGHT IP partag\u00e9 (~492 weight/min/instance avec UI) \u2014 3e instance OK (~1476/6000), surveiller pics UI+rebuild",
+    "disk_not_limiting": true,
+    "caveat": "Estimation API = mod\u00e8le steady-state ; pics -1003 possibles si polls agressifs simultan\u00e9s"
+  }
+}

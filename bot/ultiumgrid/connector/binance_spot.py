@@ -38,7 +38,16 @@ BACKOFF_BASE_S = 0.2
 MAX_ORDER_ATTEMPTS = 5
 
 PRIORITY_CLOSE_PURPOSES = frozenset(
-    {"panic_close", "risk_cut", "hard_stop", "cycle_close", "bag_sell"}
+    {
+        "panic_close",
+        "risk_cut",
+        "hard_stop",
+        "cycle_close",
+        "bag_sell",
+        "egaliseur_forced_stop",
+        "egaliseur_forced_time",
+        "egaliseur_trailing_fill",
+    }
 )
 
 
@@ -78,6 +87,8 @@ class SymbolFilters:
     min_notional: Decimal
     price_precision: int
     quantity_precision: int
+    trailing_delta_min_bips: int = 10
+    trailing_delta_max_bips: int = 2000
 
     def round_price(self, price: Decimal | float | str) -> Decimal:
         p = Decimal(str(price))
@@ -295,6 +306,17 @@ class BinanceSpotClient:
             ls = filters["LOT_SIZE"]
             mn = filters.get("NOTIONAL") or filters.get("MIN_NOTIONAL") or {}
             min_notional = Decimal(str(mn.get("minNotional") or mn.get("notional") or "0"))
+            td = filters.get("TRAILING_DELTA") or {}
+            trail_min = int(
+                td.get("minTrailingAboveDelta")
+                or td.get("minTrailingBelowDelta")
+                or 10
+            )
+            trail_max = int(
+                td.get("maxTrailingAboveDelta")
+                or td.get("maxTrailingBelowDelta")
+                or 2000
+            )
             # precision from tick/step
             tick = Decimal(pf["tickSize"])
             step = Decimal(ls["stepSize"])
@@ -310,6 +332,8 @@ class BinanceSpotClient:
                 min_notional=min_notional,
                 price_precision=price_precision,
                 quantity_precision=quantity_precision,
+                trailing_delta_min_bips=trail_min,
+                trailing_delta_max_bips=trail_max,
             )
             self._filters_cache[symbol] = sf
             return sf
@@ -692,6 +716,86 @@ class BinanceSpotClient:
             )
         assert last_error is not None
         raise last_error
+
+    def place_trailing_stop_sell(
+        self,
+        symbol: str,
+        quantity: Decimal | float | str,
+        *,
+        trailing_delta_bips: int,
+        limit_price: Decimal | float | str,
+        activation_stop_price: Decimal | float | str | None = None,
+        purpose: str = "egaliseur_trailing",
+        max_attempts: int = MAX_ORDER_ATTEMPTS,
+    ) -> dict:
+        """STOP_LOSS_LIMIT SELL avec trailingDelta — bornes lues via exchangeInfo."""
+        filters = self.get_symbol_filters(symbol)
+        bips = max(
+            filters.trailing_delta_min_bips,
+            min(int(trailing_delta_bips), filters.trailing_delta_max_bips),
+        )
+        qty_str = filters.format_qty(quantity)
+        price_str = filters.format_price(limit_price)
+        base_params: dict[str, Any] = {
+            "symbol": symbol,
+            "side": "SELL",
+            "type": "STOP_LOSS_LIMIT",
+            "quantity": qty_str,
+            "price": price_str,
+            "timeInForce": "GTC",
+            "trailingDelta": bips,
+        }
+        if activation_stop_price is not None:
+            base_params["stopPrice"] = filters.format_price(activation_stop_price)
+
+        used_client_ids: list[str] = []
+        last_error: Exception | None = None
+        for attempt_no in range(1, max_attempts + 1):
+            client_order_id = self.new_client_order_id()
+            used_client_ids.append(client_order_id)
+            params = dict(base_params)
+            params["newClientOrderId"] = client_order_id
+            status, body, raw = self._raw_request("POST", "/api/v3/order", params, signed=True)
+            code = body.get("code") if isinstance(body, dict) else None
+            msg = body.get("msg") if isinstance(body, dict) else raw
+            if 200 <= status < 300 and isinstance(body, dict) and "orderId" in body:
+                self._open_orders_cache.pop(symbol, None)
+                self._open_orders_cache.pop("*", None)
+                self._log_attempt(
+                    {
+                        "symbol": symbol,
+                        "side": "SELL",
+                        "order_type": "STOP_LOSS_LIMIT",
+                        "purpose": purpose,
+                        "client_order_id": client_order_id,
+                        "attempt_no": attempt_no,
+                        "outcome": "success",
+                        "http_status": status,
+                        "binance_code": None,
+                        "binance_msg": None,
+                        "order_id": str(body.get("orderId")),
+                        "request_json": params,
+                        "response_json": body,
+                        "verify_json": {"trailing_delta_bips": bips},
+                        "used_client_ids": list(used_client_ids),
+                    }
+                )
+                return body
+            status_unknown = code == -1007 or status in (408, 502, 504)
+            if status_unknown:
+                found, trace = self.find_order_by_client_order_id(symbol, client_order_id)
+                if found:
+                    return found
+                last_error = requests.HTTPError(f"{status} {raw[:300]}")
+                if attempt_no < max_attempts:
+                    time.sleep(BACKOFF_BASE_S * (2 ** (attempt_no - 1)))
+                    continue
+                break
+            last_error = requests.HTTPError(f"{status} {raw}")
+            break
+        if last_error:
+            raise last_error
+        raise RuntimeError("place_trailing_stop_sell failed without error")
 
     def cancel_order(self, symbol: str, order_id: int) -> dict:
         status, body, raw = self._raw_request(

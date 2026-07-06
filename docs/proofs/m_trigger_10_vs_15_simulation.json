@@ -1,0 +1,272 @@
+{
+  "ts_utc": "2026-07-06T08:11:47.219888+00:00",
+  "method": "Replay pnl_snapshots.grid_pnl (gross cycle) \u2014 premier franchissement seuil",
+  "note": "Net contre-factuel = gross@+10 - frais trades cycle - frais cl\u00f4ture estim\u00e9s",
+  "gains_snapshot": {
+    "instances": {
+      "BTC": {
+        "open": {
+          "grid_profit": 3.122975796899987,
+          "floating": -18.64180034967376,
+          "gross_total_profit_ui": -15.518824552773772
+        },
+        "realized_all_closed": {
+          "net": 21.59218369638435
+        }
+      },
+      "SOL": {
+        "open": {
+          "grid_profit": 2.4856805324999005,
+          "floating": -27.23714770154796,
+          "gross_total_profit_ui": -24.751467169048063
+        },
+        "realized_all_closed": {
+          "net": 15.38262214941035
+        }
+      },
+      "XRP": {
+        "open": {
+          "grid_profit": 3.151554559999954,
+          "floating": -15.198457449972484,
+          "gross_total_profit_ui": -12.046902889972529
+        },
+        "realized_all_closed": {
+          "net": 0.056812060411299825
+        }
+      }
+    }
+  },
+  "simulations": {
+    "BTC": {
+      "instance": "BTC",
+      "symbol": "BTCUSDT",
+      "viability_theory": {
+        "trigger_10": {
+          "notional_per_level": 250.0,
+          "fee_rate": 0.00075,
+          "fee_source": "default_bnb_taker_0.075pct",
+          "fees_initial_inventory": 1.875,
+          "fees_fixed_per_cycle": 1.875,
+          "fees_per_roundtrip": 0.375,
+          "gross_per_grid": 1.0,
+          "net_per_grid": 0.625,
+          "ratio_gross_to_fees": 2.6666666666666665,
+          "grids_to_cycle": 16,
+          "net_at_gross_threshold": 8.125,
+          "total_fees_at_gross_threshold": 7.875,
+          "alert_ratio_below_2x": false,
+          "bnb_fee_discount": true,
+          "bnb_balance": 0.0,
+          "bnb_sufficient": false,
+          "formulas": {
+            "notional_per_level": "(capital_usdt / 2) / (num_levels / 2)",
+            "fees_initial_inventory": "(capital_usdt / 2) * fee_rate",
+            "fees_per_roundtrip": "notional_per_level * fee_rate * 2",
+            "gross_per_grid": "notional_per_level * (step_pct / 100)",
+            "net_per_grid": "gross_per_grid - fees_per_roundtrip",
+            "ratio": "gross_per_grid / fees_per_roundtrip",
+            "grids_to_cycle": "ceil(cycle_trigger_usd / net_per_grid)",
+            "net_at_gross_threshold": "grids_to_cycle * net_per_grid - fees_initial_inventory",
+            "total_fees_at_gross_threshold": "fees_initial_inventory + grids_to_cycle * fees_per_roundtrip"
+          }
+        },
+        "trigger_15": {
+          "notional_per_level": 250.0,
+          "fee_rate": 0.00075,
+          "fee_source": "default_bnb_taker_0.075pct",
+          "fees_initial_inventory": 1.875,
+          "fees_fixed_per_cycle": 1.875,
+          "fees_per_roundtrip": 0.375,
+          "gross_per_grid": 1.0,
+          "net_per_grid": 0.625,
+          "ratio_gross_to_fees": 2.6666666666666665,
+          "grids_to_cycle": 24,
+          "net_at_gross_threshold": 13.125,
+          "total_fees_at_gross_threshold": 10.875,
+          "alert_ratio_below_2x": false,
+          "bnb_fee_discount": true,
+          "bnb_balance": 0.0,
+          "bnb_sufficient": false,
+          "formulas": {
+            "notional_per_level": "(capital_usdt / 2) / (num_levels / 2)",
+            "fees_initial_inventory": "(capital_usdt / 2) * fee_rate",
+            "fees_per_roundtrip": "notional_per_level * fee_rate * 2",
+            "gross_per_grid": "notional_per_level * (step_pct / 100)",
+            "net_per_grid": "gross_per_grid - fees_per_roundtrip",
+            "ratio": "gross_per_grid / fees_per_roundtrip",
+            "grids_to_cycle": "ceil(cycle_trigger_usd / net_per_grid)",
+            "net_at_gross_threshold": "grids_to_cycle * net_per_grid - fees_initial_inventory",
+            "total_fees_at_gross_threshold": "fees_initial_inventory + grids_to_cycle * fees_per_roundtrip"
+          }
+        }
+      },
+      "cycles_analyzed": [
+        {
+          "cycle_id": 8,
+          "symbol": "BTCUSDT",
+          "status": "closed",
+          "close_reason_actual": "trigger_15",
+          "opened_at": "2026-07-05 19:23:05.682301+00",
+          "closed_at": "2026-07-05 21:56:14.52546+00",
+          "snapshots_count": 0,
+          "max_gross_in_window": 0.0,
+          "first_cross_10": null,
+          "first_cross_15": null,
+          "actual_gross": 15.338225370271559,
+          "actual_net": 12.894790467271559,
+          "counterfactual_net_at_first_10": null,
+          "delta_net_if_closed_at_10_vs_actual": null,
+          "would_close_earlier_at_10": false
+        },
+        {
+          "cycle_id": 9,
+          "symbol": "BTCUSDT",
+          "status": "closed",
+          "close_reason_actual": "trigger_15",
+          "opened_at": "2026-07-05 21:56:14.532921+00",
+          "closed_at": "2026-07-05 22:20:51.219557+00",
+          "snapshots_count": 0,
+          "max_gross_in_window": 0.0,
+          "first_cross_10": null,
+          "first_cross_15": null,
+          "actual_gross": 16.130419005977007,
+          "actual_net": 15.391249103077007,
+          "counterfactual_net_at_first_10": null,
+          "delta_net_if_closed_at_10_vs_actual": null,
+          "would_close_earlier_at_10": false
+        },
+        {
+          "cycle_id": 10,
+          "symbol": "BTCUSDT",
+          "status": "open",
+          "close_reason_actual": null,
+          "opened_at": "2026-07-05 22:20:51.224895+00",
+          "closed_at": null,
+          "snapshots_count": 6848,
+          "max_gross_in_window": 14.0565,
+          "first_cross_10": {
+            "ts": "2026-07-05 23:05:12.65259+00",
+            "gross_pnl": 10.41851023170357
+          },
+          "first_cross_15": null,
+          "actual_gross": 0.0,
+          "actual_net": -1.1173353009,
+          "counterfactual_net_at_first_10": 5.9302,
+          "delta_net_if_closed_at_10_vs_actual": null,
+          "would_close_earlier_at_10": true
+        }
+      ],
+      "summary": {
+        "closed_cycles": 2,
+        "actual_net_realized": 28.286,
+        "counterfactual_net_if_always_first_10": 0,
+        "delta_net_closed_cycles": -28.286,
+        "snapshots_missing_cycles": [
+          8,
+          9
+        ],
+        "open_cycle_would_have_triggered_10": {
+          "ts": "2026-07-05 23:05:12.65259+00",
+          "gross_pnl": 10.41851023170357
+        },
+        "open_cycle_max_gross": 14.0565,
+        "open_cycle_live_gross_now": -15.518824552773772,
+        "open_cycle_savings_if_had_triggered_10_vs_now": 21.449
+      }
+    },
+    "XRP": {
+      "instance": "XRP",
+      "symbol": "XRPUSDT",
+      "viability_theory": {
+        "trigger_10": {
+          "notional_per_level": 250.0,
+          "fee_rate": 0.00075,
+          "fee_source": "default_bnb_taker_0.075pct",
+          "fees_initial_inventory": 1.875,
+          "fees_fixed_per_cycle": 1.875,
+          "fees_per_roundtrip": 0.375,
+          "gross_per_grid": 1.0,
+          "net_per_grid": 0.625,
+          "ratio_gross_to_fees": 2.6666666666666665,
+          "grids_to_cycle": 16,
+          "net_at_gross_threshold": 8.125,
+          "total_fees_at_gross_threshold": 7.875,
+          "alert_ratio_below_2x": false,
+          "bnb_fee_discount": true,
+          "bnb_balance": 0.0,
+          "bnb_sufficient": false,
+          "formulas": {
+            "notional_per_level": "(capital_usdt / 2) / (num_levels / 2)",
+            "fees_initial_inventory": "(capital_usdt / 2) * fee_rate",
+            "fees_per_roundtrip": "notional_per_level * fee_rate * 2",
+            "gross_per_grid": "notional_per_level * (step_pct / 100)",
+            "net_per_grid": "gross_per_grid - fees_per_roundtrip",
+            "ratio": "gross_per_grid / fees_per_roundtrip",
+            "grids_to_cycle": "ceil(cycle_trigger_usd / net_per_grid)",
+            "net_at_gross_threshold": "grids_to_cycle * net_per_grid - fees_initial_inventory",
+            "total_fees_at_gross_threshold": "fees_initial_inventory + grids_to_cycle * fees_per_roundtrip"
+          }
+        },
+        "trigger_15": {
+          "notional_per_level": 250.0,
+          "fee_rate": 0.00075,
+          "fee_source": "default_bnb_taker_0.075pct",
+          "fees_initial_inventory": 1.875,
+          "fees_fixed_per_cycle": 1.875,
+          "fees_per_roundtrip": 0.375,
+          "gross_per_grid": 1.0,
+          "net_per_grid": 0.625,
+          "ratio_gross_to_fees": 2.6666666666666665,
+          "grids_to_cycle": 24,
+          "net_at_gross_threshold": 13.125,
+          "total_fees_at_gross_threshold": 10.875,
+          "alert_ratio_below_2x": false,
+          "bnb_fee_discount": true,
+          "bnb_balance": 0.0,
+          "bnb_sufficient": false,
+          "formulas": {
+            "notional_per_level": "(capital_usdt / 2) / (num_levels / 2)",
+            "fees_initial_inventory": "(capital_usdt / 2) * fee_rate",
+            "fees_per_roundtrip": "notional_per_level * fee_rate * 2",
+            "gross_per_grid": "notional_per_level * (step_pct / 100)",
+            "net_per_grid": "gross_per_grid - fees_per_roundtrip",
+            "ratio": "gross_per_grid / fees_per_roundtrip",
+            "grids_to_cycle": "ceil(cycle_trigger_usd / net_per_grid)",
+            "net_at_gross_threshold": "grids_to_cycle * net_per_grid - fees_initial_inventory",
+            "total_fees_at_gross_threshold": "fees_initial_inventory + grids_to_cycle * fees_per_roundtrip"
+          }
+        }
+      },
+      "cycles_analyzed": [
+        {
+          "cycle_id": 60,
+          "symbol": "XRPUSDT",
+          "status": "open",
+          "close_reason_actual": null,
+          "opened_at": "2026-07-06 01:19:44.914471+00",
+          "closed_at": null,
+          "snapshots_count": 4898,
+          "max_gross_in_window": 5.1056,
+          "first_cross_10": null,
+          "first_cross_15": null,
+          "actual_gross": 0.0,
+          "actual_net": 0.0,
+          "counterfactual_net_at_first_10": null,
+          "delta_net_if_closed_at_10_vs_actual": null,
+          "would_close_earlier_at_10": false
+        }
+      ],
+      "summary": {
+        "closed_cycles": 0,
+        "actual_net_realized": 0,
+        "counterfactual_net_if_always_first_10": 0,
+        "delta_net_closed_cycles": 0,
+        "snapshots_missing_cycles": [],
+        "open_cycle_would_have_triggered_10": null,
+        "open_cycle_max_gross": 5.1056,
+        "open_cycle_live_gross_now": null,
+        "open_cycle_savings_if_had_triggered_10_vs_now": null
+      }
+    }
+  }
+}

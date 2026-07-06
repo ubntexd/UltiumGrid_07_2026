@@ -1,0 +1,28 @@
+{
+  "ts_utc": "2026-07-05T22:40:35+00:00",
+  "action": "close_now immediate apply",
+  "cycle_closed": {
+    "id": 5,
+    "close_reason": "config_change",
+    "grid_profit": 0.405,
+    "gross_pnl": -0.716,
+    "note": "Fermeture forcée pour appliquer seuil 5 + BNB discount (wait_cycle insuffisant — seuil 15 encore actif pendant cycle 5)"
+  },
+  "cycle_opened": {
+    "id": 6,
+    "config": {
+      "cycle_trigger_usd": 5.0,
+      "bnb_fee_discount": true,
+      "symbol": "SOLUSDT",
+      "capital_usdt": 4000,
+      "step_pct": 0.4
+    }
+  },
+  "viability": {
+    "net_at_gross_threshold": 3.5,
+    "grids_to_cycle": 10
+  },
+  "btc_untouched": {
+    "cycle_trigger_usd": 15.0
+  }
+}

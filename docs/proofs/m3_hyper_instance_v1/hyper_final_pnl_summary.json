@@ -1,0 +1,26 @@
+{
+  "ts_utc": "2026-07-06T01:17:46.738286+00:00",
+  "action": "hyper_instance_final_closure_before_xrp_migration",
+  "summary": {
+    "hyper_position_before_usdt_equiv": "~2745 USDT @ 0.0755",
+    "hyper_qty_before": 36363.2068,
+    "usdt_before_panic_partial": 5545.96,
+    "panic_close_api": "ok — liquide solde libre, annule grille DB",
+    "market_sell_complement": {
+      "qty": 29761.2,
+      "price": 0.0754,
+      "quote": 2243.99,
+      "fee_usdt": 2.24
+    },
+    "usdt_after_full_liquidation": 7787.71,
+    "hyper_dust_remaining": 0.0068,
+    "account_start_reference_usdt": 8266.32,
+    "economic_pnl_usdt": -478.61,
+    "db_closed_cycles_net_pnl_sum": 0.057,
+    "note_db_vs_real": "Cycles 1-58 corrigés post-bug WS (PnL DB ~0); perte réelle = delta USDT compte"
+  },
+  "proof_files": [
+    "hyper_panic_close_final.json",
+    "hyper_liquidation_complete.json"
+  ]
+}

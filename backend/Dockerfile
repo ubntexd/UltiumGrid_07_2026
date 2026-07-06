@@ -7,8 +7,9 @@ COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY bot /app/bot
+COPY egaliseur /app/egaliseur
 COPY backend /app/backend
-ENV PYTHONPATH=/app/bot
+ENV PYTHONPATH=/app/bot:/app/egaliseur
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app/backend

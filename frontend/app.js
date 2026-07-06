@@ -369,6 +369,7 @@ function switchTab(name) {
     t.classList.toggle("active", t.id === `tab-${name}`);
   });
   if (name === "history") loadHistory();
+  if (name === "journal") loadJournal();
   if (name === "pnl") loadPnl();
   if (name === "fees") loadFees();
   if (name === "bags") loadBags();
@@ -455,12 +456,20 @@ document.querySelectorAll(".tabs button").forEach((b) => {
 async function controlAction(path, { confirmMsg } = {}) {
   if (confirmMsg && !confirm(confirmMsg)) return;
   const banner = document.getElementById("margin-banner");
+  function showResidualWarning(w) {
+    if (!w || !banner) return;
+    let t = w.message || `Position résiduelle ${w.qty} (~${fmt(w.notional_usdt)} USDT)`;
+    if (w.floating_pnl != null) t += ` | PnL flottant: ${fmt(w.floating_pnl)}`;
+    if (w.entry_avg) t += ` | entry_avg: ${fmt(w.entry_avg)}`;
+    banner.innerHTML = `<span class="neg">⚠ ${t}</span>`;
+  }
   try {
     const res = await api(path, { method: "POST" });
     if (banner && res.message) {
       banner.dataset.prev = banner.innerHTML;
       banner.innerHTML = `<span class="${res.already_running ? "neg" : "pos"}">${res.message}</span>`;
     }
+    if (res.residual_position_warning) showResidualWarning(res.residual_position_warning);
     // Attendre le traitement bot (poll ~5s) — ignorer un last_command antérieur
     const t0 = Date.now();
     for (let i = 0; i < 10; i++) {
@@ -468,8 +477,11 @@ async function controlAction(path, { confirmMsg } = {}) {
       const last = await api("/api/last_command").catch(() => null);
       const ts = last?.ts ? Date.parse(last.ts) : 0;
       if (last?.name && path.endsWith(last.name) && last.result && ts >= t0 - 500) {
-        if (banner && last.result.message) {
+        if (banner && last.result.message && !last.result.residual_position_warning) {
           banner.innerHTML = `<span class="${last.result.already_running || last.result.noop ? "neg" : "pos"}">${last.result.message}</span>`;
+        }
+        if (last.result.residual_position_warning) {
+          showResidualWarning(last.result.residual_position_warning);
         }
         break;
       }
@@ -656,6 +668,93 @@ async function loadHistory() {
     .join("");
 }
 
+const journalState = {
+  page: 1,
+  pageSize: 50,
+  sortBy: "created_at",
+  sortDir: "desc",
+};
+
+function journalQueryParams(extra = {}) {
+  const p = new URLSearchParams();
+  const sym = document.getElementById("journal-symbol")?.value?.trim();
+  const cycle = document.getElementById("journal-cycle")?.value;
+  const side = document.getElementById("journal-side")?.value;
+  const cat = document.getElementById("journal-category")?.value;
+  const from = document.getElementById("journal-from")?.value;
+  const to = document.getElementById("journal-to")?.value;
+  if (sym) p.set("symbol", sym);
+  if (cycle) p.set("cycle_id", cycle);
+  if (side) p.set("side", side);
+  if (cat) p.set("category", cat);
+  if (from) p.set("date_from", new Date(from).toISOString());
+  if (to) p.set("date_to", new Date(to).toISOString());
+  p.set("sort_by", journalState.sortBy);
+  p.set("sort_dir", journalState.sortDir);
+  p.set("page", String(journalState.page));
+  p.set("page_size", String(journalState.pageSize));
+  Object.entries(extra).forEach(([k, v]) => p.set(k, v));
+  return p.toString();
+}
+
+async function loadJournal() {
+  const data = await api(`/api/trades/journal?${journalQueryParams()}`);
+  const meta = document.getElementById("journal-meta");
+  if (meta) {
+    meta.textContent = `${data.total} ligne(s) — page ${data.page}/${data.pages} — ${data.db_trade_count} trade(s) DB sur la période filtrée`;
+  }
+  const pi = document.getElementById("journal-page-info");
+  if (pi) pi.textContent = `Page ${data.page} / ${data.pages}`;
+  document.querySelector("#journal-table tbody").innerHTML = (data.rows || [])
+    .map(
+      (r) => `<tr>
+      <td>${r.created_at ?? "—"}</td>
+      <td>${r.symbol}</td>
+      <td>${r.cycle_id ?? "—"}</td>
+      <td>${r.side}</td>
+      <td>${r.category}</td>
+      <td>${r.level_label ?? r.level_index ?? "—"}</td>
+      <td>${fmt(r.price)}</td>
+      <td>${fmt(r.quantity, 6)}</td>
+      <td>${fmt(r.fees_usdt, 6)}</td>
+      <td>${r.roundtrip_ref ?? "—"}</td>
+      <td class="${pnlClass(r.trade_pnl)}">${r.trade_pnl != null ? fmt(r.trade_pnl, 6) : "—"}</td>
+    </tr>`
+    )
+    .join("") || `<tr><td colspan="11">Aucun trade</td></tr>`;
+}
+
+document.getElementById("journal-apply")?.addEventListener("click", () => {
+  journalState.page = 1;
+  loadJournal();
+});
+document.getElementById("journal-prev")?.addEventListener("click", () => {
+  if (journalState.page > 1) {
+    journalState.page -= 1;
+    loadJournal();
+  }
+});
+document.getElementById("journal-next")?.addEventListener("click", () => {
+  journalState.page += 1;
+  loadJournal();
+});
+document.getElementById("journal-export")?.addEventListener("click", () => {
+  window.open(`${API}/api/trades/journal?${journalQueryParams({ format: "csv" })}`, "_blank");
+});
+document.querySelectorAll("#journal-table th[data-sort]").forEach((th) => {
+  th.style.cursor = "pointer";
+  th.addEventListener("click", () => {
+    const col = th.dataset.sort;
+    if (journalState.sortBy === col) {
+      journalState.sortDir = journalState.sortDir === "asc" ? "desc" : "asc";
+    } else {
+      journalState.sortBy = col;
+      journalState.sortDir = "desc";
+    }
+    loadJournal();
+  });
+});
+
 async function loadFees() {
   const f = await api("/api/fees");
   document.getElementById("fees-summary").innerHTML = `
@@ -738,26 +837,21 @@ function drawChart(curve, theoretical) {
 }
 
 async function loadBags() {
-  const bags = await api("/api/bags");
-  document.querySelector("#bags-table tbody").innerHTML = bags
+  const bags = await api("/api/bags?status=all&include_snapshots=false");
+  const open = bags.filter((b) => ["open", "trailing_active", "journal_only"].includes(b.status));
+  document.querySelector("#bags-table tbody").innerHTML = open
     .map(
       (b) => `<tr>
       <td>${b.id}</td><td>${fmt(b.quantity, 4)}</td><td>${fmt(b.entry_price)}</td>
       <td>${b.cut_level ?? "—"}</td>
+      <td>${b.creation_reason ?? "—"}</td>
+      <td>${b.cycle_id_origin ?? "—"}</td>
+      <td>${b.market_price_at_creation != null ? fmt(b.market_price_at_creation) : "—"}</td>
       <td class="${pnlClass(b.realized_pnl)}">${fmt(b.realized_pnl)}</td>
-      <td><button data-sell="${b.id}">Vendre marché</button></td>
+      <td>${b.status}</td>
     </tr>`
     )
-    .join("") || `<tr><td colspan="6">Aucun sac ouvert</td></tr>`;
-  document.querySelectorAll("[data-sell]").forEach((btn) => {
-    btn.onclick = async () => {
-      await api(`/api/bags/${btn.dataset.sell}/sell`, {
-        method: "POST",
-        body: JSON.stringify({ order_type: "MARKET" }),
-      });
-      loadBags();
-    };
-  });
+    .join("") || `<tr><td colspan="9">Aucun sac actif</td></tr>`;
 }
 
 function renderViability(v) {
@@ -890,6 +984,31 @@ function connectWs() {
   ws.onclose = () => setTimeout(connectWs, 2000);
 }
 
+async function loadInstanceBranding() {
+  try {
+    const m = await api("/api/instance");
+    const el = document.getElementById("instance-brand");
+    if (el && m.instance_label) el.textContent = m.instance_label;
+    const symEl = document.getElementById("instance-symbol-badge");
+    if (symEl && m.trading_symbol) {
+      symEl.hidden = false;
+      symEl.textContent = m.trading_symbol;
+      if (m.symbol_disclaimer) symEl.title = m.symbol_disclaimer;
+    }
+    if (m.instance_label) {
+      const sym = m.trading_symbol ? ` · ${m.trading_symbol}` : "";
+      document.title = `${m.instance_label}${sym} — UltiumGrid Spot`;
+    }
+    if (m.accent_color) {
+      document.documentElement.style.setProperty("--accent", m.accent_color);
+      document.body.classList.add(`instance-${m.instance_id || "default"}`);
+    }
+  } catch (_) {
+    /* backend pas prêt */
+  }
+}
+
 refreshRunning().catch(console.error);
+loadInstanceBranding();
 connectWs();
 setInterval(() => refreshRunning().catch(() => {}), 5000);

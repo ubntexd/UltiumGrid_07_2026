@@ -1,0 +1,81 @@
+{
+  "ts_utc": "2026-07-05T23:50:00+00:00",
+  "purpose": "Cohérence position héritée + achat initial cycle 59 — post relance WS fix",
+  "point1_cycle59_initial_buy": {
+    "orderId": 158373464,
+    "clientOrderId": "ugebb83d8e6fa14a318dc4afee3b1ec991",
+    "side": "BUY",
+    "type": "MARKET",
+    "purpose": "initial_inventory_buy",
+    "executedQty_gross": 3221.2,
+    "cummulativeQuoteQty_usdt": 243.52272,
+    "avg_price": 0.0756,
+    "status": "FILLED",
+    "source": "GET /api/v3/order + cycle_meta_59 bot_state",
+    "note_top_up_not_full_inventory": "free_base ~29843.9 HYPER déjà présent — achat = sell_qty_total - free_base (complément inventaire SELL), pas achat 2500 USDT complet"
+  },
+  "point2_difference_vs_3185_estimate": {
+    "user_estimate_delta": "~3185 HYPER (33065 - 29880)",
+    "actual_cycle59_buy": 3221.2,
+    "explanation": "29880 était un snapshot compte approximatif pendant l'investigation bug ; position bot au stop = 29847.0989. Le delta ~3185 mélange deux références temporelles différentes.",
+    "exact_arithmetic": {
+      "pre_relaunch_bot_position_qty": 29847.0989,
+      "cycle59_buy_gross_hyper": 3221.2,
+      "commission_hyper_estimated": 3.2212,
+      "commission_formula": "0.001 * 3221.2 = 3.2212 (BNB free ~0.00025 → pas de remise, commission probablement en HYPER)",
+      "net_hyper_added": 3217.9788,
+      "sum_check": "29847.0989 + 3217.9788 = 33065.0777",
+      "matches_binance": true
+    }
+  },
+  "point3_binance_account_reconciliation": {
+    "GET_api_v3_account": {
+      "HYPER_free": 3303.8777,
+      "HYPER_locked": 29761.2,
+      "HYPER_total": 33065.0777,
+      "USDT": 5295.84580016,
+      "BNB": 0.00025381
+    },
+    "formula": "position_héritée (29847.0989) + achat_net (3217.9788) = 33065.0777",
+    "alternative_formula": "33065.0777 - 3221.2 = 29843.8777 (inherited at buy instant free_base) ; écart 3.2212 vs bot_state = commission achat cycle 59",
+    "api_running_position_qty": 33065.0777,
+    "exact_match_account": true,
+    "locked_in_sell_orders": 29761.2,
+    "note": "Total = free + locked ; cohérent avec grille SELL ouverte cycle 59"
+  },
+  "point4_garde_fous": {
+    "hard_stop_pct": -8.0,
+    "daily_circuit_breaker_usd": -40.0,
+    "code_path": {
+      "hard_stop": "bot_runner.tick() → total_qty = engine.real_position_qty() (GET /api/v3/account base asset) ; total_entry = _total_entry_avg() ; guards.check_hard_stop(total_entry, mark, total_qty)",
+      "circuit_breaker": "guards.check_circuit_breaker() → daily_pnl réalisé cumulé vs -40 USD (pas lié à taille position)"
+    },
+    "runtime_snapshot": {
+      "position_qty_used": 33065.0777,
+      "entry_avg_engine": 0.0756,
+      "mark": 0.0756,
+      "position_notional_usdt": 2499.72,
+      "hard_stop_triggers_at_mark": 0.069552,
+      "unrealized_pct_at_mark": 0.0,
+      "daily_pnl_guards": 0.0
+    },
+    "confirmation": {
+      "hard_stop_uses_full_real_qty": true,
+      "notional_at_stake_usdt": "~2500 (33065 × 0.0756) — bien supérieur à un cycle standard (~2500 inventaire cible, ici position gonflée par héritage bug)",
+      "hard_stop_usd_at_minus_8pct": "~200 USD de drawdown sur la position totale",
+      "entry_avg_caveat": "entry_avg=0.0756 provient du prix moyen de l'achat complément cycle 59 uniquement (open_grid L199) — pas moyenne pondérée inventaire hérité (~0.07558). Écart négligeable sur stop (-8% → ~0.00002 USDT sur mark seuil)",
+      "circuit_breaker_independent_of_position_size": true
+    }
+  },
+  "timeline": {
+    "cycle58_closed": "2026-07-05T23:36:34Z user_stop",
+    "cycle59_opened": "2026-07-05T23:47:38Z",
+    "relaunch_proof": "hyper_relaunch_v2.json"
+  },
+  "verdict": {
+    "position_coherent": true,
+    "3185_estimate_was_inexact": true,
+    "correct_story": "29847 hérité (bot) + 3221.2 achat brut − 3.2212 frais HYPER = 33065.0777 Binance",
+    "garde_fous_ok_for_oversized_position": true
+  }
+}

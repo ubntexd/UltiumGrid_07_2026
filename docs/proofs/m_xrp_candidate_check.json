@@ -1,0 +1,197 @@
+{
+  "ts_utc": "2026-07-06T01:18:52.100019+00:00",
+  "method": "verification directe demo-api.binance.com \u2014 meme compte que HYPER (.env.hyper)",
+  "target_symbol": "XRPUSDT",
+  "capital_usdt": 5000.0,
+  "num_levels": 20,
+  "step_pct": 0.4,
+  "cycle_trigger_usd": 15.0,
+  "notional_per_buy_level_usdt": 250.0,
+  "rest_base": "https://demo-api.binance.com",
+  "transition_note": "Remplacement instance 3 : HYPERUSDT terminee \u2192 XRPUSDT (meme stack Docker, ports 18200/18280)",
+  "exchange_info": {
+    "status": "TRADING",
+    "baseAsset": "XRP",
+    "quoteAsset": "USDT",
+    "tickSize": "0.00010000",
+    "stepSize": "0.10000000",
+    "minNotional": 5.0,
+    "filters_present": [
+      "PRICE_FILTER",
+      "LOT_SIZE",
+      "ICEBERG_PARTS",
+      "MARKET_LOT_SIZE",
+      "TRAILING_DELTA",
+      "PERCENT_PRICE_BY_SIDE",
+      "NOTIONAL",
+      "MAX_NUM_ORDERS",
+      "MAX_NUM_ORDER_LISTS",
+      "MAX_NUM_ALGO_ORDERS",
+      "MAX_NUM_ORDER_AMENDS"
+    ]
+  },
+  "min_notional_check": {
+    "notional_per_level": 250.0,
+    "min_notional": 5.0,
+    "ratio": 50.0,
+    "ok": true
+  },
+  "viability": {
+    "notional_per_level": 250.0,
+    "fee_rate": 0.00075,
+    "fee_source": "default_bnb_taker_0.075pct",
+    "fees_initial_inventory": 1.875,
+    "fees_fixed_per_cycle": 1.875,
+    "fees_per_roundtrip": 0.375,
+    "gross_per_grid": 1.0,
+    "net_per_grid": 0.625,
+    "ratio_gross_to_fees": 2.6666666666666665,
+    "grids_to_cycle": 24,
+    "net_at_gross_threshold": 13.125,
+    "total_fees_at_gross_threshold": 10.875,
+    "alert_ratio_below_2x": false,
+    "bnb_fee_discount": true,
+    "bnb_balance": 1.0,
+    "bnb_sufficient": true,
+    "formulas": {
+      "notional_per_level": "(capital_usdt / 2) / (num_levels / 2)",
+      "fees_initial_inventory": "(capital_usdt / 2) * fee_rate",
+      "fees_per_roundtrip": "notional_per_level * fee_rate * 2",
+      "gross_per_grid": "notional_per_level * (step_pct / 100)",
+      "net_per_grid": "gross_per_grid - fees_per_roundtrip",
+      "ratio": "gross_per_grid / fees_per_roundtrip",
+      "grids_to_cycle": "ceil(cycle_trigger_usd / net_per_grid)",
+      "net_at_gross_threshold": "grids_to_cycle * net_per_grid - fees_initial_inventory",
+      "total_fees_at_gross_threshold": "fees_initial_inventory + grids_to_cycle * fees_per_roundtrip"
+    }
+  },
+  "depth_top100": {
+    "bid_levels": 100,
+    "ask_levels": 100,
+    "top20_bid_qty": 440380.1,
+    "top20_ask_qty": 483971.3,
+    "book_empty": false
+  },
+  "volatility": {
+    "BTCUSDT_1h_24bars": {
+      "high": 63794.01,
+      "low": 62622.18,
+      "range_pct": 1.853923931736911,
+      "bars": 24
+    },
+    "BTCUSDT_1d_7bars": {
+      "high": 63794.01,
+      "low": 58624.71,
+      "range_pct": 8.445276996851467,
+      "bars": 7
+    },
+    "SOLUSDT_1h_24bars": {
+      "high": 82.2,
+      "low": 79.9,
+      "range_pct": 2.837754472547806,
+      "bars": 24
+    },
+    "SOLUSDT_1d_7bars": {
+      "high": 82.34,
+      "low": 73.67,
+      "range_pct": 11.114672136401516,
+      "bars": 7
+    },
+    "HYPERUSDT_1h_24bars": {
+      "high": 0.0768,
+      "low": 0.074,
+      "range_pct": 3.7135278514588825,
+      "bars": 24
+    },
+    "HYPERUSDT_1d_7bars": {
+      "high": 0.0816,
+      "low": 0.0754,
+      "range_pct": 7.898089171974536,
+      "bars": 7
+    },
+    "XRPUSDT_1h_24bars": {
+      "high": 1.1591,
+      "low": 1.1279,
+      "range_pct": 2.7284652383034644,
+      "bars": 24
+    },
+    "XRPUSDT_1d_7bars": {
+      "high": 1.1591,
+      "low": 1.0402,
+      "range_pct": 10.812531259946347,
+      "bars": 7
+    }
+  },
+  "comparison_table_btc_sol_hyper_xrp": {
+    "BTCUSDT": {
+      "status": "TRADING",
+      "tickSize": "0.01000000",
+      "stepSize": "0.00001000",
+      "minNotional": 5.0,
+      "capital_usdt": 5000,
+      "notional_per_buy_level": 250.0,
+      "ratio_notional_to_min": 50.0,
+      "ok_min_notional_3x": true,
+      "vol_1h_24bars_range_pct": 1.853923931736911,
+      "vol_1d_7bars_range_pct": 8.445276996851467,
+      "depth_top20_bid_qty": 7.9536,
+      "depth_top20_ask_qty": 0.64257
+    },
+    "SOLUSDT": {
+      "status": "TRADING",
+      "tickSize": "0.01000000",
+      "stepSize": "0.00100000",
+      "minNotional": 5.0,
+      "capital_usdt": 4000,
+      "notional_per_buy_level": 200.0,
+      "ratio_notional_to_min": 40.0,
+      "ok_min_notional_3x": true,
+      "vol_1h_24bars_range_pct": 2.837754472547806,
+      "vol_1d_7bars_range_pct": 11.114672136401516,
+      "depth_top20_bid_qty": 8885.095,
+      "depth_top20_ask_qty": 15978.624
+    },
+    "HYPERUSDT": {
+      "status": "TRADING",
+      "tickSize": "0.00010000",
+      "stepSize": "0.10000000",
+      "minNotional": 5.0,
+      "capital_usdt": 5000,
+      "notional_per_buy_level": 250.0,
+      "ratio_notional_to_min": 50.0,
+      "ok_min_notional_3x": true,
+      "vol_1h_24bars_range_pct": 3.7135278514588825,
+      "vol_1d_7bars_range_pct": 7.898089171974536,
+      "depth_top20_bid_qty": 1255039.1,
+      "depth_top20_ask_qty": 687885.6
+    },
+    "XRPUSDT": {
+      "status": "TRADING",
+      "tickSize": "0.00010000",
+      "stepSize": "0.10000000",
+      "minNotional": 5.0,
+      "capital_usdt": 5000,
+      "notional_per_buy_level": 250.0,
+      "ratio_notional_to_min": 50.0,
+      "ok_min_notional_3x": true,
+      "vol_1h_24bars_range_pct": 2.7284652383034644,
+      "vol_1d_7bars_range_pct": 10.812531259946347,
+      "depth_top20_bid_qty": 469227.4,
+      "depth_top20_ask_qty": 422971.3
+    }
+  },
+  "keys": {
+    "env_hyper_exists": true,
+    "account_check": {
+      "canTrade": true,
+      "bnb_free": 3.194e-05,
+      "usdt_free": 7787.71459698,
+      "hyper_remaining": 0.0068,
+      "ok_bnb": true,
+      "ok_usdt": true,
+      "ok_no_hyper_dust": true
+    }
+  },
+  "ok_to_deploy_structure": true,
+  "ok_to_start_bot": true
+}

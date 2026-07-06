@@ -1,0 +1,198 @@
+{
+  "ts_utc": "2026-07-05T22:23:45.793478+00:00",
+  "display_inconsistency": {
+    "confirmed_cause": "backend_SOL_a_servi_donnees_BTCUSDT",
+    "not_browser_cache": true,
+    "evidence": [
+      {
+        "source": "docs/proofs/m3_sol_instance_v1/pre_launch_proof.json (premier lancement)",
+        "post_start_symbol": "BTCUSDT",
+        "post_start_step_pct": 0.25,
+        "target_symbol": "SOLUSDT",
+        "note": "Config SOL rejetee par POST /api/config (bnb_fee_discount=true, BNB=0) \u2014 bot demarre avec StrategyConfig par defaut BTCUSDT"
+      },
+      {
+        "source": "backend/app/main.py POST /api/config",
+        "mechanism": "validation BNB echoue -> HTTP 400 -> script launch ignorait l erreur -> bot demarre avec config active par defaut"
+      },
+      {
+        "source": "UI frontend",
+        "mechanism": "page SOL lit GET /api/running sur port 18100 \u2014 affichait l etat reel (BTC) du backend SOL, pas un cache navigateur"
+      }
+    ],
+    "resolution": "Relance avec config SOLUSDT valide + reset etat DB \u2014 capture actuelle coherente SOLUSDT"
+  },
+  "baseline": {
+    "btc": {
+      "label": "baseline_btc",
+      "ts_utc": "2026-07-05T22:23:45.793501+00:00",
+      "instance": {
+        "detail": "Not Found"
+      },
+      "running_http": 200,
+      "running": {
+        "running": true,
+        "symbol": "BTCUSDT",
+        "cycle_id": 10,
+        "mark_price": 63538.955,
+        "capital_usdt": 5000
+      },
+      "ui": {
+        "status": 200,
+        "has_sol_brand": false,
+        "has_btc_brand": false
+      }
+    },
+    "sol": {
+      "label": "baseline_sol",
+      "ts_utc": "2026-07-05T22:23:45.811937+00:00",
+      "instance": {
+        "instance_id": "sol",
+        "instance_label": "UltiumGrid \u2014 Instance SOL",
+        "accent_color": "#a855f7"
+      },
+      "running_http": 200,
+      "running": {
+        "running": true,
+        "symbol": "SOLUSDT",
+        "cycle_id": 5,
+        "mark_price": 82.315,
+        "capital_usdt": 4000
+      },
+      "ui": {
+        "status": 200,
+        "has_sol_brand": false,
+        "has_btc_brand": false
+      }
+    }
+  },
+  "tests": [
+    {
+      "name": "stop_btc_backend_sol_must_work",
+      "action": "docker compose -p ultiumgrid_07_2026 stop backend",
+      "btc_api": {
+        "label": "btc_backend_stopped",
+        "ts_utc": "2026-07-05T22:23:49.644729+00:00",
+        "instance": {
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=18000): Max retries exceeded with url: /api/instance (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7960da7131d0>: Failed to establish a new connection: [Errno 111] Connection refused'))"
+        },
+        "running": {
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=18000): Max retries exceeded with url: /api/running (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7960da748740>: Failed to establish a new connection: [Errno 111] Connection refused'))"
+        },
+        "ui": {
+          "status": 200,
+          "has_sol_brand": false,
+          "has_btc_brand": false
+        }
+      },
+      "sol_api": {
+        "label": "sol_while_btc_backend_down",
+        "ts_utc": "2026-07-05T22:23:49.648672+00:00",
+        "instance": {
+          "instance_id": "sol",
+          "instance_label": "UltiumGrid \u2014 Instance SOL",
+          "accent_color": "#a855f7"
+        },
+        "running_http": 200,
+        "running": {
+          "running": true,
+          "symbol": "SOLUSDT",
+          "cycle_id": 5,
+          "mark_price": 82.29,
+          "capital_usdt": 4000
+        },
+        "ui": {
+          "status": 200,
+          "has_sol_brand": false,
+          "has_btc_brand": false
+        }
+      },
+      "ok": true
+    },
+    {
+      "name": "stop_sol_backend_btc_must_work",
+      "action": "docker compose -p ultiumgrid_sol stop backend",
+      "btc_api": {
+        "label": "btc_while_sol_backend_down",
+        "ts_utc": "2026-07-05T22:23:59.261312+00:00",
+        "instance": {
+          "detail": "Not Found"
+        },
+        "running_http": 200,
+        "running": {
+          "running": true,
+          "symbol": "BTCUSDT",
+          "cycle_id": 10,
+          "mark_price": 63523.985,
+          "capital_usdt": 5000
+        },
+        "ui": {
+          "status": 200,
+          "has_sol_brand": false,
+          "has_btc_brand": false
+        }
+      },
+      "sol_api": {
+        "label": "sol_backend_stopped",
+        "ts_utc": "2026-07-05T22:23:59.294649+00:00",
+        "instance": {
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=18100): Max retries exceeded with url: /api/instance (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7960da749c40>: Failed to establish a new connection: [Errno 111] Connection refused'))"
+        },
+        "running": {
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=18100): Max retries exceeded with url: /api/running (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7960da74a690>: Failed to establish a new connection: [Errno 111] Connection refused'))"
+        },
+        "ui": {
+          "status": 200,
+          "has_sol_brand": false,
+          "has_btc_brand": false
+        }
+      },
+      "ok": true
+    }
+  ],
+  "post_restore": {
+    "btc": {
+      "label": "restored_btc",
+      "ts_utc": "2026-07-05T22:24:05.338404+00:00",
+      "instance": {
+        "detail": "Not Found"
+      },
+      "running_http": 200,
+      "running": {
+        "running": true,
+        "symbol": "BTCUSDT",
+        "cycle_id": 10,
+        "mark_price": 63520.225,
+        "capital_usdt": 5000
+      },
+      "ui": {
+        "status": 200,
+        "has_sol_brand": false,
+        "has_btc_brand": false
+      }
+    },
+    "sol": {
+      "label": "restored_sol",
+      "ts_utc": "2026-07-05T22:24:05.356647+00:00",
+      "instance": {
+        "instance_id": "sol",
+        "instance_label": "UltiumGrid \u2014 Instance SOL",
+        "accent_color": "#a855f7"
+      },
+      "running_http": 200,
+      "running": {
+        "running": true,
+        "symbol": "SOLUSDT",
+        "cycle_id": 5,
+        "mark_price": 82.255,
+        "capital_usdt": 4000
+      },
+      "ui": {
+        "status": 200,
+        "has_sol_brand": false,
+        "has_btc_brand": false
+      }
+    }
+  },
+  "all_ok": true
+}

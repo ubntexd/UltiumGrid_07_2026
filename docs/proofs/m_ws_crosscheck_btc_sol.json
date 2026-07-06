@@ -1,0 +1,93 @@
+{
+  "ts_utc": "2026-07-05T23:45:00+00:00",
+  "method": "verification active mark API vs REST + logs WS + historique config DB",
+  "verdict": {
+    "BTC": "saine_actuellement_jamais_desynchronisee",
+    "SOL": "saine_actuellement_exposition_historique_limitee_premier_lancement",
+    "HYPER": "fix_applique_pret_relance",
+    "feu_vert_relance_hyper": true
+  },
+  "point1_historique_config": {
+    "BTC": {
+      "symbol_changes": false,
+      "configurations_all_btcusdt": true,
+      "active_config_id": 7,
+      "active_since": "2026-07-05T19:23:00.616527+00:00",
+      "note": "Config cible = defaut BTCUSDT des le premier demarrage run v2. Aucun changement de symbole → chemin bug WS (fige btc puis cfg autre symbole) non declenche."
+    },
+    "SOL": {
+      "symbol_changes": true,
+      "timeline": [
+        {"config_id": 1, "symbol": "BTCUSDT", "active": false, "at": "2026-07-05T21:55:43", "note": "Premier demarrage container — config defaut BTC"},
+        {"config_id": 2, "symbol": "SOLUSDT", "active": false, "at": null, "note": "Tentatives config SOL"},
+        {"config_id": 12, "symbol": "SOLUSDT", "active": true, "at": "2026-07-05T22:40:35", "note": "Config active actuelle seuil 5"}
+      ],
+      "ws_bug_exposure": {
+        "confirmed_historical": true,
+        "window_utc": "2026-07-05T21:58:19 — 21:59:45",
+        "evidence": "17 price_ticks SOLUSDT avec prix ~63186 (BTC) — WS btcusdt non relance apres changement cfg",
+        "incident_sol_affichage_btc": "Cause primaire reste bot demarre/trade BTCUSDT (pre_launch_proof). WS desync explique en partie ticks/mark errones pendant ~90s premier lancement, pas l'affichage symbole BTC persistant apres relance 22:02."
+      },
+      "container_rebuild_ws_fix_de_facto": "2026-07-05T22:35:52 UTC — log WS solusdt@bookTicker au rebuild bot (avant fix code generalise)"
+    }
+  },
+  "point2_verification_directe": {
+    "BTC": {
+      "symbol_running": "BTCUSDT",
+      "mark_api": 63724.915,
+      "mark_source": "ws",
+      "rest_ticker_btcusdt": 63727.39,
+      "ratio_error": 3.883730370879e-05,
+      "live_pnl_db_mark": 63703.485,
+      "live_pnl_source": "ws",
+      "ws_log": "WS connecting wss://demo-stream.binance.com/ws/btcusdt@bookTicker (2026-07-05T22:35:40)",
+      "ws_wrong_stream_in_logs": false,
+      "running": true,
+      "cycle_id": 10,
+      "gross_pnl": 5.176241392890696,
+      "max_cycle_gross_pnl_abs": 16.130419005977007,
+      "contaminated_price_ticks": 0
+    },
+    "SOL": {
+      "symbol_running": "SOLUSDT",
+      "mark_api": 81.695,
+      "mark_source": "ws",
+      "rest_ticker_solusdt": 81.7,
+      "ratio_error": 6.119951040403e-05,
+      "live_pnl_db_mark": 81.675,
+      "live_pnl_source": "ws",
+      "ws_log": "WS connecting wss://demo-stream.binance.com/ws/solusdt@bookTicker (2026-07-05T22:35:52)",
+      "ws_btcusdt_in_logs_after_rebuild": false,
+      "running": true,
+      "cycle_id": 7,
+      "gross_pnl": -9.122672840831683,
+      "max_cycle_gross_pnl_abs": 5.8319082650000125,
+      "cycles_abs_gross_gt_1000": 0,
+      "contaminated_price_ticks_historical": 17,
+      "contaminated_ticks_window": "2026-07-05T21:58:19 — 21:59:45"
+    },
+    "HYPER_post_fix": {
+      "symbol_running": "HYPERUSDT",
+      "mark_api": 0.07565,
+      "rest_ticker": 0.0756,
+      "ratio_error": 0.0006613756613755885,
+      "ws_log": "hyperusdt@bookTicker (2026-07-05T23:39:00)",
+      "running": false
+    }
+  },
+  "point3_actions": {
+    "BTC_stop_required": false,
+    "SOL_stop_required": false,
+    "reason": "Etat actuel sain — pas de PnL/cycles absurdes actifs. SOL: contamination historique limitee sans trigger faux sur cycles organiques 5-7."
+  },
+  "point4_feu_vert_hyper": {
+    "ok": true,
+    "conditions": [
+      "BTC mark aligne REST (<0.01%)",
+      "SOL mark aligne REST (<0.01%)",
+      "HYPER fix deploye + ws_price_regression.json ok",
+      "Aucune instance active ne montre WS desynchronise maintenant"
+    ],
+    "recommendation": "Relancer HYPER avec code corrige. Rebuild BTC/SOL bot a planifier (non urgent) pour beneficier restart_price_stream() si changement config futur."
+  }
+}

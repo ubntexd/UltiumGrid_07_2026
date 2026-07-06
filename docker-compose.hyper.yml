@@ -1,0 +1,125 @@
+# Instance XRP/USDT (ex-HYPER) — stack isolée, meme projet Docker / ports 18200|18280.
+# Usage: docker compose -p ultiumgrid_hyper -f docker-compose.hyper.yml --env-file .env.hyper up -d
+
+name: ultiumgrid_hyper
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ultium
+      POSTGRES_PASSWORD: ultium
+      POSTGRES_DB: ultiumgrid_hyper
+    volumes:
+      - pgdata_hyper:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ultium -d ultiumgrid_hyper"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - ultiumnet_hyper
+
+  bot:
+    build:
+      context: .
+      dockerfile: bot/Dockerfile
+    env_file:
+      - .env.hyper
+    environment:
+      DATABASE_URL: postgresql+psycopg2://ultium:ultium@db:5432/ultiumgrid_hyper
+      ULTIUM_INSTANCE_ID: xrp
+      ULTIUM_INSTANCE_LABEL: "UltiumGrid — Instance XRP"
+      ULTIUM_TRADING_SYMBOL: XRPUSDT
+      ULTIUM_ACCENT: "#0ea5e9"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - ultiumnet_hyper
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file:
+      - .env.hyper
+    environment:
+      DATABASE_URL: postgresql+psycopg2://ultium:ultium@db:5432/ultiumgrid_hyper
+      ULTIUM_INSTANCE_ID: xrp
+      ULTIUM_INSTANCE_LABEL: "UltiumGrid — Instance XRP"
+      ULTIUM_TRADING_SYMBOL: XRPUSDT
+      ULTIUM_ACCENT: "#0ea5e9"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:18200:8000"
+    restart: unless-stopped
+    networks:
+      - ultiumnet_hyper
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    depends_on:
+      - backend
+    ports:
+      - "127.0.0.1:18280:80"
+    restart: unless-stopped
+    networks:
+      - ultiumnet_hyper
+
+  supervisor:
+    build:
+      context: .
+      dockerfile: supervisor/Dockerfile
+    env_file:
+      - .env.hyper
+    environment:
+      DATABASE_URL: postgresql+psycopg2://ultium:ultium@db:5432/ultiumgrid_hyper
+      SUPERVISOR_BOT_HEALTH_URL: http://backend:8000/health
+      SUPERVISOR_HEARTBEAT_TIMEOUT_S: "90"
+      SUPERVISOR_RECON_THRESHOLD_USDT: "1.0"
+      SUPERVISOR_MARKET_ANOMALY_PCT: "0.5"
+      SUPERVISOR_POLL_S: "15"
+      SUPERVISOR_EMERGENCY_ACTION: "false"
+      ULTIUM_INSTANCE_ID: xrp
+    depends_on:
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_started
+      bot:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - ultiumnet_hyper
+
+  egaliseur:
+    build:
+      context: .
+      dockerfile: egaliseur/Dockerfile
+    env_file:
+      - .env.hyper
+    environment:
+      DATABASE_URL: postgresql+psycopg2://ultium:ultium@db:5432/ultiumgrid_hyper
+      EGALISEUR_RESTRICTED_MODE: "true"
+      EGALISEUR_OPERATION_MODE: "test_only"
+      EGALISEUR_POLL_S: "5"
+      ULTIUM_INSTANCE_ID: xrp
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - ultiumnet_hyper
+
+volumes:
+  pgdata_hyper:
+
+networks:
+  ultiumnet_hyper:
+    driver: bridge

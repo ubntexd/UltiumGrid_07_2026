@@ -1,0 +1,73 @@
+{
+  "ts_utc": "2026-07-06T01:17:46.738286+00:00",
+  "action": "complete_hyper_liquidation_after_partial_panic",
+  "before": {
+    "BNB": {
+      "free": 3.194e-05,
+      "locked": 0.0,
+      "total": 3.194e-05
+    },
+    "USDT": {
+      "free": 5545.96411146,
+      "locked": 0.0,
+      "total": 5545.96411146
+    },
+    "USDC": {
+      "free": 1536.57662,
+      "locked": 0.0,
+      "total": 1536.57662
+    },
+    "HYPER": {
+      "free": 29761.2068,
+      "locked": 0.0,
+      "total": 29761.2068
+    }
+  },
+  "after_cancel": {
+    "BNB": {
+      "free": 3.194e-05,
+      "locked": 0.0,
+      "total": 3.194e-05
+    },
+    "USDT": {
+      "free": 5545.96411146,
+      "locked": 0.0,
+      "total": 5545.96411146
+    },
+    "USDC": {
+      "free": 1536.57662,
+      "locked": 0.0,
+      "total": 1536.57662
+    },
+    "HYPER": {
+      "free": 29761.2068,
+      "locked": 0.0,
+      "total": 29761.2068
+    }
+  },
+  "after_market_sell": {
+    "BNB": {
+      "free": 3.194e-05,
+      "locked": 0.0,
+      "total": 3.194e-05
+    },
+    "USDT": {
+      "free": 7787.71459698,
+      "locked": 0.0,
+      "total": 7787.71459698
+    },
+    "USDC": {
+      "free": 1536.57662,
+      "locked": 0.0,
+      "total": 1536.57662
+    },
+    "HYPER": {
+      "free": 0.0068,
+      "locked": 0.0,
+      "total": 0.0068
+    }
+  },
+  "hyper_rest_price": 0.0754,
+  "hyper_remaining": 0.0068,
+  "usdt_final": 7787.71459698
+}

@@ -1,0 +1,1171 @@
+{
+  "ts_utc": "2026-07-05T23:38:36.499288+00:00",
+  "corrections": [
+    {
+      "cycle_id": 1,
+      "before": {
+        "id": 1,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2111854704.2409003,
+        "grid_profit": 0.0,
+        "net_pnl": 2111854702.3653798,
+        "floating_profit": 2111854704.2409003
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 2,
+      "before": {
+        "id": 2,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 1905536478.4281716,
+        "grid_profit": 0.0,
+        "net_pnl": 1905536476.3598964,
+        "floating_profit": 1905536478.4281716
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 3,
+      "before": {
+        "id": 3,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2117180849.4799004,
+        "grid_profit": 0.0,
+        "net_pnl": 2117180847.4127421,
+        "floating_profit": 2117180849.4799004
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 4,
+      "before": {
+        "id": 4,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2117759965.1859002,
+        "grid_profit": 0.0,
+        "net_pnl": 2117759963.118634,
+        "floating_profit": 2117759965.1859002
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 5,
+      "before": {
+        "id": 5,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 1906194421.4587963,
+        "grid_profit": 0.0,
+        "net_pnl": 1906194419.3912818,
+        "floating_profit": 1906194421.4587963
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 6,
+      "before": {
+        "id": 6,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 1903806563.497125,
+        "grid_profit": 0.0,
+        "net_pnl": 1903806561.430888,
+        "floating_profit": 1903806563.497125
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 7,
+      "before": {
+        "id": 7,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2114989567.4727101,
+        "grid_profit": 0.0,
+        "net_pnl": 2114989565.4064224,
+        "floating_profit": 2114989567.4727101
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 8,
+      "before": {
+        "id": 8,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2114740565.5696301,
+        "grid_profit": 0.0,
+        "net_pnl": 2114740563.5037615,
+        "floating_profit": 2114740565.5696301
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 9,
+      "before": {
+        "id": 9,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2114723965.41963,
+        "grid_profit": 0.0,
+        "net_pnl": 2114723963.3548615,
+        "floating_profit": 2114723965.41963
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 10,
+      "before": {
+        "id": 10,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2114259161.21963,
+        "grid_profit": 0.0,
+        "net_pnl": 2114259159.15475,
+        "floating_profit": 2114259161.21963
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 11,
+      "before": {
+        "id": 11,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2116463101.10191,
+        "grid_profit": 0.0,
+        "net_pnl": 2116463099.0348978,
+        "floating_profit": 2116463101.10191
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 12,
+      "before": {
+        "id": 12,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2113404917.69794,
+        "grid_profit": 0.0,
+        "net_pnl": 2113404915.6336715,
+        "floating_profit": 2113404917.69794
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 13,
+      "before": {
+        "id": 13,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2113860425.8703403,
+        "grid_profit": 0.0,
+        "net_pnl": 2113860423.8026903,
+        "floating_profit": 2113860425.8703403
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 14,
+      "before": {
+        "id": 14,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 1902237549.7331288,
+        "grid_profit": 0.0,
+        "net_pnl": 1902237547.665304,
+        "floating_profit": 1902237549.7331288
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 15,
+      "before": {
+        "id": 15,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2113437121.9889402,
+        "grid_profit": 0.0,
+        "net_pnl": 2113437119.9215643,
+        "floating_profit": 2113437121.9889402
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 16,
+      "before": {
+        "id": 16,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2113360097.3336403,
+        "grid_profit": 0.0,
+        "net_pnl": 2113360095.2663085,
+        "floating_profit": 2113360097.3336403
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 17,
+      "before": {
+        "id": 17,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2113438118.1437402,
+        "grid_profit": 0.0,
+        "net_pnl": 2113438116.0763993,
+        "floating_profit": 2113438118.1437402
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 18,
+      "before": {
+        "id": 18,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2113438118.1437402,
+        "grid_profit": 0.0,
+        "net_pnl": 2113438116.0764027,
+        "floating_profit": 2113438118.1437402
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 19,
+      "before": {
+        "id": 19,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 1902096216.0453491,
+        "grid_profit": 0.0,
+        "net_pnl": 1902096213.9780433,
+        "floating_profit": 1902096216.0453491
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 20,
+      "before": {
+        "id": 20,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2113462022.3597403,
+        "grid_profit": 0.0,
+        "net_pnl": 2113462020.2924378,
+        "floating_profit": 2113462022.3597403
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 21,
+      "before": {
+        "id": 21,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2113462022.3597403,
+        "grid_profit": 0.0,
+        "net_pnl": 2113462020.2924664,
+        "floating_profit": 2113462022.3597403
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 22,
+      "before": {
+        "id": 22,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 1902580874.511349,
+        "grid_profit": 0.0,
+        "net_pnl": 1902580872.444005,
+        "floating_profit": 1902580874.511349
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 23,
+      "before": {
+        "id": 23,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2114590832.3862803,
+        "grid_profit": 0.0,
+        "net_pnl": 2114590830.318487,
+        "floating_profit": 2114590832.3862803
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 24,
+      "before": {
+        "id": 24,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 1903038341.5017786,
+        "grid_profit": 0.0,
+        "net_pnl": 1903038339.433428,
+        "floating_profit": 1903038341.5017786
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 25,
+      "before": {
+        "id": 25,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2114325561.71544,
+        "grid_profit": 0.0,
+        "net_pnl": 2114325559.647252,
+        "floating_profit": 2114325561.71544
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 26,
+      "before": {
+        "id": 26,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2114529743.5604403,
+        "grid_profit": 0.0,
+        "net_pnl": 2114529741.492281,
+        "floating_profit": 2114529743.5604403
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 27,
+      "before": {
+        "id": 27,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2114723633.3124404,
+        "grid_profit": 0.0,
+        "net_pnl": 2114723631.2441952,
+        "floating_profit": 2114723633.3124404
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 28,
+      "before": {
+        "id": 28,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 1903253180.8587787,
+        "grid_profit": 0.0,
+        "net_pnl": 1903253178.7899857,
+        "floating_profit": 1903253180.8587787
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 29,
+      "before": {
+        "id": 29,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2114723633.3752003,
+        "grid_profit": 0.0,
+        "net_pnl": 2114723631.3063536,
+        "floating_profit": 2114723633.3752003
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 30,
+      "before": {
+        "id": 30,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2114511815.4612002,
+        "grid_profit": 0.0,
+        "net_pnl": 2114511813.3925414,
+        "floating_profit": 2114511815.4612002
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 31,
+      "before": {
+        "id": 31,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2114059959.3782,
+        "grid_profit": 0.0,
+        "net_pnl": 2114059957.3098629,
+        "floating_profit": 2114059959.3782
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 32,
+      "before": {
+        "id": 32,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2113864741.44793,
+        "grid_profit": 0.0,
+        "net_pnl": 2113864739.3799682,
+        "floating_profit": 2113864741.44793
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 33,
+      "before": {
+        "id": 33,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 1902480177.6412928,
+        "grid_profit": 0.0,
+        "net_pnl": 1902480175.5737262,
+        "floating_profit": 1902480177.6412928
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 34,
+      "before": {
+        "id": 34,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 1902416831.4052927,
+        "grid_profit": 0.0,
+        "net_pnl": 1902416829.3377483,
+        "floating_profit": 1902416831.4052927
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 35,
+      "before": {
+        "id": 35,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2113794357.0749002,
+        "grid_profit": 0.0,
+        "net_pnl": 2113794355.0074284,
+        "floating_profit": 2113794357.0749002
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 36,
+      "before": {
+        "id": 36,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 1902416831.4621277,
+        "grid_profit": 0.0,
+        "net_pnl": 1902416829.3946905,
+        "floating_profit": 1902416831.4621277
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 37,
+      "before": {
+        "id": 37,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2113794356.66297,
+        "grid_profit": 0.0,
+        "net_pnl": 2113794354.5955043,
+        "floating_profit": 2113794356.66297
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 38,
+      "before": {
+        "id": 38,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2113561954.75637,
+        "grid_profit": 0.0,
+        "net_pnl": 2113561952.6889641,
+        "floating_profit": 2113561954.75637
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 39,
+      "before": {
+        "id": 39,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 1902207669.4230938,
+        "grid_profit": 0.0,
+        "net_pnl": 1902207667.355854,
+        "floating_profit": 1902207669.4230938
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 40,
+      "before": {
+        "id": 40,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2113462354.27045,
+        "grid_profit": 0.0,
+        "net_pnl": 2113462352.2036026,
+        "floating_profit": 2113462354.27045
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 41,
+      "before": {
+        "id": 41,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2113229951.9098902,
+        "grid_profit": 0.0,
+        "net_pnl": 2113229949.8430512,
+        "floating_profit": 2113229951.9098902
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 42,
+      "before": {
+        "id": 42,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 1901583768.5827837,
+        "grid_profit": 0.0,
+        "net_pnl": 1901583766.5162184,
+        "floating_profit": 1901583768.5827837
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 43,
+      "before": {
+        "id": 43,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2112399944.53805,
+        "grid_profit": 0.0,
+        "net_pnl": 2112399942.471721,
+        "floating_profit": 2112399944.53805
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 44,
+      "before": {
+        "id": 44,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2112466013.1350503,
+        "grid_profit": 0.0,
+        "net_pnl": 2112466011.0688837,
+        "floating_profit": 2112466013.1350503
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 45,
+      "before": {
+        "id": 45,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2112466013.1350503,
+        "grid_profit": 0.0,
+        "net_pnl": 2112466011.0685716,
+        "floating_profit": 2112466013.1350503
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 46,
+      "before": {
+        "id": 46,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2112466013.1350503,
+        "grid_profit": 0.0,
+        "net_pnl": 2112466011.0673401,
+        "floating_profit": 2112466013.1350503
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 47,
+      "before": {
+        "id": 47,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2112466013.1350503,
+        "grid_profit": 0.0,
+        "net_pnl": 2112466011.0673306,
+        "floating_profit": 2112466013.1350503
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 48,
+      "before": {
+        "id": 48,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2112466013.1350503,
+        "grid_profit": 0.0,
+        "net_pnl": 2112466011.06756,
+        "floating_profit": 2112466013.1350503
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 49,
+      "before": {
+        "id": 49,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2112598814.33505,
+        "grid_profit": 0.0,
+        "net_pnl": 2112598812.2675917,
+        "floating_profit": 2112598814.33505
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 50,
+      "before": {
+        "id": 50,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 1901340841.8591278,
+        "grid_profit": 0.0,
+        "net_pnl": 1901340839.7913315,
+        "floating_profit": 1901340841.8591278
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 51,
+      "before": {
+        "id": 51,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2112598814.33505,
+        "grid_profit": 0.0,
+        "net_pnl": 2112598812.2670817,
+        "floating_profit": 2112598814.33505
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 52,
+      "before": {
+        "id": 52,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2112731615.5350502,
+        "grid_profit": 0.0,
+        "net_pnl": 2112731613.467238,
+        "floating_profit": 2112731615.5350502
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 53,
+      "before": {
+        "id": 53,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2112996221.92605,
+        "grid_profit": 0.0,
+        "net_pnl": 2112996219.8581517,
+        "floating_profit": 2112996221.92605
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 54,
+      "before": {
+        "id": 54,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2110883225.9680595,
+        "grid_profit": 0.0,
+        "net_pnl": 2110883223.2712646,
+        "floating_profit": 2110883225.9680595
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 55,
+      "before": {
+        "id": 55,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2110883213.2392843,
+        "grid_profit": 0.0,
+        "net_pnl": 2110883210.4799645,
+        "floating_profit": 2110883213.2392843
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 56,
+      "before": {
+        "id": 56,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 1899585189.1371715,
+        "grid_profit": 0.0,
+        "net_pnl": 1899585186.3778517,
+        "floating_profit": 1899585189.1371715
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 57,
+      "before": {
+        "id": 57,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "trigger_15",
+        "gross_pnl": 2110751846.0692928,
+        "grid_profit": 0.0,
+        "net_pnl": 2110751843.309973,
+        "floating_profit": 2110751846.0692928
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    },
+    {
+      "cycle_id": 58,
+      "before": {
+        "id": 58,
+        "symbol": "HYPERUSDT",
+        "status": "closed",
+        "close_reason": "user_stop",
+        "gross_pnl": 2110453661.1221957,
+        "grid_profit": 0.0,
+        "net_pnl": 2110453658.613204,
+        "floating_profit": 2110453661.1221957
+      },
+      "after": {
+        "gross_pnl": 0.0,
+        "net_pnl": 0.0,
+        "floating_profit": 0.0,
+        "note": "Recalcul: grid_profit seul (floating gonfl\u00e9 par mark BTC erron\u00e9)"
+      }
+    }
+  ],
+  "cycles_total": 58,
+  "cycles_absurd": 58,
+  "absurd_ids": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58
+  ],
+  "price_ticks_btc_contaminated": 84,
+  "post_fix_cycle_sum_net": "0"
+}

@@ -1,0 +1,174 @@
+{
+  "ts_utc": "2026-07-05T22:35:58.151830+00:00",
+  "fix": "commission_usdt = commission * bnb_usdt (was commission * trade_price)",
+  "instances": [
+    {
+      "instance": "btc",
+      "bnb_usdt_price_used": 590.33,
+      "rows_corrected": 17,
+      "corrections": [
+        {
+          "id": 37,
+          "cycle_id": 4,
+          "old_usdt": 20.0714054,
+          "new_usdt": 0.1887285
+        },
+        {
+          "id": 38,
+          "cycle_id": 5,
+          "old_usdt": 20.0694872,
+          "new_usdt": 0.1887285
+        },
+        {
+          "id": 39,
+          "cycle_id": 8,
+          "old_usdt": 199.7515323504,
+          "new_usdt": 1.87781612
+        },
+        {
+          "id": 40,
+          "cycle_id": 8,
+          "old_usdt": 13.7429898231,
+          "new_usdt": 0.12945347
+        },
+        {
+          "id": 41,
+          "cycle_id": 8,
+          "old_usdt": 0.5508727281,
+          "new_usdt": 0.005189
+        },
+        {
+          "id": 42,
+          "cycle_id": 8,
+          "old_usdt": 5.6672833677,
+          "new_usdt": 0.05338354
+        },
+        {
+          "id": 43,
+          "cycle_id": 8,
+          "old_usdt": 20.0958942204,
+          "new_usdt": 0.1885396
+        },
+        {
+          "id": 44,
+          "cycle_id": 8,
+          "old_usdt": 20.231076390000002,
+          "new_usdt": 0.18905318
+        },
+        {
+          "id": 45,
+          "cycle_id": 9,
+          "old_usdt": 39.010859935,
+          "new_usdt": 0.36441071
+        },
+        {
+          "id": 46,
+          "cycle_id": 9,
+          "old_usdt": 19.9936748754,
+          "new_usdt": 0.18714051
+        },
+        {
+          "id": 47,
+          "cycle_id": 9,
+          "old_usdt": 20.1251029206,
+          "new_usdt": 0.18761868
+        },
+        {
+          "id": 48,
+          "cycle_id": 10,
+          "old_usdt": 39.5596964214,
+          "new_usdt": 0.36728562
+        },
+        {
+          "id": 49,
+          "cycle_id": 10,
+          "old_usdt": 20.216183367,
+          "new_usdt": 0.18735303
+        },
+        {
+          "id": 50,
+          "cycle_id": 10,
+          "old_usdt": 20.357003570899998,
+          "new_usdt": 0.18790794
+        },
+        {
+          "id": 51,
+          "cycle_id": 10,
+          "old_usdt": 6.944475882,
+          "new_usdt": 0.06435778
+        },
+        {
+          "id": 52,
+          "cycle_id": 10,
+          "old_usdt": 13.271707485,
+          "new_usdt": 0.12299526
+        },
+        {
+          "id": 53,
+          "cycle_id": 10,
+          "old_usdt": 0.18728644860000002,
+          "new_usdt": 0.18743568
+        }
+      ],
+      "net_pnl_updates": [
+        {
+          "cycle_id": 4,
+          "fees_usdt": 0.18872850100000002,
+          "gross_pnl": 0.00771925000001167,
+          "net_pnl": -0.18100925099998835
+        },
+        {
+          "cycle_id": 5,
+          "fees_usdt": 0.18872850100000002,
+          "gross_pnl": -0.024039950000010503,
+          "net_pnl": -0.21276845100001052
+        },
+        {
+          "cycle_id": 8,
+          "fees_usdt": 2.4434349030000004,
+          "gross_pnl": 15.338225370271559,
+          "net_pnl": 12.894790467271559
+        },
+        {
+          "cycle_id": 9,
+          "fees_usdt": 0.7391699029000001,
+          "gross_pnl": 16.130419005977007,
+          "net_pnl": 15.391249103077007
+        },
+        {
+          "cycle_id": 10,
+          "fees_usdt": 1.1173353009,
+          "gross_pnl": 0.0,
+          "net_pnl": -1.1173353009
+        }
+      ]
+    },
+    {
+      "instance": "sol",
+      "bnb_usdt_price_used": 590.23,
+      "rows_corrected": 2,
+      "corrections": [
+        {
+          "id": 5,
+          "cycle_id": 5,
+          "old_usdt": 0.0210334974,
+          "new_usdt": 0.15082737
+        },
+        {
+          "id": 6,
+          "cycle_id": 5,
+          "old_usdt": 0.0208417754,
+          "new_usdt": 0.15005417
+        }
+      ],
+      "net_pnl_updates": [
+        {
+          "cycle_id": 5,
+          "fees_usdt": 2.5010851070999993,
+          "gross_pnl": 0.0,
+          "net_pnl": -2.5010851070999993
+        }
+      ]
+    }
+  ]
+}

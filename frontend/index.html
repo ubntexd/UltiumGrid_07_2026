@@ -9,7 +9,11 @@
 </head>
 <body>
   <header class="top">
-    <div class="brand">UltiumGrid</div>
+    <div class="brand-wrap">
+      <div class="brand" id="instance-brand">UltiumGrid</div>
+      <div class="instance-symbol-badge" id="instance-symbol-badge" hidden></div>
+    </div>
+    <a href="/egaliseur.html" class="nav-egaliseur" title="Bot 2 — gestion automatique des sacs">Bot Égaliseur →</a>
     <div id="live-price" class="live-price">—</div>
     <div id="margin-banner" class="margin-banner">Capital : —</div>
     <div class="controls">
@@ -22,12 +26,14 @@
   <nav class="tabs">
     <button data-tab="running" class="active">Running</button>
     <button data-tab="history">History</button>
+    <button data-tab="journal">Journal</button>
     <button data-tab="pnl">PnL Analysis</button>
     <button data-tab="bags">Bags</button>
     <button data-tab="config">Config</button>
     <button data-tab="market">Market</button>
     <button data-tab="fees">Fees</button>
     <button data-tab="supervision">Supervision</button>
+    <a href="/egaliseur.html" class="tab-external">Égaliseur (Bot 2)</a>
   </nav>
 
   <main>
@@ -90,6 +96,61 @@
       </div>
     </section>
 
+    <section id="tab-journal" class="tab">
+      <div class="card">
+        <h2>Journal de trades</h2>
+        <div class="journal-filters row">
+          <label>Symbole <input id="journal-symbol" type="text" placeholder="BTCUSDT" /></label>
+          <label>Cycle <input id="journal-cycle" type="number" placeholder="id" /></label>
+          <label>Côté
+            <select id="journal-side">
+              <option value="">Tous</option>
+              <option value="BUY">BUY</option>
+              <option value="SELL">SELL</option>
+            </select>
+          </label>
+          <label>Catégorie
+            <select id="journal-category">
+              <option value="">Toutes</option>
+              <option value="grid_fill">Fill grille</option>
+              <option value="initial_inventory_buy">Achat initial</option>
+              <option value="forced_sell_stuck_level">Vente forcée Cas B</option>
+            </select>
+          </label>
+          <label>Du <input id="journal-from" type="datetime-local" /></label>
+          <label>Au <input id="journal-to" type="datetime-local" /></label>
+          <button id="journal-apply" class="ok">Filtrer</button>
+          <button id="journal-export">Export CSV</button>
+        </div>
+        <p id="journal-meta" class="chart-msg"></p>
+        <div class="table-scroll">
+          <table id="journal-table">
+            <thead>
+              <tr>
+                <th data-sort="created_at">Date</th>
+                <th data-sort="symbol">Symbole</th>
+                <th data-sort="cycle_id">Cycle</th>
+                <th data-sort="side">Côté</th>
+                <th data-sort="category">Catégorie</th>
+                <th data-sort="level_index">Palier</th>
+                <th data-sort="price">Prix</th>
+                <th data-sort="quantity">Qty</th>
+                <th data-sort="fees_usdt">Frais USDT</th>
+                <th>Round-trip</th>
+                <th data-sort="trade_pnl">PnL trade</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="row journal-pager">
+          <button id="journal-prev">← Préc.</button>
+          <span id="journal-page-info">—</span>
+          <button id="journal-next">Suiv. →</button>
+        </div>
+      </div>
+    </section>
+
     <section id="tab-pnl" class="tab">
       <div class="grid-2">
         <div class="card" id="pnl-kpis"></div>
@@ -103,7 +164,8 @@
 
     <section id="tab-bags" class="tab">
       <div class="card">
-        <table id="bags-table"><thead><tr><th>ID</th><th>Qty</th><th>Entry</th><th>Cut</th><th>PnL</th><th>Action</th></tr></thead><tbody></tbody></table>
+        <p class="hint">Sacs gérés par le <a href="/egaliseur.html">Bot Égaliseur</a> (page dédiée).</p>
+        <table id="bags-table"><thead><tr><th>ID</th><th>Qty</th><th>Entry</th><th>Cut</th><th>Reason</th><th>Cycle</th><th>Mark créa.</th><th>PnL</th><th>Statut</th></tr></thead><tbody></tbody></table>
       </div>
     </section>
 

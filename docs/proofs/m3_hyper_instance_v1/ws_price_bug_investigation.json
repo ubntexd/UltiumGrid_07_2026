@@ -1,0 +1,69 @@
+{
+  "ts_utc": "2026-07-05T23:38:05.749759+00:00",
+  "root_cause": {
+    "confirmed": true,
+    "distinct_from_sol_incident": true,
+    "description": "Au d\u00e9marrage container, WS bookTicker connect\u00e9 sur btcusdt@bookTicker (config par d\u00e9faut BTCUSDT). Apr\u00e8s application config HYPERUSDT (bot inactif), le flux WS n'a pas \u00e9t\u00e9 relanc\u00e9. on_ws_price enregistrait le mid BTC sous cfg.symbol=HYPERUSDT; tick() pr\u00e9f\u00e9rait _live_mark \u2192 PnL flottant absurde \u2192 trigger_15 en boucle.",
+    "sol_incident_comparison": "SOL = config rejet\u00e9e \u2192 bot d\u00e9marr\u00e9 en BTCUSDT (symbole trading). HYPER = symbole trading correct (HYPERUSDT) mais mark price WS rest\u00e9 BTC."
+  },
+  "rest_prices_at_investigation": {
+    "HYPERUSDT": 0.0754,
+    "BTCUSDT": 63672.01
+  },
+  "api_running": {
+    "symbol": "HYPERUSDT",
+    "mark_price": 63672.005,
+    "mark_source": "ws",
+    "cycle_id": 58,
+    "running": false,
+    "gross_pnl": 1900422374.8037646
+  },
+  "db": {
+    "cycles_total": "58",
+    "cycles_trigger_15": "57",
+    "max_gross_pnl": "2117759965.1859002",
+    "live_pnl_mark": "63672.005",
+    "price_ticks_hyper_gt_1": "76",
+    "sample_bad_ticks": "63672.005\n63674.005\n63689.995"
+  },
+  "binance_account": {
+    "balances": {
+      "BNB": 0.00025381,
+      "USDT": 5539.36852016,
+      "USDC": 1536.57662,
+      "HYPER": 29847.0989
+    },
+    "starting_usdt_reference": 8266.32
+  },
+  "real_trades": {
+    "myTrades_count": 300,
+    "allOrders_count": 500,
+    "sample_last_trade": {
+      "symbol": "HYPERUSDT",
+      "id": 5067035,
+      "orderId": 158369374,
+      "orderListId": -1,
+      "price": "0.07540000",
+      "qty": "3320.00000000",
+      "quoteQty": "250.32800000",
+      "commission": "0.25032800",
+      "commissionAsset": "USDT",
+      "time": 1783294588912,
+      "isBuyer": false,
+      "isMaker": true,
+      "isBestMatch": true
+    },
+    "note": "Ordres r\u00e9els ex\u00e9cut\u00e9s au prix HYPER correct (~0.075) \u2014 bug limit\u00e9 au mark WS/PnL affich\u00e9"
+  },
+  "ws_logs": {
+    "btcusdt_connect_count_in_tail200": 0,
+    "hyperusdt_connect_count_in_tail200": 0,
+    "first_btc_line": null
+  },
+  "real_damage_estimate": {
+    "usdt_now": 5539.36852016,
+    "hyper_now": 29847.0989,
+    "usdt_delta_vs_start_approx": -2726.95,
+    "note": "Pertes r\u00e9elles = frais + churn cycles (~57 trigger_15), pas les milliards affich\u00e9s en DB"
+  }
+}

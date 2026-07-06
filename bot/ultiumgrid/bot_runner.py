@@ -30,7 +30,9 @@ from ultiumgrid.db.models import (
     utcnow,
 )
 from ultiumgrid.engine.config import StrategyConfig
+from ultiumgrid.engine.fees import commission_to_usdt
 from ultiumgrid.engine.grid import GridEngine, GridLevel
+from ultiumgrid.engine.orphan_position import UntrackedInventoryError, residual_position_warning
 from ultiumgrid.guards.safety import SafetyGuards
 from ultiumgrid.risk.cuts import ProgressiveCutManager
 
@@ -57,8 +59,11 @@ class BotRunner:
         self._live_mark: float | None = None
         self._last_live_persist: float = 0.0
         self._ws_stop = False
+        self._ws_thread: Any = None
+        self._ws_stream_symbol: str | None = None
         self._session_factory = None  # set by main_loop for thread-safe WS writes
         self._opening_cycle = False  # lock séquence ouverture (anti double achat marché)
+        self._stopped_at: str | None = None
 
     def _persist_order_attempt(self, entry: dict) -> None:
         row = OrderAttempt(
@@ -170,6 +175,7 @@ class BotRunner:
                 "panic": self.guards.state.panic,
             },
             "config": self.cfg.to_dict(),
+            "stopped_at": self._stopped_at if not self.running else None,
         }
         row = self.session.query(BotState).filter(BotState.key == "main").first()
         if not row:
@@ -216,6 +222,7 @@ class BotRunner:
         self.engine.state.levels = levels
         self.cycle_id = data.get("cycle_id")
         self.running = bool(data.get("running"))
+        self._stopped_at = data.get("stopped_at")
         # Un seul cycle open par symbole (ferme les orphelins laissés par un start sans close)
         self._ensure_single_open_cycle(reason="orphan_on_restore")
         # Réconciliation ordres ouverts Binance vs DB
@@ -309,10 +316,22 @@ class BotRunner:
                 "message": "Cycle déjà actif — aucun nouveau cycle créé",
             }
         self.running = True
+        self._stopped_at = None
+        self.restart_price_stream()
         # Toujours réconcilier les cycles open en DB avant d'en créer un nouveau
         self._ensure_single_open_cycle(reason="orphan_on_start")
-        if not self.engine.state.active:
-            self._open_new_cycle()
+        try:
+            if not self.engine.state.active:
+                self._open_new_cycle()
+        except UntrackedInventoryError as exc:
+            self.running = False
+            self.save_state()
+            return {
+                "ok": False,
+                "blocked": True,
+                "error": "untracked_inventory",
+                "message": str(exc),
+            }
         self.save_state()
         return {
             "ok": True,
@@ -355,13 +374,24 @@ class BotRunner:
         self.engine.state.active = False
         self._out_of_range_since = None
         self._stuck_sell_since.clear()
+        self._stopped_at = utcnow().isoformat()
+        warning = residual_position_warning(
+            self.client,
+            self.cfg.symbol,
+            self.bags.bags_qty(),
+            entry_avg=self.engine.state.entry_avg,
+        )
         self.save_state()
-        return {
+        result: dict[str, Any] = {
             "ok": True,
             "cancelled_orders": cancelled,
             "cycle_closed": closed_cycle_id,
             "message": "Arrêté — ordres annulés, position conservée",
+            "stopped_at": self._stopped_at,
         }
+        if warning:
+            result["residual_position_warning"] = warning
+        return result
 
     def panic(self) -> dict[str, Any]:
         """Panic : annule ordres, vend 100 % du base libre réel, clôture cycle + sacs."""
@@ -468,8 +498,9 @@ class BotRunner:
             self.session.refresh(cycle)
             self.cycle_id = cycle.id
 
+            prior_entry = float(self.engine.state.entry_avg or 0)
             try:
-                state = self.engine.open_grid()
+                state = self.engine.open_grid(prior_entry_avg=prior_entry)
             except Exception:
                 cycle.status = "closed"
                 cycle.closed_at = utcnow()
@@ -590,12 +621,17 @@ class BotRunner:
                 cut["entry_price"],
                 cut["level"],
                 incomplete_levels=cut.get("incomplete_levels"),
+                cycle_id_origin=self.cycle_id,
+                market_price_at_creation=float(mark),
             )
             sign = 1 if self.engine.state.position_qty >= 0 else -1
             self.engine.state.position_qty -= sign * cut["qty"]
             if cut["level"] == self.cfg.cut_level_2:
                 self.engine.cancel_all_grid_orders()
-                self.engine.open_grid(Decimal(str(mark)))
+                self.engine.open_grid(
+                    Decimal(str(mark)),
+                    prior_entry_avg=self.engine.state.entry_avg,
+                )
 
         # Garde-fous sur position totale RÉELLE
         try:
@@ -608,6 +644,12 @@ class BotRunner:
             self.running = False
         if self.guards.check_circuit_breaker():
             self.running = False
+
+        if self.bags.open_bags():
+            try:
+                self.bags.maybe_snapshot_floating(float(mark))
+            except Exception as exc:
+                logger.debug("bag floating snapshot skipped: %s", exc)
 
         # Cycle +15
         if self.engine.should_close_cycle():
@@ -679,6 +721,8 @@ class BotRunner:
                     self._record_fees_for_order(lv.order_id)
 
         self._recompute_grid_profit_from_db()
+
+    def _grid_price_bounds(self) -> tuple[float | None, float | None]:
         prices = [float(lv.price) for lv in self.engine.state.levels]
         if not prices:
             return None, None
@@ -867,14 +911,15 @@ class BotRunner:
             asset = str(t.get("commissionAsset") or "")
             price = float(t.get("price") or 0)
             qty = float(t.get("qty") or 0)
-            # Conversion USDT : si commission déjà en USDT, sinon qty*price * commission/qty approx
-            if asset in ("USDT", "USDC", "BUSD"):
-                commission_usdt = commission
-            elif asset and price > 0:
-                # commission en base asset (ex. BTC) → USDT
-                commission_usdt = commission * price
-            else:
-                commission_usdt = 0.0
+            bnb_px = None
+            if asset.upper() == "BNB":
+                try:
+                    bnb_px = float(self.client.ticker_price("BNBUSDT", force=True)["price"])
+                except Exception:
+                    bnb_px = None
+            commission_usdt = commission_to_usdt(
+                commission, asset, trade_price=price, bnb_usdt_price=bnb_px
+            )
             row = FeePaid(
                 symbol=self.cfg.symbol,
                 order_id=str(order_id),
@@ -945,6 +990,15 @@ class BotRunner:
         self.session.add(tick)
         self.session.commit()
 
+    def _rebind_subsystems(self) -> None:
+        """Recrée moteur/coupe/sacs/garde-fous après changement de config (symbole inclus)."""
+        self.engine = GridEngine(
+            self.client, self.cfg, on_level_incomplete=self._on_level_incomplete
+        )
+        self.cuts = ProgressiveCutManager(self.engine, self.cfg)
+        self.bags = BagManager(self.client, self.session, self.cfg)
+        self.guards = SafetyGuards(self.client, self.session, self.cfg)
+
     def request_config_change(self, new_cfg: StrategyConfig, mode: str) -> dict[str, Any]:
         errors = new_cfg.validate()
         if errors:
@@ -963,23 +1017,24 @@ class BotRunner:
                     self._open_new_cycle()
             return {"ok": True, "pending": mode == "wait_cycle", "applied": mode == "close_now"}
         self.cfg = new_cfg
-        self.engine.cfg = new_cfg
+        self._rebind_subsystems()
         self._persist_config(new_cfg, active=True)
+        self.restart_price_stream()
         return {"ok": True, "applied": True}
 
     def _apply_pending_config(self) -> None:
         if not self._pending_config:
             return
+        old_symbol = self.cfg.symbol
         self.cfg = self._pending_config
-        self.engine = GridEngine(
-            self.client, self.cfg, on_level_incomplete=self._on_level_incomplete
-        )
-        self.cuts = ProgressiveCutManager(self.engine, self.cfg)
-        self.bags = BagManager(self.client, self.session, self.cfg)
-        self.guards = SafetyGuards(self.client, self.session, self.cfg)
+        self._rebind_subsystems()
         self._persist_config(self.cfg, active=True)
         self._pending_config = None
         self._pending_config_mode = None
+        if old_symbol != self.cfg.symbol:
+            self._live_mark = None
+            self.client._last_ticker.pop(old_symbol, None)
+            self.restart_price_stream()
 
     def status(self) -> dict[str, Any]:
         mark = None
@@ -1114,6 +1169,15 @@ class BotRunner:
     def on_ws_price(self, data: dict) -> None:
         """Appelé à chaque bookTicker — recalcule le floating immédiatement."""
         try:
+            stream_sym = (data.get("s") or "").upper()
+            if stream_sym and stream_sym != self.cfg.symbol.upper():
+                logger.warning(
+                    "WS price ignored: stream=%s cfg=%s p=%s",
+                    stream_sym,
+                    self.cfg.symbol,
+                    data.get("p"),
+                )
+                return
             mark = float(data.get("p") or 0)
             if mark <= 0:
                 return
@@ -1126,9 +1190,30 @@ class BotRunner:
         except Exception:
             logger.exception("on_ws_price failed")
 
+    def stop_price_stream(self, *, join_timeout: float = 3.0) -> None:
+        """Arrête le thread WS bookTicker (ex. changement de symbole)."""
+        self._ws_stop = True
+        t = self._ws_thread
+        if t and t.is_alive():
+            t.join(timeout=join_timeout)
+        self._ws_thread = None
+        self._ws_stream_symbol = None
+
+    def restart_price_stream(self) -> None:
+        """Relance le WS sur self.cfg.symbol (no-op si déjà sur le bon flux)."""
+        sym = self.cfg.symbol
+        if self._ws_thread and self._ws_thread.is_alive() and self._ws_stream_symbol == sym:
+            return
+        self.stop_price_stream()
+        self._ws_stop = False
+        self._live_mark = None
+        self.start_price_stream()
+
     def start_price_stream(self) -> None:
         """Thread daemon : WS bookTicker → floating à chaque tick."""
         import threading
+
+        sym = self.cfg.symbol
 
         def _run() -> None:
             loop = asyncio.new_event_loop()
@@ -1142,7 +1227,7 @@ class BotRunner:
 
             async def _main() -> None:
                 await asyncio.gather(
-                    self.client.stream_mark_price(self.cfg.symbol, self.on_ws_price, stop_event=stop),
+                    self.client.stream_mark_price(sym, self.on_ws_price, stop_event=stop),
                     _guard(),
                 )
 
@@ -1153,9 +1238,11 @@ class BotRunner:
             finally:
                 loop.close()
 
-        t = threading.Thread(target=_run, name="ultium-ws-price", daemon=True)
+        self._ws_stream_symbol = sym
+        t = threading.Thread(target=_run, name=f"ultium-ws-price-{sym.lower()}", daemon=True)
         t.start()
-        logger.info("WS price stream thread started for %s", self.cfg.symbol)
+        self._ws_thread = t
+        logger.info("WS price stream thread started for %s", sym)
 
 
 def build_client_from_env() -> BinanceSpotClient:
@@ -1186,8 +1273,8 @@ def main_loop(database_url: str, poll_seconds: float = 5.0) -> None:
     bot = BotRunner(client, session)
     bot._session_factory = SessionLocal
     bot.restore_state()
-    bot.start_price_stream()
-    logger.info("Bot started, running=%s", bot.running)
+    bot.restart_price_stream()
+    logger.info("Bot started, running=%s symbol=%s", bot.running, bot.cfg.symbol)
 
     def _write_heartbeat() -> None:
         from ultiumgrid.db.models import BotState, utcnow

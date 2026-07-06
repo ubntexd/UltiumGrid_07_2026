@@ -1,0 +1,73 @@
+{
+  "ts_utc": "2026-07-05T22:03:05.126408+00:00",
+  "symbol": "SOLUSDT",
+  "capital_usdt": 4000.0,
+  "num_levels": 20,
+  "notional_per_buy_level_usdt": 200.0,
+  "rest_base": "https://demo-api.binance.com",
+  "exchange_info": {
+    "status": "TRADING",
+    "tickSize": "0.01000000",
+    "stepSize": "0.00100000",
+    "minNotional": 5.0,
+    "filters_present": [
+      "PRICE_FILTER",
+      "LOT_SIZE",
+      "ICEBERG_PARTS",
+      "MARKET_LOT_SIZE",
+      "TRAILING_DELTA",
+      "PERCENT_PRICE_BY_SIDE",
+      "NOTIONAL",
+      "MAX_NUM_ORDERS",
+      "MAX_NUM_ORDER_LISTS",
+      "MAX_NUM_ALGO_ORDERS",
+      "MAX_NUM_ORDER_AMENDS"
+    ]
+  },
+  "min_notional_check": {
+    "notional_per_level": 200.0,
+    "min_notional": 5.0,
+    "ratio": 40.0,
+    "ok": true,
+    "note": "ratio >= 3x recommand\u00e9 (100 USDT/palier vs minNotional)"
+  },
+  "volatility": {
+    "SOLUSDT_1h_24bars": {
+      "high": 81.96,
+      "low": 79.9,
+      "range_pct": 2.545409613246,
+      "bars": 24
+    },
+    "SOLUSDT_1d_7bars": {
+      "high": 82.34,
+      "low": 73.67,
+      "range_pct": 11.114672136401516,
+      "bars": 7
+    },
+    "BTCUSDT_1h_24bars": {
+      "high": 63144.01,
+      "low": 62622.18,
+      "range_pct": 0.8298414701121212,
+      "bars": 24
+    },
+    "BTCUSDT_1d_7bars": {
+      "high": 63144.01,
+      "low": 58624.71,
+      "range_pct": 7.422760130844773,
+      "bars": 7
+    },
+    "note": "Contexte comparatif \u2014 pas d'ajustement config avant lancement"
+  },
+  "keys": {
+    "env_sol_exists": true,
+    "account_check": {
+      "canTrade": true,
+      "bnb_free": 0.0,
+      "usdt_free": 1020.68022364,
+      "ok_bnb": false,
+      "ok_usdt": false
+    }
+  },
+  "ok_to_deploy_structure": true,
+  "ok_to_start_bot": false
+}

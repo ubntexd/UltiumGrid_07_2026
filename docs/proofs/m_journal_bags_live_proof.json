@@ -1,0 +1,84 @@
+{
+  "journal_api": {
+    "total": 33,
+    "db_trade_count": 33,
+    "sample_rows": [
+      {
+        "id": 34,
+        "created_at": "2026-07-05T18:50:09.329009+00:00",
+        "symbol": "BTCUSDT",
+        "cycle_id": 5,
+        "side": "BUY",
+        "category": "initial_inventory_buy",
+        "level_index": null,
+        "level_label": "achat initial",
+        "price": 62776.0,
+        "quantity": 0.00401,
+        "order_id": "46216498076",
+        "fees_usdt": 20.0694872,
+        "commission_assets": [
+          "BNB"
+        ],
+        "roundtrip_ref": null,
+        "trade_pnl": null,
+        "excluded_from_matched_trades": true
+      },
+      {
+        "id": 33,
+        "created_at": "2026-07-05T18:49:54.030310+00:00",
+        "symbol": "BTCUSDT",
+        "cycle_id": 4,
+        "side": "BUY",
+        "category": "initial_inventory_buy",
+        "level_index": null,
+        "level_label": "achat initial",
+        "price": 62782.0,
+        "quantity": 0.00401,
+        "order_id": "46216457001",
+        "fees_usdt": 20.0714054,
+        "commission_assets": [
+          "BNB"
+        ],
+        "roundtrip_ref": null,
+        "trade_pnl": null,
+        "excluded_from_matched_trades": true
+      },
+      {
+        "id": 32,
+        "created_at": "2026-07-05T17:22:50.673010+00:00",
+        "symbol": "BTCUSDT",
+        "cycle_id": 3,
+        "side": "SELL",
+        "category": "grid_fill",
+        "level_index": 6,
+        "level_label": 6,
+        "price": 62752.39,
+        "quantity": 0.00394,
+        "order_id": "46198477276",
+        "fees_usdt": 0.24724442,
+        "commission_assets": [
+          "USDT"
+        ],
+        "roundtrip_ref": "BUY@5+SELL@6 qty=0.00394000",
+        "trade_pnl": 0.12967911,
+        "excluded_from_matched_trades": false
+      }
+    ]
+  },
+  "sql_trade_count": 33,
+  "count_match": true,
+  "filter_cycle": {
+    "cycle_id": 5,
+    "api_total": 1,
+    "sql_count": 1,
+    "match": true
+  },
+  "filter_side_buy": {
+    "api_total": 18,
+    "sql_count": 18,
+    "match": true
+  },
+  "bags_api_count": 0,
+  "bags_sample": [],
+  "bag_fields_note": "aucun sac en DB \u2014 champs v\u00e9rifi\u00e9s via test_m_journal_bags.py"
+}

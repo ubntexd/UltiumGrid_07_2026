@@ -1,0 +1,90 @@
+{
+  "ts_utc": "2026-07-05T22:39:02.462236+00:00",
+  "cycle_id": 5,
+  "point1_config": {
+    "config_active_db": "5|15.0|false|t",
+    "bot_state_main_trigger": "15.0",
+    "pending_configs": "9|5.0|2026-07-05 22:24:17.203588+00\n8|5.0|2026-07-05 22:24:13.054632+00\n7|15.0|2026-07-05 22:14:41.592243+00",
+    "conclusion": "cycle_trigger_usd ACTIF = 15.0 ; 5.0 en attente wait_cycle (is_active=false)",
+    "config_5_requested_at": "2026-07-05T22:24:13Z",
+    "first_gross_ge_5_at": "2026-07-05 22:03:24.957494+00"
+  },
+  "point2_code": {
+    "should_close_cycle": "self.state.gross_pnl >= self.cfg.cycle_trigger_usd",
+    "gross_pnl": "grid_profit + floating_profit",
+    "conclusion": "Gross PnL complet, pas grid_profit seul"
+  },
+  "point3_spec": {
+    "source": "docs/spec.md section 2",
+    "text": "Declenchement +15 USD brut (Grid + Floating, hors sacs)",
+    "coherent": true
+  },
+  "point4_trigger_history": {
+    "snapshots_count": 433,
+    "max_gross_pnl": {
+      "ts": "2026-07-05 22:22:00.987887+00",
+      "gross_pnl": 12.011073615000178,
+      "threshold_active_15": false,
+      "would_trigger_if_5": true
+    },
+    "first_gross_ge_5": {
+      "ts": "2026-07-05 22:03:24.957494+00",
+      "gross_pnl": 6.482389295000038,
+      "threshold_active_15": false,
+      "would_trigger_if_5": true
+    },
+    "ever_gross_ge_15": false,
+    "samples_above_5": [
+      {
+        "ts": "2026-07-05 22:03:24.957494+00",
+        "gross_pnl": 6.482389295000038,
+        "threshold_active_15": false,
+        "would_trigger_if_5": true
+      },
+      {
+        "ts": "2026-07-05 22:03:30.034756+00",
+        "gross_pnl": 5.603421255000213,
+        "threshold_active_15": false,
+        "would_trigger_if_5": true
+      },
+      {
+        "ts": "2026-07-05 22:03:35.07651+00",
+        "gross_pnl": 6.042905275000125,
+        "threshold_active_15": false,
+        "would_trigger_if_5": true
+      },
+      {
+        "ts": "2026-07-05 22:14:06.304741+00",
+        "gross_pnl": 5.603421255000213,
+        "threshold_active_15": false,
+        "would_trigger_if_5": true
+      },
+      {
+        "ts": "2026-07-05 22:14:11.340469+00",
+        "gross_pnl": 5.823163265000013,
+        "threshold_active_15": false,
+        "would_trigger_if_5": true
+      },
+      {
+        "ts": "2026-07-05 22:14:16.393647+00",
+        "gross_pnl": 5.603421255000213,
+        "threshold_active_15": false,
+        "would_trigger_if_5": true
+      },
+      {
+        "ts": "2026-07-05 22:14:21.427202+00",
+        "gross_pnl": 5.603421255000213,
+        "threshold_active_15": false,
+        "would_trigger_if_5": true
+      },
+      {
+        "ts": "2026-07-05 22:16:42.710206+00",
+        "gross_pnl": 6.921873315000263,
+        "threshold_active_15": false,
+        "would_trigger_if_5": true
+      }
+    ],
+    "why_no_close": "gross max 12.01 < seuil actif 15 ; seuil 5 non applique au runtime"
+  },
+  "cycle5_opened": "5|open|2026-07-05 22:02:38.862049+00|0|0"
+}

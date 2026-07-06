@@ -1,0 +1,405 @@
+{
+  "ts_utc": "2026-07-05T23:18:36.660544+00:00",
+  "rest_base": "https://demo-api.binance.com",
+  "method": "verification directe demo-api.binance.com uniquement",
+  "demo_data_disclaimer": "Realistic market data on Demo is not equal to real market data (Binance documentation)",
+  "hypeusdt_direct_query": {
+    "http_status": 400,
+    "body_excerpt": "{\"code\":-1121,\"msg\":\"Invalid symbol.\"}"
+  },
+  "symbols_containing_HYPE": [
+    "HYPERBNB",
+    "HYPERFDUSD",
+    "HYPERTRY",
+    "HYPERUSDC",
+    "HYPERUSDT"
+  ],
+  "hype_variants_parsed": [
+    {
+      "symbol": "HYPERUSDT",
+      "status": "TRADING",
+      "baseAsset": "HYPER",
+      "quoteAsset": "USDT",
+      "tickSize": "0.00010000",
+      "stepSize": "0.10000000",
+      "minQty": "0.10000000",
+      "minNotional": 5.0,
+      "filters_present": [
+        "PRICE_FILTER",
+        "LOT_SIZE",
+        "ICEBERG_PARTS",
+        "MARKET_LOT_SIZE",
+        "TRAILING_DELTA",
+        "PERCENT_PRICE_BY_SIDE",
+        "NOTIONAL",
+        "MAX_NUM_ORDERS",
+        "MAX_NUM_ORDER_LISTS",
+        "MAX_NUM_ALGO_ORDERS",
+        "MAX_NUM_ORDER_AMENDS"
+      ]
+    },
+    {
+      "symbol": "HYPERUSDC",
+      "status": "TRADING",
+      "baseAsset": "HYPER",
+      "quoteAsset": "USDC",
+      "tickSize": "0.00010000",
+      "stepSize": "0.10000000",
+      "minQty": "0.10000000",
+      "minNotional": 5.0,
+      "filters_present": [
+        "PRICE_FILTER",
+        "LOT_SIZE",
+        "ICEBERG_PARTS",
+        "MARKET_LOT_SIZE",
+        "TRAILING_DELTA",
+        "PERCENT_PRICE_BY_SIDE",
+        "NOTIONAL",
+        "MAX_NUM_ORDERS",
+        "MAX_NUM_ORDER_LISTS",
+        "MAX_NUM_ALGO_ORDERS",
+        "MAX_NUM_ORDER_AMENDS"
+      ]
+    },
+    {
+      "symbol": "HYPERBNB",
+      "status": "BREAK",
+      "baseAsset": "HYPER",
+      "quoteAsset": "BNB",
+      "tickSize": "0.00000010",
+      "stepSize": "0.10000000",
+      "minQty": "0.10000000",
+      "minNotional": 0.01,
+      "filters_present": [
+        "PRICE_FILTER",
+        "LOT_SIZE",
+        "ICEBERG_PARTS",
+        "MARKET_LOT_SIZE",
+        "TRAILING_DELTA",
+        "PERCENT_PRICE_BY_SIDE",
+        "NOTIONAL",
+        "MAX_NUM_ORDERS",
+        "MAX_NUM_ORDER_LISTS",
+        "MAX_NUM_ALGO_ORDERS",
+        "MAX_NUM_ORDER_AMENDS"
+      ]
+    },
+    {
+      "symbol": "HYPERFDUSD",
+      "status": "BREAK",
+      "baseAsset": "HYPER",
+      "quoteAsset": "FDUSD",
+      "tickSize": "0.00010000",
+      "stepSize": "0.10000000",
+      "minQty": "0.10000000",
+      "minNotional": 5.0,
+      "filters_present": [
+        "PRICE_FILTER",
+        "LOT_SIZE",
+        "ICEBERG_PARTS",
+        "MARKET_LOT_SIZE",
+        "TRAILING_DELTA",
+        "PERCENT_PRICE_BY_SIDE",
+        "NOTIONAL",
+        "MAX_NUM_ORDERS",
+        "MAX_NUM_ORDER_LISTS",
+        "MAX_NUM_ALGO_ORDERS",
+        "MAX_NUM_ORDER_AMENDS"
+      ]
+    },
+    {
+      "symbol": "HYPERTRY",
+      "status": "TRADING",
+      "baseAsset": "HYPER",
+      "quoteAsset": "TRY",
+      "tickSize": "0.01000000",
+      "stepSize": "0.10000000",
+      "minQty": "0.10000000",
+      "minNotional": 10.0,
+      "filters_present": [
+        "PRICE_FILTER",
+        "LOT_SIZE",
+        "ICEBERG_PARTS",
+        "MARKET_LOT_SIZE",
+        "TRAILING_DELTA",
+        "PERCENT_PRICE_BY_SIDE",
+        "NOTIONAL",
+        "MAX_POSITION",
+        "MAX_NUM_ORDERS",
+        "MAX_NUM_ORDER_LISTS",
+        "MAX_NUM_ALGO_ORDERS",
+        "MAX_NUM_ORDER_AMENDS"
+      ]
+    }
+  ],
+  "primary_symbol": {
+    "symbol": "HYPERUSDT",
+    "status": "TRADING",
+    "baseAsset": "HYPER",
+    "quoteAsset": "USDT",
+    "tickSize": "0.00010000",
+    "stepSize": "0.10000000",
+    "minQty": "0.10000000",
+    "minNotional": 5.0,
+    "filters_present": [
+      "PRICE_FILTER",
+      "LOT_SIZE",
+      "ICEBERG_PARTS",
+      "MARKET_LOT_SIZE",
+      "TRAILING_DELTA",
+      "PERCENT_PRICE_BY_SIDE",
+      "NOTIONAL",
+      "MAX_NUM_ORDERS",
+      "MAX_NUM_ORDER_LISTS",
+      "MAX_NUM_ALGO_ORDERS",
+      "MAX_NUM_ORDER_AMENDS"
+    ]
+  },
+  "min_notional_checks": {
+    "3000": {
+      "capital_usdt": 3000,
+      "notional_per_buy_level_usdt": 150.0,
+      "min_notional": 5.0,
+      "ratio": 30.0,
+      "ok_ratio_3x": true
+    },
+    "4000": {
+      "capital_usdt": 4000,
+      "notional_per_buy_level_usdt": 200.0,
+      "min_notional": 5.0,
+      "ratio": 40.0,
+      "ok_ratio_3x": true
+    }
+  },
+  "volatility_same_method": {
+    "HYPERUSDT_24h_24bars": {
+      "high": 0.0769,
+      "low": 0.074,
+      "range_pct": 3.8436050364479795,
+      "bars": 24
+    },
+    "HYPERUSDT_24h_48bars": {
+      "high": 0.0812,
+      "low": 0.074,
+      "range_pct": 9.278350515463915,
+      "bars": 48
+    },
+    "HYPERUSDT_7d_7bars": {
+      "high": 0.0816,
+      "low": 0.0752,
+      "range_pct": 8.163265306122453,
+      "bars": 7
+    },
+    "BTCUSDT_24h_24bars": {
+      "high": 63930.0,
+      "low": 62622.18,
+      "range_pct": 2.0668470507580348,
+      "bars": 24
+    },
+    "BTCUSDT_7d_7bars": {
+      "high": 63930.0,
+      "low": 58624.71,
+      "range_pct": 8.657831265726141,
+      "bars": 7
+    },
+    "SOLUSDT_24h_24bars": {
+      "high": 81.93,
+      "low": 79.9,
+      "range_pct": 2.508805536674289,
+      "bars": 24
+    },
+    "SOLUSDT_7d_7bars": {
+      "high": 82.34,
+      "low": 73.67,
+      "range_pct": 11.114672136401516,
+      "bars": 7
+    }
+  },
+  "depth": {
+    "HYPERUSDT": {
+      "lastUpdateId": 115177967,
+      "bids": {
+        "levels": 100,
+        "total_qty": 2167973.8,
+        "notional_usdt": 154267.66
+      },
+      "asks": {
+        "levels": 100,
+        "total_qty": 11364067.3,
+        "notional_usdt": 952365.99
+      },
+      "best_bid": 0.0752,
+      "best_ask": 0.0753,
+      "spread_pct": 0.13289036544850877,
+      "book_empty": false,
+      "book_thin": false
+    },
+    "BTCUSDT": {
+      "lastUpdateId": 4964293710,
+      "bids": {
+        "levels": 100,
+        "total_qty": 8.7255,
+        "notional_usdt": 557747.22
+      },
+      "asks": {
+        "levels": 100,
+        "total_qty": 7.56447,
+        "notional_usdt": 483639.5
+      },
+      "best_bid": 63929.99,
+      "best_ask": 63930.0,
+      "spread_pct": 1.5642109782797995e-05,
+      "book_empty": false,
+      "book_thin": false
+    },
+    "SOLUSDT": {
+      "lastUpdateId": 977604915,
+      "bids": {
+        "levels": 100,
+        "total_qty": 20585.392,
+        "notional_usdt": 1679339.54
+      },
+      "asks": {
+        "levels": 100,
+        "total_qty": 31344.995,
+        "notional_usdt": 2578337.23
+      },
+      "best_bid": 81.91,
+      "best_ask": 81.92,
+      "spread_pct": 0.012207776353543452,
+      "book_empty": false,
+      "book_thin": false
+    }
+  },
+  "ticker": {
+    "symbol": "HYPERUSDT",
+    "price": "0.07520000"
+  },
+  "commission": {
+    "HYPERUSDT": {
+      "symbol": "HYPERUSDT",
+      "standardCommission": {
+        "maker": "0.00100000",
+        "taker": "0.00100000",
+        "buyer": "0.00000000",
+        "seller": "0.00000000"
+      },
+      "specialCommission": {
+        "maker": "0.00000000",
+        "taker": "0.00000000",
+        "buyer": "0.00000000",
+        "seller": "0.00000000"
+      },
+      "taxCommission": {
+        "maker": "0.00000000",
+        "taker": "0.00000000",
+        "buyer": "0.00000000",
+        "seller": "0.00000000"
+      },
+      "discount": {
+        "enabledForAccount": true,
+        "enabledForSymbol": true,
+        "discountAsset": "BNB",
+        "discount": "0.75000000"
+      }
+    },
+    "BTCUSDT_ref": {
+      "symbol": "BTCUSDT",
+      "standardCommission": {
+        "maker": "0.00100000",
+        "taker": "0.00100000",
+        "buyer": "0.00000000",
+        "seller": "0.00000000"
+      },
+      "specialCommission": {
+        "maker": "0.00000000",
+        "taker": "0.00000000",
+        "buyer": "0.00000000",
+        "seller": "0.00000000"
+      },
+      "taxCommission": {
+        "maker": "0.00000000",
+        "taker": "0.00000000",
+        "buyer": "0.00000000",
+        "seller": "0.00000000"
+      },
+      "discount": {
+        "enabledForAccount": true,
+        "enabledForSymbol": true,
+        "discountAsset": "BNB",
+        "discount": "0.75000000"
+      }
+    }
+  },
+  "comparison_table": [
+    {
+      "symbol": "BTCUSDT",
+      "available": true,
+      "status": "TRADING",
+      "tickSize": "0.01000000",
+      "stepSize": "0.00001000",
+      "minNotional": 5.0,
+      "notional_per_level_4000usdt": 200.0,
+      "min_notional_ratio_4000": 40.0,
+      "min_notional_ok_3x": true,
+      "volatility_1h_24bars_range_pct": 2.0668470507580348,
+      "volatility_7d_range_pct": 8.657831265726141,
+      "depth_bids_notional_usdt": 557747.22,
+      "depth_asks_notional_usdt": 483639.5,
+      "spread_pct": 1.5642109782797995e-05,
+      "book_empty": false
+    },
+    {
+      "symbol": "SOLUSDT",
+      "available": true,
+      "status": "TRADING",
+      "tickSize": "0.01000000",
+      "stepSize": "0.00100000",
+      "minNotional": 5.0,
+      "notional_per_level_4000usdt": 200.0,
+      "min_notional_ratio_4000": 40.0,
+      "min_notional_ok_3x": true,
+      "volatility_1h_24bars_range_pct": 2.508805536674289,
+      "volatility_7d_range_pct": 11.114672136401516,
+      "depth_bids_notional_usdt": 1679339.54,
+      "depth_asks_notional_usdt": 2578337.23,
+      "spread_pct": 0.012207776353543452,
+      "book_empty": false
+    },
+    {
+      "symbol": "HYPERUSDT",
+      "available": true,
+      "status": "TRADING",
+      "tickSize": "0.00010000",
+      "stepSize": "0.10000000",
+      "minNotional": 5.0,
+      "notional_per_level_4000usdt": 200.0,
+      "min_notional_ratio_4000": 40.0,
+      "min_notional_ok_3x": true,
+      "volatility_1h_24bars_range_pct": 3.8436050364479795,
+      "volatility_7d_range_pct": 8.163265306122453,
+      "depth_bids_notional_usdt": 154267.66,
+      "depth_asks_notional_usdt": 952365.99,
+      "spread_pct": 0.13289036544850877,
+      "book_empty": false
+    }
+  ],
+  "requested_symbol": "HYPEUSDT",
+  "requested_symbol_available": false,
+  "requested_symbol_error": {
+    "code": -1121,
+    "msg": "Invalid symbol."
+  },
+  "usdt_variant_evaluated": "HYPERUSDT",
+  "usdt_variant_note": "HYPEUSDT absent ; seule paire USDT contenant HYPE est HYPERUSDT (baseAsset=HYPER, pas HYPE). Autres variantes: HYPERUSDC (TRADING), HYPERTRY (TRADING), HYPERBNB/HYPERFDUSD (BREAK).",
+  "conclusion": {
+    "HYPEUSDT": {
+      "verdict": "non_disponible_sur_demo",
+      "reason": "GET exchangeInfo?symbol=HYPEUSDT retourne -1121 Invalid symbol ; aucun symbole HYPEUSDT dans la liste complete exchangeInfo."
+    },
+    "HYPERUSDT_substitute_technical": {
+      "verdict": "disponible_et_viable",
+      "reason": "TRADING, minNotional 5 USDT OK (ratio 30-40x pour 3000-4000 USDT / 20 paliers), carnet non vide (100 niveaux, ~154k USDT bids / ~952k asks top-100), frais identiques BTC (0.1% maker/taker, remise BNB 25%). Volatilite Demo 24h plus elevee que BTC/SOL (+3.84% vs ~2.1-2.5%). Spread plus large (0.13% vs ~0.00001% BTC). Donnees Demo realistes != marche reel."
+    }
+  }
+}

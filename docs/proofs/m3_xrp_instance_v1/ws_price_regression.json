@@ -1,0 +1,13 @@
+{
+  "ts_utc": "2026-07-06T01:20:25.395376+00:00",
+  "xrp_rest": 1.1601,
+  "api_mark": 1.16025,
+  "mark_source": "ws",
+  "ratio_error": 0.00012929919834505174,
+  "ws_xrpusdt_connected_in_logs": true,
+  "ws_not_dominated_by_hyper": true,
+  "ok": true,
+  "running": true,
+  "symbol": "XRPUSDT",
+  "scenario": "post HYPER\u2192XRP symbol change \u2014 restart_price_stream validation"
+}

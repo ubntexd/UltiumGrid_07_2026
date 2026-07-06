@@ -23,6 +23,19 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_API = "http://127.0.0.1:18000"
 OUT_DIR = ROOT / "docs" / "proofs" / "m3_organic_long_run"
+COMPOSE_FILE = "docker-compose.yml"
+COMPOSE_PROJECT: str | None = None
+DB_NAME = "ultiumgrid"
+
+
+def compose_cmd(*args: str) -> list[str]:
+    cmd = ["docker", "compose"]
+    if COMPOSE_PROJECT:
+        cmd.extend(["-p", COMPOSE_PROJECT])
+    if COMPOSE_FILE != "docker-compose.yml":
+        cmd.extend(["-f", COMPOSE_FILE])
+    cmd.extend(args)
+    return cmd
 
 
 def http_get(base: str, path: str) -> dict | None:
@@ -36,9 +49,7 @@ def http_get(base: str, path: str) -> dict | None:
 def sql(query: str) -> str:
     try:
         return subprocess.check_output(
-            [
-                "docker",
-                "compose",
+            compose_cmd(
                 "exec",
                 "-T",
                 "db",
@@ -46,12 +57,12 @@ def sql(query: str) -> str:
                 "-U",
                 "ultium",
                 "-d",
-                "ultiumgrid",
+                DB_NAME,
                 "-t",
                 "-A",
                 "-c",
                 query,
-            ],
+            ),
             cwd=ROOT,
             text=True,
             stderr=subprocess.STDOUT,
@@ -116,6 +127,13 @@ def snapshot(api: str, seq: int) -> dict:
         "supervisor_alerts_active": sum(
             1 for a in (supervision.get("alerts") or []) if a.get("status") == "active"
         ),
+        "supervisor_alert_kinds": [
+            a.get("kind")
+            for a in (supervision.get("alerts") or [])
+            if a.get("status") == "active"
+        ],
+        "step_pct": cfg.get("step_pct"),
+        "bnb_fee_discount": cfg.get("bnb_fee_discount"),
         "db_recent_cycles": recent_cycles,
         "db_recent_recenter_attempts": recent_attempts,
         "api_errors": {
@@ -144,8 +162,23 @@ def main() -> int:
     parser.add_argument("--duration-h", type=float, default=48.0)
     parser.add_argument("--interval-s", type=int, default=300)
     parser.add_argument("--resume", action="store_true", help="Reprendre depuis manifest existant")
+    parser.add_argument(
+        "--out-dir",
+        type=Path,
+        default=None,
+        help="Répertoire preuves (défaut: docs/proofs/m3_organic_long_run)",
+    )
+    parser.add_argument("--compose-project", default=None)
+    parser.add_argument("--compose-file", default="docker-compose.yml")
+    parser.add_argument("--db-name", default="ultiumgrid")
     args = parser.parse_args()
 
+    global OUT_DIR, COMPOSE_PROJECT, COMPOSE_FILE, DB_NAME
+    COMPOSE_PROJECT = args.compose_project
+    COMPOSE_FILE = args.compose_file
+    DB_NAME = args.db_name
+    if args.out_dir:
+        OUT_DIR = args.out_dir if args.out_dir.is_absolute() else ROOT / args.out_dir
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     manifest = load_manifest() if args.resume else {}
     now = datetime.now(timezone.utc)
@@ -157,6 +190,16 @@ def main() -> int:
             "duration_h": args.duration_h,
             "interval_s": args.interval_s,
             "api_base": args.api,
+            "out_dir": str(OUT_DIR),
+            "target_config": {
+                "step_pct": 0.4,
+                "bnb_fee_discount": True,
+                "cycle_trigger_usd": 15,
+                "capital_usdt": 5000,
+                "num_levels": 20,
+            },
+            "simulation_ref": "docs/proofs/m7bis_target_config_simulation.json",
+            "protocol": "docs/m3_organic_long_run_v2_protocol.md",
             "status": "running",
             "objectives": {
                 "trigger_15_organic": "cycle clos close_reason=trigger_15 sans seuil réduit",
@@ -164,6 +207,10 @@ def main() -> int:
                 "cas_b_production": "forced_sell_stuck_level à stuck_sell_min=15",
                 "no_manual_intervention": True,
                 "supervisor_active": True,
+                "no_orphan_alerts": True,
+                "no_guardrail_mismatch": True,
+                "no_recon_mismatch": True,
+                "config_frozen": True,
             },
             "snapshots_count": 0,
             "events": [],

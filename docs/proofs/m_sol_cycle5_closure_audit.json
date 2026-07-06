@@ -1,0 +1,58 @@
+{
+  "ts_utc": "2026-07-05T22:46:00+00:00",
+  "point1_cycle5_closure": {
+    "sql_cycles": {
+      "cycle_5": {
+        "id": 5,
+        "status": "closed",
+        "close_reason": "config_change",
+        "grid_profit": 0.405,
+        "gross_pnl": -0.716,
+        "net_pnl": -3.217,
+        "opened_at": "2026-07-05T22:02:38.862049+00:00",
+        "closed_at": "2026-07-05T22:40:35.361386+00:00"
+      },
+      "cycle_6": {
+        "id": 6,
+        "opened_at": "2026-07-05T22:40:35.373662+00:00",
+        "note": "Ouvert 12 ms après clôture cycle 5"
+      }
+    },
+    "rebuild_bot_sol": "2026-07-05T22:35:51Z",
+    "log_after_rebuild": "State restored cycle_id=5 running=True (pas de nouveau cycle)",
+    "config_close_now": "2026-07-05T22:40:35.312Z Command received: config",
+    "conclusion": "Cycle 5 clos par config_change (close_now Module 7bis), PAS trigger_5, PAS orphan_on_restart. Rebuild 22:35 n'a PAS créé cycle 6.",
+    "trigger_organic_5_usd": {
+      "proven": false,
+      "reason": "Seuil actif runtime = 15 jusqu'à 22:40. Max gross_pnl observé = 12.01 < 15. 195 ticks avec gross >= 5 mais seuil 15 — comportement attendu sans close.",
+      "first_gross_ge_5": "2026-07-05T22:03:24Z",
+      "max_gross": 12.011,
+      "ticks_ge_5": 195,
+      "ticks_ge_15": 0,
+      "user_observed_9_86": "Cohérent avec snapshots gross (flottant+grid) ; clos à -0.72 lors du close_now"
+    },
+    "cycle6_initial_buy": {
+      "trade_id": 6,
+      "side": "BUY",
+      "purpose": "initial_inventory_buy",
+      "order_id": "2409892928",
+      "ts": "2026-07-05T22:40:35.645245+00:00"
+    }
+  },
+  "point2_api_instance": {
+    "btc_backend_before_rebuild": "404 Not Found — image backend antérieure au commit /api/instance",
+    "sol_backend": "200 OK instance_id=sol",
+    "frontend_usage": "loadInstanceBranding() — label/couleur/title uniquement ; symbole et PnL via GET /api/running",
+    "display_bug_root_cause_confirmed": "Config SOL rejetée au 1er lancement → bot BTCUSDT par défaut → /api/running servait BTC (pre_launch_proof.json). /api/instance 404 n'explique PAS les données BTC sur la page.",
+    "btc_backend_after_rebuild": "200 OK instance_id=btc (rebuild backend 2026-07-05T22:46Z)"
+  },
+  "point3_btc_reconciliation": {
+    "at_2235_utc": "delta ~0.0039 BTC (fill récent)",
+    "now": "binance_qty == grid_qty == 0.03933, delta 0, mismatches 0"
+  },
+  "point4_egaliseur_btc": {
+    "container_running": false,
+    "in_compose": true,
+    "intentional": "Pas d'activation continue avant fin run v2 ; service non démarré volontairement (test_only si démarré)"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "ts_utc": "2026-07-05T22:24:13+00:00",
+  "instance": "sol",
+  "change": {
+    "param": "cycle_trigger_usd",
+    "from": 15.0,
+    "to": 5.0,
+    "mode": "wait_cycle",
+    "reason": "Test empirique hypothèse fréquence/coût fixe inventaire initial",
+    "cycle_at_request": 5,
+    "applies_at": "fin naturelle cycle 5 (+5 USD grid profit brut cumulé)"
+  },
+  "unchanged_params": {
+    "symbol": "SOLUSDT",
+    "capital_usdt": 4000,
+    "step_pct": 0.4,
+    "num_levels": 20,
+    "bnb_fee_discount_pending": true
+  },
+  "btc_untouched": {
+    "api": "http://127.0.0.1:18000",
+    "cycle_trigger_usd": 15.0,
+    "run_v2_frozen_until": "2026-07-06T19:23:00+00:00"
+  },
+  "viability_sol": {
+    "fee_rate": 0.00075,
+    "net_per_grid": 0.5,
+    "grids_to_cycle": 10,
+    "fees_initial_inventory": 1.5,
+    "net_at_gross_threshold": 3.5,
+    "comparison_threshold_15": {
+      "grids_to_cycle": 30,
+      "net_at_gross_threshold": 13.5
+    }
+  },
+  "api_response_ok": true
+}

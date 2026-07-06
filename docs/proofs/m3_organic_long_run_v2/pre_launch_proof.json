@@ -1,0 +1,121 @@
+{
+  "ts_utc": "2026-07-05T19:22:57.427379+00:00",
+  "checks": {
+    "account": {
+      "quote_free": 5000.2625347,
+      "base_free": 0.0,
+      "base_total": 0.0,
+      "running": false,
+      "open_cycles_sql": "0"
+    },
+    "bnb_free": 1.02099252,
+    "viability_status": 200,
+    "viability": {
+      "notional_per_level": 250.0,
+      "fee_rate": 0.00075,
+      "fee_source": "account.commissionRates.taker * 0.75 (BNB)",
+      "fees_initial_inventory": 1.875,
+      "fees_fixed_per_cycle": 1.875,
+      "fees_per_roundtrip": 0.375,
+      "gross_per_grid": 1.0,
+      "net_per_grid": 0.625,
+      "ratio_gross_to_fees": 2.6666666666666665,
+      "grids_to_cycle": 24,
+      "net_at_gross_threshold": 13.125,
+      "total_fees_at_gross_threshold": 10.875,
+      "alert_ratio_below_2x": false,
+      "bnb_fee_discount": true,
+      "bnb_balance": 1.02099252,
+      "bnb_sufficient": true,
+      "formulas": {
+        "notional_per_level": "(capital_usdt / 2) / (num_levels / 2)",
+        "fees_initial_inventory": "(capital_usdt / 2) * fee_rate",
+        "fees_per_roundtrip": "notional_per_level * fee_rate * 2",
+        "gross_per_grid": "notional_per_level * (step_pct / 100)",
+        "net_per_grid": "gross_per_grid - fees_per_roundtrip",
+        "ratio": "gross_per_grid / fees_per_roundtrip",
+        "grids_to_cycle": "ceil(cycle_trigger_usd / net_per_grid)",
+        "net_at_gross_threshold": "grids_to_cycle * net_per_grid - fees_initial_inventory",
+        "total_fees_at_gross_threshold": "fees_initial_inventory + grids_to_cycle * fees_per_roundtrip"
+      },
+      "quote_free": 5000.2625347
+    },
+    "config_apply": {
+      "ok": true,
+      "queued": true,
+      "mode": "close_now",
+      "config": {
+        "symbol": "BTCUSDT",
+        "capital_usdt": 5000,
+        "num_levels": 20,
+        "step_pct": 0.4,
+        "cycle_trigger_usd": 15.0,
+        "cut_level_1": 10,
+        "cut_pct_1": 50.0,
+        "cut_level_2": 14,
+        "cut_pct_2": 100.0,
+        "rearm_levels": 2,
+        "rearm_delay_min": 20,
+        "hard_stop_pct": -8.0,
+        "daily_circuit_breaker_usd": -40.0,
+        "bags_capital_threshold_pct": 40.0,
+        "bnb_fee_discount": true,
+        "idle_recenter_min": 20.0,
+        "stuck_sell_min": 15.0
+      },
+      "viability": {
+        "notional_per_level": 250.0,
+        "fee_rate": 0.00075,
+        "fee_source": "account.commissionRates.taker * 0.75 (BNB)",
+        "fees_initial_inventory": 1.875,
+        "fees_fixed_per_cycle": 1.875,
+        "fees_per_roundtrip": 0.375,
+        "gross_per_grid": 1.0,
+        "net_per_grid": 0.625,
+        "ratio_gross_to_fees": 2.6666666666666665,
+        "grids_to_cycle": 24,
+        "net_at_gross_threshold": 13.125,
+        "total_fees_at_gross_threshold": 10.875,
+        "alert_ratio_below_2x": false,
+        "bnb_fee_discount": true,
+        "bnb_balance": 1.02099252,
+        "bnb_sufficient": true,
+        "formulas": {
+          "notional_per_level": "(capital_usdt / 2) / (num_levels / 2)",
+          "fees_initial_inventory": "(capital_usdt / 2) * fee_rate",
+          "fees_per_roundtrip": "notional_per_level * fee_rate * 2",
+          "gross_per_grid": "notional_per_level * (step_pct / 100)",
+          "net_per_grid": "gross_per_grid - fees_per_roundtrip",
+          "ratio": "gross_per_grid / fees_per_roundtrip",
+          "grids_to_cycle": "ceil(cycle_trigger_usd / net_per_grid)",
+          "net_at_gross_threshold": "grids_to_cycle * net_per_grid - fees_initial_inventory",
+          "total_fees_at_gross_threshold": "fees_initial_inventory + grids_to_cycle * fees_per_roundtrip"
+        },
+        "quote_free": 5000.2625347
+      }
+    },
+    "config_active": {
+      "step_pct": 0.4,
+      "bnb_fee_discount": true,
+      "capital_usdt": 5000,
+      "num_levels": 20,
+      "cycle_trigger_usd": 15.0
+    },
+    "start": {
+      "ok": true,
+      "queued": "start",
+      "already_running": false,
+      "cycle_id": 7,
+      "message": "D\u00e9marrage demand\u00e9"
+    },
+    "running_after_start": {
+      "running": true,
+      "cycle_id": 8,
+      "step_pct": 0.4,
+      "bnb_fee_discount": true
+    }
+  },
+  "ok": true,
+  "simulation_ref": "docs/proofs/m7bis_target_config_simulation.json",
+  "protocol": "docs/m3_organic_long_run_v2_protocol.md"
+}

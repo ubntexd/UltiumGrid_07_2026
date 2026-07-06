@@ -82,12 +82,41 @@ class Bag(Base):
     symbol: Mapped[str] = mapped_column(String(32), index=True)
     quantity: Mapped[float] = mapped_column(Float)
     entry_price: Mapped[float] = mapped_column(Float)
-    status: Mapped[str] = mapped_column(String(16), default="open")  # open|closed
+    status: Mapped[str] = mapped_column(String(32), default="open")
+    # open | sold_manual | sold_panic | closed (legacy)
     source: Mapped[str] = mapped_column(String(32), default="cut")  # cut|manual
     cut_level: Mapped[int | None] = mapped_column(Integer, nullable=True)
     realized_pnl: Mapped[float] = mapped_column(Float, default=0.0)
+    creation_reason: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    cycle_id_origin: Mapped[int | None] = mapped_column(ForeignKey("cycles.id"), nullable=True, index=True)
+    incomplete_levels_at_creation: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    market_price_at_creation: Mapped[float | None] = mapped_column(Float, nullable=True)
+    sold_price: Mapped[float | None] = mapped_column(Float, nullable=True)
+    sold_by: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    trailing_order_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    trailing_delta_bips: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    trailing_limit_price: Mapped[float | None] = mapped_column(Float, nullable=True)
+    activation_stop_price: Mapped[float | None] = mapped_column(Float, nullable=True)
+    hard_stop_price: Mapped[float | None] = mapped_column(Float, nullable=True)
+    max_exit_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    floating_snapshots: Mapped[list["BagFloatingSnapshot"]] = relationship(back_populates="bag")
+
+
+class BagFloatingSnapshot(Base):
+    """Historique périodique du flottant d'un sac (module vente indépendant futur)."""
+
+    __tablename__ = "bag_floating_snapshots"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    bag_id: Mapped[int] = mapped_column(ForeignKey("bags.id"), index=True)
+    mark_price: Mapped[float] = mapped_column(Float)
+    floating_pnl: Mapped[float] = mapped_column(Float, default=0.0)
+    ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+
+    bag: Mapped[Bag] = relationship(back_populates="floating_snapshots")
 
 
 class BotState(Base):
@@ -173,6 +202,30 @@ class AlertEvent(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class EgaliseurState(Base):
+    """État / config du Bot Égaliseur — écrit uniquement par le service egaliseur."""
+
+    __tablename__ = "egaliseur_state"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    key: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    value_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class EgaliseurAction(Base):
+    """Journal des actions du Bot Égaliseur (alerting permanent)."""
+
+    __tablename__ = "egaliseur_actions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    bag_id: Mapped[int | None] = mapped_column(ForeignKey("bags.id"), nullable=True, index=True)
+    action: Mapped[str] = mapped_column(String(64), index=True)
+    message: Mapped[str] = mapped_column(Text, default="")
+    payload_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+
+
 class OrderAttempt(Base):
     """Journal des tentatives d'ordres — anti-doublon post -1007 / audit instabilité testnet."""
 
@@ -201,7 +254,61 @@ def make_engine(database_url: str):
     return create_engine(database_url, pool_pre_ping=True)
 
 
+def apply_schema_migrations(engine) -> None:
+    """Ajoute les colonnes/tables manquantes (SQLite / PostgreSQL)."""
+    Base.metadata.create_all(engine)
+    is_sqlite = engine.dialect.name == "sqlite"
+    bag_cols_sqlite = [
+        ("creation_reason", "TEXT"),
+        ("cycle_id_origin", "INTEGER"),
+        ("incomplete_levels_at_creation", "TEXT"),
+        ("market_price_at_creation", "REAL"),
+        ("sold_price", "REAL"),
+        ("sold_by", "TEXT"),
+    ]
+    bag_cols_pg = [
+        ("creation_reason", "VARCHAR(64)"),
+        ("cycle_id_origin", "INTEGER"),
+        ("incomplete_levels_at_creation", "JSON"),
+        ("market_price_at_creation", "DOUBLE PRECISION"),
+        ("sold_price", "DOUBLE PRECISION"),
+        ("sold_by", "VARCHAR(64)"),
+        ("trailing_order_id", "VARCHAR(64)"),
+        ("trailing_delta_bips", "INTEGER"),
+        ("trailing_limit_price", "DOUBLE PRECISION"),
+        ("activation_stop_price", "DOUBLE PRECISION"),
+        ("hard_stop_price", "DOUBLE PRECISION"),
+        ("max_exit_at", "TIMESTAMP WITH TIME ZONE"),
+    ]
+    bag_cols_sqlite_extra = [
+        ("trailing_order_id", "TEXT"),
+        ("trailing_delta_bips", "INTEGER"),
+        ("trailing_limit_price", "REAL"),
+        ("activation_stop_price", "REAL"),
+        ("hard_stop_price", "REAL"),
+        ("max_exit_at", "TEXT"),
+    ]
+    with engine.begin() as conn:
+        if is_sqlite:
+            try:
+                existing = {
+                    row[1] for row in conn.execute(text("PRAGMA table_info(bags)")).fetchall()
+                }
+            except Exception:
+                existing = set()
+            for col, ddl in bag_cols_sqlite:
+                if col not in existing:
+                    conn.execute(text(f"ALTER TABLE bags ADD COLUMN {col} {ddl}"))
+            for col, ddl in bag_cols_sqlite_extra:
+                if col not in existing:
+                    conn.execute(text(f"ALTER TABLE bags ADD COLUMN {col} {ddl}"))
+        else:
+            for col, ddl in bag_cols_pg:
+                conn.execute(text(f"ALTER TABLE bags ADD COLUMN IF NOT EXISTS {col} {ddl}"))
+
+
 def make_session_factory(database_url: str):
     engine = make_engine(database_url)
+    apply_schema_migrations(engine)
     Base.metadata.create_all(engine)
     return sessionmaker(bind=engine, autoflush=False, autocommit=False), engine

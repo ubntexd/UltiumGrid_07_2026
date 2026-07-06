@@ -1,0 +1,178 @@
+{
+  "ts_utc": "2026-07-05T23:31:06.767980+00:00",
+  "target_params": {
+    "symbol": "HYPERUSDT",
+    "capital_usdt": 5000,
+    "num_levels": 20,
+    "step_pct": 0.4,
+    "cycle_trigger_usd": 15.0,
+    "bnb_fee_discount": true,
+    "idle_recenter_min": 20.0,
+    "stuck_sell_min": 15.0,
+    "cut_level_1": 10,
+    "cut_pct_1": 50.0,
+    "cut_level_2": 14,
+    "cut_pct_2": 100.0,
+    "rearm_levels": 2,
+    "rearm_delay_min": 20,
+    "hard_stop_pct": -8.0,
+    "daily_circuit_breaker_usd": -40.0,
+    "bags_capital_threshold_pct": 40.0
+  },
+  "symbol_clarification": "HYPERUSDT (HYPER) \u2014 pas HYPE/Hyperliquid",
+  "expected_net_at_gross_threshold": 13.125,
+  "comparison_window": {
+    "btc_run_v2_start": "2026-07-05T19:23:00+00:00",
+    "btc_run_v2_target_end": "2026-07-06T19:23:00+00:00",
+    "sol_start": "2026-07-05T22:02:00+00:00",
+    "hyper_start": "2026-07-05T23:31:06.767980+00:00",
+    "note": "Fen\u00eatres in\u00e9gales \u2014 signaler dans le rapport comparatif"
+  },
+  "checks": {
+    "instance": {
+      "instance_id": "hyper",
+      "instance_label": "UltiumGrid \u2014 Instance HYPER",
+      "accent_color": "#f97316",
+      "trading_symbol": "HYPERUSDT",
+      "symbol_disclaimer": "HYPERUSDT est l'actif HYPER sur Binance Demo \u2014 pas HYPE/Hyperliquid."
+    },
+    "ui_first_load": {
+      "status": 200,
+      "has_instance_symbol_badge": true
+    },
+    "pre_start": {
+      "running": false,
+      "symbol": "BTCUSDT",
+      "quote_free": 8266.31744,
+      "open_cycles": "0"
+    },
+    "config_close_now": {
+      "ok": true,
+      "queued": true,
+      "mode": "close_now",
+      "config": {
+        "symbol": "HYPERUSDT",
+        "capital_usdt": 5000,
+        "num_levels": 20,
+        "step_pct": 0.4,
+        "cycle_trigger_usd": 15.0,
+        "cut_level_1": 10,
+        "cut_pct_1": 50.0,
+        "cut_level_2": 14,
+        "cut_pct_2": 100.0,
+        "rearm_levels": 2,
+        "rearm_delay_min": 20,
+        "hard_stop_pct": -8.0,
+        "daily_circuit_breaker_usd": -40.0,
+        "bags_capital_threshold_pct": 40.0,
+        "bnb_fee_discount": true,
+        "idle_recenter_min": 20.0,
+        "stuck_sell_min": 15.0
+      },
+      "viability": {
+        "notional_per_level": 250.0,
+        "fee_rate": 0.00075,
+        "fee_source": "account.commissionRates.taker * 0.75 (BNB)",
+        "fees_initial_inventory": 1.875,
+        "fees_fixed_per_cycle": 1.875,
+        "fees_per_roundtrip": 0.375,
+        "gross_per_grid": 1.0,
+        "net_per_grid": 0.625,
+        "ratio_gross_to_fees": 2.6666666666666665,
+        "grids_to_cycle": 24,
+        "net_at_gross_threshold": 13.125,
+        "total_fees_at_gross_threshold": 10.875,
+        "alert_ratio_below_2x": false,
+        "bnb_fee_discount": true,
+        "bnb_balance": 0.33775918,
+        "bnb_sufficient": true,
+        "formulas": {
+          "notional_per_level": "(capital_usdt / 2) / (num_levels / 2)",
+          "fees_initial_inventory": "(capital_usdt / 2) * fee_rate",
+          "fees_per_roundtrip": "notional_per_level * fee_rate * 2",
+          "gross_per_grid": "notional_per_level * (step_pct / 100)",
+          "net_per_grid": "gross_per_grid - fees_per_roundtrip",
+          "ratio": "gross_per_grid / fees_per_roundtrip",
+          "grids_to_cycle": "ceil(cycle_trigger_usd / net_per_grid)",
+          "net_at_gross_threshold": "grids_to_cycle * net_per_grid - fees_initial_inventory",
+          "total_fees_at_gross_threshold": "fees_initial_inventory + grids_to_cycle * fees_per_roundtrip"
+        },
+        "quote_free": 8266.31744
+      }
+    },
+    "config_wait_cycle": {
+      "ok": true,
+      "queued": true,
+      "mode": "wait_cycle",
+      "config": {
+        "symbol": "HYPERUSDT",
+        "capital_usdt": 5000,
+        "num_levels": 20,
+        "step_pct": 0.4,
+        "cycle_trigger_usd": 15.0,
+        "cut_level_1": 10,
+        "cut_pct_1": 50.0,
+        "cut_level_2": 14,
+        "cut_pct_2": 100.0,
+        "rearm_levels": 2,
+        "rearm_delay_min": 20,
+        "hard_stop_pct": -8.0,
+        "daily_circuit_breaker_usd": -40.0,
+        "bags_capital_threshold_pct": 40.0,
+        "bnb_fee_discount": true,
+        "idle_recenter_min": 20.0,
+        "stuck_sell_min": 15.0
+      },
+      "viability": {
+        "notional_per_level": 250.0,
+        "fee_rate": 0.00075,
+        "fee_source": "account.commissionRates.taker * 0.75 (BNB)",
+        "fees_initial_inventory": 1.875,
+        "fees_fixed_per_cycle": 1.875,
+        "fees_per_roundtrip": 0.375,
+        "gross_per_grid": 1.0,
+        "net_per_grid": 0.625,
+        "ratio_gross_to_fees": 2.6666666666666665,
+        "grids_to_cycle": 24,
+        "net_at_gross_threshold": 13.125,
+        "total_fees_at_gross_threshold": 10.875,
+        "alert_ratio_below_2x": false,
+        "bnb_fee_discount": true,
+        "bnb_balance": 0.33775918,
+        "bnb_sufficient": true,
+        "formulas": {
+          "notional_per_level": "(capital_usdt / 2) / (num_levels / 2)",
+          "fees_initial_inventory": "(capital_usdt / 2) * fee_rate",
+          "fees_per_roundtrip": "notional_per_level * fee_rate * 2",
+          "gross_per_grid": "notional_per_level * (step_pct / 100)",
+          "net_per_grid": "gross_per_grid - fees_per_roundtrip",
+          "ratio": "gross_per_grid / fees_per_roundtrip",
+          "grids_to_cycle": "ceil(cycle_trigger_usd / net_per_grid)",
+          "net_at_gross_threshold": "grids_to_cycle * net_per_grid - fees_initial_inventory",
+          "total_fees_at_gross_threshold": "fees_initial_inventory + grids_to_cycle * fees_per_roundtrip"
+        },
+        "quote_free": 8266.31744
+      }
+    },
+    "start": {
+      "ok": true,
+      "queued": "start",
+      "already_running": false,
+      "cycle_id": null,
+      "message": "D\u00e9marrage demand\u00e9"
+    },
+    "post_start": {
+      "running": true,
+      "cycle_id": 2,
+      "symbol": "HYPERUSDT",
+      "step_pct": 0.4,
+      "cycle_trigger_usd": 15.0
+    },
+    "ui_data_not_wrong_instance": {
+      "expected_symbol": "HYPERUSDT",
+      "actual_symbol": "HYPERUSDT",
+      "ok": true,
+      "note": "Test anti-bug SOL : premier /api/running doit \u00eatre HYPERUSDT, pas BTCUSDT/SOLUSDT"
+    }
+  }
+}

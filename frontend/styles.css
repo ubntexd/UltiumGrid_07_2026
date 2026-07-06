@@ -23,7 +23,20 @@ body {
   border-bottom: 1px solid var(--border);
   background: #0e1628;
 }
+body.instance-sol .top { background: #160e28; border-bottom-color: #4c1d95; }
+body.instance-btc .top { background: #0e1628; }
+body.instance-hyper .top { background: #1a1208; border-bottom-color: #9a3412; }
+body.instance-xrp .top { background: #081a24; border-bottom-color: #0369a1; }
+.brand-wrap { display: flex; flex-direction: column; gap: 0.15rem; min-width: 12rem; }
 .brand { font-weight: 700; letter-spacing: 0.04em; }
+.instance-symbol-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  opacity: 0.95;
+}
+#instance-brand { color: var(--accent); }
 .margin-banner {
   flex: 1;
   background: #18233a;
@@ -140,3 +153,49 @@ pre { white-space: pre-wrap; color: var(--muted); font-size: 0.85rem; }
   .grid-2 { grid-template-columns: 1fr; }
   .top { flex-wrap: wrap; }
 }
+
+.nav-egaliseur {
+  color: #93c5fd;
+  text-decoration: none;
+  font-weight: 700;
+  margin-left: 0.75rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: rgba(59, 130, 246, 0.12);
+  white-space: nowrap;
+}
+.nav-egaliseur:hover { background: rgba(59, 130, 246, 0.28); }
+.tabs a.tab-external {
+  margin-left: auto;
+  align-self: center;
+  color: #93c5fd;
+  text-decoration: none;
+  font-weight: 700;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: rgba(59, 130, 246, 0.15);
+  white-space: nowrap;
+}
+.tabs a.tab-external:hover { background: rgba(59, 130, 246, 0.3); }
+.tabs { align-items: center; }
+.brand a { color: var(--accent); text-decoration: none; }
+.mode-banner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  border: 2px solid var(--border);
+  font-size: 0.9rem;
+}
+.mode-banner strong { font-size: 1rem; }
+.mode-banner span { color: var(--muted); }
+.mode-test { border-color: #b45309; background: rgba(180, 83, 9, 0.15); }
+.mode-continuous { border-color: var(--ok); background: rgba(31, 157, 85, 0.15); }
+.mode-paused { border-color: var(--bad); background: rgba(214, 69, 69, 0.15); }
+.egaliseur-page .controls-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.75rem; }
+.hint { color: var(--muted); font-size: 0.9rem; }
+.hint a { color: var(--accent); }

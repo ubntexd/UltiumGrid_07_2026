@@ -1,0 +1,126 @@
+{
+  "generated_at": "2026-07-05T18:52:15.328799+00:00",
+  "tests": {
+    "B1": {
+      "api_stop_response": {
+        "ok": true,
+        "queued": "stop",
+        "message": "Arr\u00eat demand\u00e9 \u2014 annulation des ordres, position conserv\u00e9e",
+        "residual_position_warning": {
+          "qty": 0.00401,
+          "notional_usdt": 252.0333,
+          "mark_price": 62851.2,
+          "message": "Position r\u00e9siduelle 0.00401000 (~252.03 USDT) non surveill\u00e9e tant que le bot est arr\u00eat\u00e9 \u2014 vendre (Panic) ou relancer le bot.",
+          "entry_avg": 62776.0,
+          "floating_pnl": 0.301552
+        }
+      },
+      "last_command": {
+        "name": "stop",
+        "result": {
+          "ok": true,
+          "cancelled_orders": 4,
+          "cycle_closed": 6,
+          "message": "Arr\u00eat\u00e9 \u2014 ordres annul\u00e9s, position conserv\u00e9e",
+          "stopped_at": "2026-07-05T18:52:25.604726+00:00",
+          "residual_position_warning": {
+            "qty": 0.00401,
+            "notional_usdt": 252.0146,
+            "mark_price": 62846.53,
+            "message": "Position r\u00e9siduelle 0.00401000 (~252.01 USDT) non surveill\u00e9e tant que le bot est arr\u00eat\u00e9 \u2014 vendre (Panic) ou relancer le bot.",
+            "entry_avg": 62776.0,
+            "floating_pnl": 0.282825
+          }
+        },
+        "ts": "2026-07-05T18:52:25.624765+00:00"
+      },
+      "account_at_stop": {
+        "base_total": 0.00401,
+        "base_free": 0.00401,
+        "quote_free": 4748.2759392,
+        "mark": 62846.53,
+        "notional_usdt": 252.01458529999996,
+        "ts": "2026-07-05T18:52:26.621021+00:00"
+      }
+    },
+    "A1": {
+      "alerts": [
+        {
+          "severity": "alert",
+          "message": "Position orpheline non surveill\u00e9e : 0.00401000 (~252.01 USDT)",
+          "payload": {
+            "orphan_qty": 0.00401,
+            "notional_usdt": 252.0146,
+            "mark_price": 62846.53,
+            "entry_avg": null,
+            "floating_pnl": null,
+            "stopped_at": null,
+            "stopped_duration_s": null,
+            "running": false,
+            "grid_active": false,
+            "threshold_usdt": 10.0,
+            "min_stopped_s": 0.0,
+            "bags_qty": 0.0,
+            "binance_qty": 0.00401
+          }
+        }
+      ],
+      "account": {
+        "base_total": 0.00401,
+        "base_free": 0.00401,
+        "quote_free": 4748.2759392,
+        "mark": 62846.53,
+        "notional_usdt": 252.01458529999996,
+        "ts": "2026-07-05T18:52:26.747040+00:00"
+      }
+    },
+    "C1": {
+      "entry_avg": 62776.0,
+      "center_price": 62846.53,
+      "entry_before_stop": 62776.0,
+      "initial_buy_skipped": true,
+      "entry_avg_source": "prior_bot_state_entry_avg",
+      "initial_buy": {
+        "skipped": true,
+        "reason": "free_base_sufficient",
+        "entry_avg_source": "prior_bot_state_entry_avg",
+        "free_base": 0.00401,
+        "avg_price": 62776.0
+      },
+      "account": {
+        "base_total": 0.00401,
+        "base_free": 5e-05,
+        "quote_free": 4500.1502988,
+        "mark": 62846.53,
+        "notional_usdt": 252.01458529999996,
+        "ts": "2026-07-05T18:52:30.833726+00:00"
+      }
+    },
+    "A2": {
+      "active_orphan_alerts": 0,
+      "account": {
+        "base_total": 0.0,
+        "base_free": 0.0,
+        "quote_free": 5000.2625347,
+        "mark": 62838.78,
+        "notional_usdt": 0.0,
+        "ts": "2026-07-05T18:52:44.038261+00:00"
+      }
+    },
+    "C2": {
+      "covered_by": "bot/tests/test_m3_orphan_position.py::test_start_blocked_untracked_C2",
+      "proof_file": "docs/proofs/m3_orphan_C2_blocked.json"
+    }
+  },
+  "setup": {
+    "entry_avg_before_stop": 62776.0,
+    "account": {
+      "base_total": 0.00401,
+      "base_free": 5e-05,
+      "quote_free": 4500.1319244,
+      "mark": 62851.19,
+      "notional_usdt": 252.0332719,
+      "ts": "2026-07-05T18:52:21.507223+00:00"
+    }
+  }
+}

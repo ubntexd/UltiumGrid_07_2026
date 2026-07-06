@@ -1,0 +1,32 @@
+{
+  "ts_utc": "2026-07-05T23:47:42.055175+00:00",
+  "event": "hyper_relaunch_after_ws_fix",
+  "rest_before": 0.0756,
+  "rest_after": 0.0756,
+  "before": {
+    "running": false,
+    "cycle_id": 58,
+    "mark": 0.07565,
+    "pos": 29847.0989
+  },
+  "start_response": {
+    "ok": true,
+    "queued": "start",
+    "already_running": false,
+    "cycle_id": 58,
+    "message": "D\u00e9marrage demand\u00e9"
+  },
+  "after": {
+    "running": true,
+    "cycle_id": 59,
+    "symbol": "HYPERUSDT",
+    "mark_price": 0.07555,
+    "mark_source": "ws",
+    "ratio_error": 0.0006613756613755885,
+    "gross_pnl": -1.653253884999818,
+    "floating": -1.653253884999818,
+    "position_qty": 33065.0777
+  },
+  "ok": true,
+  "position_coherence_check": "docs/proofs/m3_hyper_instance_v1/hyper_position_coherence_check.json"
+}

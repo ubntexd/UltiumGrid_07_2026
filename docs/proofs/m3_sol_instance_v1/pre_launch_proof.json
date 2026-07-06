@@ -1,0 +1,46 @@
+{
+  "ts_utc": "2026-07-05T22:02:30+00:00",
+  "target_params": {
+    "symbol": "SOLUSDT",
+    "capital_usdt": 4000,
+    "num_levels": 20,
+    "step_pct": 0.4,
+    "cycle_trigger_usd": 15.0,
+    "bnb_fee_discount": false,
+    "note": "bnb_fee_discount=false car BNB=0 sur compte Demo SOL — activer après approvisionnement BNB"
+  },
+  "comparison_window": {
+    "btc_run_v2_start": "2026-07-05T19:23:00+00:00",
+    "btc_run_v2_target_end": "2026-07-06T19:23:00+00:00",
+    "sol_start": "2026-07-05T22:02:30+00:00",
+    "note": "SOL démarré ~2h40 après BTC — comparer durées effectives demain"
+  },
+  "incident_corrected": {
+    "issue": "Premier lancement a démarré avec config BTC par défaut (bnb_fee_discount=true rejeté silencieusement)",
+    "actions": ["stop", "panic BTC résiduel", "reset état DB", "fix bugs bot", "relance SOLUSDT cycle 5"]
+  },
+  "checks": {
+    "instance": {
+      "instance_id": "sol",
+      "instance_label": "UltiumGrid — Instance SOL",
+      "accent_color": "#a855f7"
+    },
+    "post_start": {
+      "running": true,
+      "cycle_id": 5,
+      "symbol": "SOLUSDT",
+      "mark_price": 81.91,
+      "step_pct": 0.4,
+      "grid_active": true,
+      "center_price": 81.82,
+      "range_low": 78.71,
+      "range_high": 84.6,
+      "levels_open": 19
+    },
+    "btc_isolation": {
+      "btc_running": true,
+      "btc_cycle_id": 9,
+      "btc_symbol": "BTCUSDT"
+    }
+  }
+}

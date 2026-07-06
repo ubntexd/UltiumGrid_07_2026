@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UltiumGrid — Bot Égaliseur</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="egaliseur-page">
+  <header class="top">
+    <div class="brand-wrap">
+      <div class="brand"><a href="/">← Bot Grille</a> · <span id="instance-brand">Égaliseur</span></div>
+      <div class="instance-symbol-badge" id="instance-symbol-badge" hidden></div>
+    </div>
+    <div id="mode-banner" class="mode-banner mode-test">Chargement…</div>
+  </header>
+
+  <main>
+    <div class="card">
+      <h1>Bot Égaliseur (Bot 2)</h1>
+      <p class="hint">
+        Service indépendant du Bot Grille — gestion automatique des sacs.
+        <strong>Mode test</strong> : tests ponctuels réels sur sacs armés.
+        <strong>Mode continu</strong> : veille autonome (bloqué pendant run v2).
+      </p>
+      <div id="egaliseur-meta"></div>
+      <div class="row controls-row">
+        <button id="btn-egaliseur-pause" class="danger">Pause</button>
+        <button id="btn-egaliseur-resume" class="ok">Reprendre</button>
+        <button id="btn-mode-test">Mode test uniquement</button>
+        <button id="btn-mode-continuous" class="danger">Mode continu</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Tests ponctuels (mode test_only)</h2>
+      <p class="hint">Armer un sac pour autoriser un ordre réel isolé (T1–T4) sans passer en mode continu.</p>
+      <div class="row controls-row">
+        <label>ID sac <input id="test-bag-id" type="number" min="1" step="1" /></label>
+        <button id="btn-test-arm" class="ok">Armer pour test</button>
+        <button id="btn-test-disarm">Désarmer</button>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h2>Sacs gérés</h2>
+        <table id="egaliseur-active-table">
+          <thead>
+            <tr>
+              <th>ID</th><th>Statut</th><th>Qty</th><th>Entry</th><th>Mark</th>
+              <th>Flottant</th><th>Mécanisme</th><th>Temps restant</th><th>Test</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h2>Historique vendus</h2>
+        <table id="egaliseur-sold-table">
+          <thead>
+            <tr><th>ID</th><th>Motif</th><th>Entry</th><th>Vente</th><th>PnL</th><th>Date</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Configuration</h2>
+      <form id="egaliseur-config-form"></form>
+      <button id="btn-egaliseur-save-config" class="ok">Enregistrer</button>
+      <pre id="egaliseur-config-msg"></pre>
+    </div>
+
+    <div class="card">
+      <h2>Journal actions</h2>
+      <table id="egaliseur-actions-table">
+        <thead>
+          <tr><th>ID</th><th>Action</th><th>Sac</th><th>Message</th><th>Date</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="/egaliseur.js"></script>
+</body>
+</html>

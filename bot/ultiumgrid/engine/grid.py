@@ -30,6 +30,7 @@ from ultiumgrid.connector.binance_spot import (
     SymbolFilters,
 )
 from ultiumgrid.engine.config import StrategyConfig
+from ultiumgrid.engine.fees import commission_to_usdt
 from ultiumgrid.engine.grid_profit import MatchedGridLedger, compute_grid_profit_from_trades
 
 logger = logging.getLogger(__name__)
@@ -118,7 +119,11 @@ class GridEngine:
         self.state = GridState(symbol=cfg.symbol, center_price=Decimal("0"))
         self.on_level_incomplete = on_level_incomplete
 
-    def open_grid(self, center_price: Decimal | None = None) -> GridState:
+    def open_grid(
+        self,
+        center_price: Decimal | None = None,
+        prior_entry_avg: float = 0.0,
+    ) -> GridState:
         """Séquence unique d'ouverture :
         1) niveaux 2) BUY marché inventaire SELL 3) limites BUY+SELL 4) état.
         """
@@ -145,8 +150,10 @@ class GridEngine:
         # Étape 2 — inventaire pour les SELL (achat marché si besoin)
         free_base = Decimal(str(self.client.balance_free(filters.base_asset, force=True)))
         need = sell_qty_total - free_base
+        from ultiumgrid.engine.orphan_position import resolve_entry_avg_existing
+
         initial_buy: dict | None = None
-        entry_avg = float(center_price)
+        entry_avg = 0.0
         position_qty = float(free_base)
 
         if need >= filters.min_qty:
@@ -196,23 +203,33 @@ class GridEngine:
                 else 0.0
             )
             fees_usdt = 0.0
+            bnb_px = None
             for t in trades:
                 comm = float(t.get("commission") or 0)
                 asset = str(t.get("commissionAsset") or "")
                 px = float(t.get("price") or entry_avg)
-                if asset in ("USDT", "USDC", "BUSD"):
-                    fees_usdt += comm
-                else:
-                    fees_usdt += comm * px
-            # Base nette après frais éventuels en BTC
+                if asset.upper() == "BNB" and bnb_px is None:
+                    try:
+                        bnb_px = float(self.client.ticker_price("BNBUSDT", force=True)["price"])
+                    except Exception:
+                        bnb_px = None
+                fees_usdt += commission_to_usdt(
+                    comm, asset, trade_price=px, bnb_usdt_price=bnb_px
+                )
+            # Base nette après frais éventuels en base asset
             free_after = Decimal(
                 str(self.client.balance_free(filters.base_asset, force=True))
             )
-            if free_after + filters.step_size * 2 < sell_qty_total:
-                raise RuntimeError(
-                    f"inventaire insuffisant après buy: free={free_after} need={sell_qty_total}"
-                )
             if free_after < sell_qty_total:
+                shortfall = sell_qty_total - free_after
+                max_shortfall = max(
+                    filters.step_size * 10,
+                    sell_qty_total * Decimal("0.02"),
+                )
+                if shortfall > max_shortfall:
+                    raise RuntimeError(
+                        f"inventaire insuffisant après buy: free={free_after} need={sell_qty_total}"
+                    )
                 sell_qty_total = filters.round_qty(free_after)
             initial_buy = {
                 "orderId": order.get("orderId"),
@@ -237,10 +254,27 @@ class GridEngine:
                 confirm_source,
             )
         else:
+            if free_base >= filters.min_qty:
+                entry_avg, src = resolve_entry_avg_existing(
+                    self.client,
+                    symbol,
+                    float(free_base),
+                    theoretical_center,
+                    prior_entry_avg if prior_entry_avg > 0 else None,
+                )
+                initial_buy = {
+                    "skipped": True,
+                    "reason": "free_base_sufficient",
+                    "entry_avg_source": src,
+                    "free_base": float(free_base),
+                    "avg_price": entry_avg,
+                }
             logger.info(
-                "initial_inventory_buy skipped — free_base=%s >= sell_qty=%s",
+                "initial_inventory_buy skipped — free_base=%s >= sell_qty=%s entry_avg=%s src=%s",
                 free_base,
                 sell_qty_total,
+                entry_avg,
+                (initial_buy or {}).get("entry_avg_source"),
             )
 
         self.state = GridState(

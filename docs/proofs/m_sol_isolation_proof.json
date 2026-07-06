@@ -1,0 +1,43 @@
+{
+  "ts_utc": "2026-07-05T21:55:57.600816+00:00",
+  "checks": {
+    "container_ids_disjoint": {
+      "btc_count": 5,
+      "sol_count": 6,
+      "intersection": [],
+      "ok": true
+    },
+    "db_names": {
+      "btc_db": "ultiumgrid",
+      "sol_db": "ultiumgrid_sol",
+      "ok": true
+    },
+    "cycle_counts_independent": {
+      "btc_cycles": "8",
+      "sol_cycles": "0",
+      "ok": true
+    },
+    "instance_btc": {
+      "detail": "Not Found"
+    },
+    "instance_sol": {
+      "instance_id": "sol",
+      "instance_label": "UltiumGrid \u2014 Instance SOL",
+      "accent_color": "#a855f7"
+    },
+    "btc_ui": {
+      "status": 200,
+      "has_instance_brand": false
+    },
+    "sol_ui": {
+      "status": 200,
+      "has_instance_brand": true
+    },
+    "btc_unaffected_when_sol_bot_stopped": {
+      "btc_running_before": true,
+      "btc_running_after": true,
+      "ok": true
+    }
+  },
+  "ok": true
+}

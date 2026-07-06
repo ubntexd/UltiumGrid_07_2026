@@ -26,7 +26,10 @@ from ultiumgrid.db.models import (  # noqa: E402
     BotState,
     Configuration,
     Cycle,
+    EgaliseurAction,
+    EgaliseurState,
     FeePaid,
+    OrderAttempt,
     PnlSnapshot,
     PriceTick,
     Trade,
@@ -34,7 +37,17 @@ from ultiumgrid.db.models import (  # noqa: E402
 )
 from ultiumgrid.engine.config import StrategyConfig  # noqa: E402
 from ultiumgrid.engine.grid_profit import total_matched_trades_from_trades  # noqa: E402
+from ultiumgrid.engine.orphan_position import residual_position_warning  # noqa: E402
+from ultiumgrid.engine.trade_journal import (  # noqa: E402
+    JOURNAL_CATEGORIES,
+    build_trade_journal_entries,
+    sort_journal_entries,
+)
 from ultiumgrid.engine.viability import compute_viability  # noqa: E402
+from ultiumgrid.bags.manager import ACTIVE_BAG_STATUSES, bag_to_dict  # noqa: E402
+
+sys.path.insert(0, str(ROOT / "egaliseur"))
+from ultium_egaliseur.config import EgaliseurConfig  # noqa: E402
 
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{ROOT / 'data' / 'ultiumgrid.db'}")
 Path(ROOT / "data").mkdir(exist_ok=True)
@@ -54,6 +67,22 @@ def _client():
     if client is None:
         client = build_client_from_env()
     return client
+
+
+def _residual_warning_from_status() -> dict[str, Any] | None:
+    """Estimation synchrone position résiduelle (même logique que le bot au Stop)."""
+    try:
+        status = build_status()
+        bags_qty = sum(float(b.get("quantity") or 0) for b in (status.get("bags") or []))
+        entry = float((status.get("grid") or {}).get("entry_avg") or 0)
+        return residual_position_warning(
+            _client(),
+            status["symbol"],
+            bags_qty,
+            entry_avg=entry,
+        )
+    except Exception:
+        return None
 
 
 def get_session():
@@ -200,7 +229,7 @@ def build_status() -> dict[str, Any]:
         account = c.capital_snapshot(cfg.symbol)
         bags = (
             session.query(Bag)
-            .filter(Bag.symbol == cfg.symbol, Bag.status == "open")
+            .filter(Bag.symbol == cfg.symbol, Bag.status.in_(ACTIVE_BAG_STATUSES))
             .all()
         )
         guards = state.get("guards") or {}
@@ -281,17 +310,7 @@ def build_status() -> dict[str, Any]:
                 "incomplete_levels": incomplete,
                 "incomplete_count": len(incomplete),
             },
-            "bags": [
-                {
-                    "id": b.id,
-                    "quantity": b.quantity,
-                    "entry_price": b.entry_price,
-                    "status": b.status,
-                    "cut_level": b.cut_level,
-                    "realized_pnl": b.realized_pnl,
-                }
-                for b in bags
-            ],
+            "bags": [bag_to_dict(b) for b in bags],
             "capital": account,
             "margin": account,
             "exchange_orders": {
@@ -375,6 +394,27 @@ class SimulateRequest(BaseModel):
     params: dict[str, Any]
 
 
+@app.get("/api/instance")
+def instance_meta():
+    """Identité d'instance (BTC vs SOL vs XRP) pour distinction UI."""
+    meta = {
+        "instance_id": os.getenv("ULTIUM_INSTANCE_ID", "default"),
+        "instance_label": os.getenv("ULTIUM_INSTANCE_LABEL", "UltiumGrid"),
+        "accent_color": os.getenv("ULTIUM_ACCENT", "#3b82f6"),
+    }
+    sym = (os.getenv("ULTIUM_TRADING_SYMBOL") or "").strip()
+    if sym:
+        meta["trading_symbol"] = sym.upper()
+        meta["symbol_disclaimer"] = (
+            "HYPERUSDT est l'actif HYPER sur Binance Demo — pas HYPE/Hyperliquid."
+            if sym.upper() == "HYPERUSDT"
+            else "XRPUSDT — Ripple sur Binance Demo Spot."
+            if sym.upper() == "XRPUSDT"
+            else None
+        )
+    return meta
+
+
 @app.get("/health")
 def health():
     """Heartbeat agrégé backend + dernier signal bot (bot_state.heartbeat)."""
@@ -451,11 +491,15 @@ def stop():
     session = get_session()
     try:
         push_command(session, "stop")
-        return {
+        warning = _residual_warning_from_status()
+        out: dict[str, Any] = {
             "ok": True,
             "queued": "stop",
             "message": "Arrêt demandé — annulation des ordres, position conservée",
         }
+        if warning:
+            out["residual_position_warning"] = warning
+        return out
     finally:
         session.close()
 
@@ -581,8 +625,186 @@ def pnl_analysis(symbol: str | None = None):
 
 
 @app.get("/api/bags")
-def bags():
-    return build_status()["bags"]
+def bags(
+    status: str = "open",
+    symbol: str | None = None,
+    include_snapshots: bool = False,
+):
+    """Sacs — lecture seule, tous champs de traçabilité (futur module vente indépendant)."""
+    session = get_session()
+    try:
+        sym = symbol or build_status()["symbol"]
+        q = session.query(Bag).filter(Bag.symbol == sym)
+        if status != "all":
+            q = q.filter(Bag.status == status)
+        rows = q.order_by(Bag.id.desc()).limit(500).all()
+        if include_snapshots:
+            for b in rows:
+                session.refresh(b)
+        return [bag_to_dict(b, include_snapshots=include_snapshots) for b in rows]
+    finally:
+        session.close()
+
+
+def _forced_sell_order_ids(session) -> set[str]:
+    rows = (
+        session.query(OrderAttempt.order_id)
+        .filter(
+            OrderAttempt.outcome == "forced_sell_stuck_level",
+            OrderAttempt.order_id.isnot(None),
+        )
+        .all()
+    )
+    return {str(r[0]) for r in rows if r[0]}
+
+
+def _fees_grouped_by_order(session, order_ids: list[str]) -> dict[str, list[dict]]:
+    if not order_ids:
+        return {}
+    fees = session.query(FeePaid).filter(FeePaid.order_id.in_(order_ids)).all()
+    out: dict[str, list[dict]] = {}
+    for f in fees:
+        key = str(f.order_id or "")
+        out.setdefault(key, []).append(
+            {
+                "commission": f.commission,
+                "commission_asset": f.commission_asset,
+                "commission_usdt": f.commission_usdt,
+                "trade_id": f.trade_id,
+            }
+        )
+    return out
+
+
+def _query_journal_trades(
+    session,
+    *,
+    symbol: str | None,
+    cycle_id: int | None,
+    side: str | None,
+    category: str | None,
+    date_from,
+    date_to,
+):
+    q = session.query(Trade)
+    if symbol:
+        q = q.filter(Trade.symbol == symbol)
+    if cycle_id is not None:
+        q = q.filter(Trade.cycle_id == cycle_id)
+    if side:
+        q = q.filter(Trade.side == side.upper())
+    if date_from:
+        q = q.filter(Trade.created_at >= date_from)
+    if date_to:
+        q = q.filter(Trade.created_at <= date_to)
+    rows = q.order_by(Trade.created_at.asc(), Trade.id.asc()).all()
+    trade_dicts = [
+        {
+            "id": t.id,
+            "cycle_id": t.cycle_id,
+            "symbol": t.symbol,
+            "side": t.side,
+            "price": t.price,
+            "quantity": t.quantity,
+            "order_id": t.order_id,
+            "level_index": t.level_index,
+            "created_at": t.created_at,
+        }
+        for t in rows
+    ]
+    forced = _forced_sell_order_ids(session)
+    order_ids = [str(t.order_id) for t in rows if t.order_id]
+    fees_map = _fees_grouped_by_order(session, order_ids)
+    entries = build_trade_journal_entries(trade_dicts, fees_map, forced)
+    if category:
+        entries = [e for e in entries if e.get("category") == category]
+    return entries, len(trade_dicts)
+
+
+@app.get("/api/trades/journal")
+def trades_journal(
+    symbol: str | None = None,
+    cycle_id: int | None = None,
+    side: str | None = None,
+    category: str | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
+    sort_by: str = "created_at",
+    sort_dir: str = "desc",
+    page: int = 1,
+    page_size: int = 50,
+    format: str | None = None,
+):
+    """Journal de trades individuels — lecture seule, source table `trades`."""
+    from datetime import datetime, timezone
+
+    session = get_session()
+    try:
+        if not symbol:
+            symbol = build_status()["symbol"]
+        df = datetime.fromisoformat(date_from.replace("Z", "+00:00")) if date_from else None
+        dt = datetime.fromisoformat(date_to.replace("Z", "+00:00")) if date_to else None
+        entries, db_count = _query_journal_trades(
+            session,
+            symbol=symbol,
+            cycle_id=cycle_id,
+            side=side,
+            category=category,
+            date_from=df,
+            date_to=dt,
+        )
+        entries = sort_journal_entries(entries, sort_by, sort_dir)
+        total = len(entries)
+        page = max(1, page)
+        page_size = min(max(1, page_size), 500)
+        start = (page - 1) * page_size
+        page_rows = entries[start : start + page_size]
+
+        if format == "csv":
+            import csv
+            import io
+
+            buf = io.StringIO()
+            fields = [
+                "id",
+                "created_at",
+                "symbol",
+                "cycle_id",
+                "side",
+                "category",
+                "level_label",
+                "price",
+                "quantity",
+                "fees_usdt",
+                "roundtrip_ref",
+                "trade_pnl",
+                "order_id",
+            ]
+            w = csv.DictWriter(buf, fieldnames=fields, extrasaction="ignore")
+            w.writeheader()
+            for row in entries:
+                w.writerow(row)
+            from fastapi.responses import Response
+
+            return Response(
+                content=buf.getvalue(),
+                media_type="text/csv",
+                headers={"Content-Disposition": "attachment; filename=trade_journal.csv"},
+            )
+
+        return {
+            "ok": True,
+            "symbol": symbol,
+            "total": total,
+            "db_trade_count": db_count,
+            "page": page,
+            "page_size": page_size,
+            "pages": (total + page_size - 1) // page_size if page_size else 1,
+            "categories": list(JOURNAL_CATEGORIES),
+            "rows": page_rows,
+        }
+    finally:
+        session.close()
 
 
 @app.post("/api/bags/{bag_id}/sell")
@@ -598,7 +820,271 @@ def sell_bag(bag_id: int, body: SellBagRequest):
                 "limit_price": body.limit_price,
             },
         )
-        return {"ok": True, "queued": "sell_bag", "bag_id": bag_id}
+        return {"ok": True, "queued": "sell_bag", "bag_id": bag_id, "deprecated": True}
+    finally:
+        session.close()
+
+
+class EgaliseurConfigBody(BaseModel):
+    trailing_delta_pct: float | None = None
+    limit_margin_pct: float | None = None
+    activation_recovery_pct: float | None = None
+    hard_stop_pct: float | None = None
+    max_hold_days: float | None = None
+    daily_loss_cap_usd: float | None = None
+    operation_mode: str | None = None
+    cancel_orders_on_pause: bool | None = None
+
+
+class EgaliseurModeBody(BaseModel):
+    operation_mode: str = Field(..., pattern="^(test_only|continuous)$")
+
+
+class EgaliseurTestArmBody(BaseModel):
+    bag_id: int
+
+
+def _egaliseur_engine(session):
+    from ultium_egaliseur.engine import EgaliseurEngine
+
+    return EgaliseurEngine(_client(), session)
+
+
+def _load_egaliseur_config(session) -> EgaliseurConfig:
+    row = session.query(EgaliseurState).filter(EgaliseurState.key == "main").first()
+    return EgaliseurConfig.from_dict(row.value_json if row else None)
+
+
+def _save_egaliseur_config(session, cfg: EgaliseurConfig) -> None:
+    from ultiumgrid.db.models import utcnow
+
+    row = session.query(EgaliseurState).filter(EgaliseurState.key == "main").first()
+    if not row:
+        session.add(EgaliseurState(key="main", value_json=cfg.to_dict()))
+    else:
+        row.value_json = cfg.to_dict()
+        row.updated_at = utcnow()
+    session.commit()
+
+
+@app.get("/api/egaliseur/status")
+def egaliseur_status():
+    session = get_session()
+    try:
+        cfg = _load_egaliseur_config(session)
+        hb = session.query(EgaliseurState).filter(EgaliseurState.key == "heartbeat").first()
+        active_count = (
+            session.query(Bag)
+            .filter(Bag.status.in_(("open", "trailing_active", "journal_only")))
+            .count()
+        )
+        sold_count = (
+            session.query(Bag)
+            .filter(Bag.sold_by == "bot_egaliseur")
+            .count()
+        )
+        return {
+            "paused": cfg.paused,
+            "operation_mode": cfg.operation_mode,
+            "mode_label": cfg.mode_label(),
+            "test_armed_bag_ids": list(cfg.test_armed_bag_ids or []),
+            "active_bags": active_count,
+            "sold_by_egaliseur": sold_count,
+            "heartbeat": (hb.value_json if hb else None),
+            "config": cfg.to_dict(),
+        }
+    finally:
+        session.close()
+
+
+@app.get("/api/egaliseur/bags")
+def egaliseur_bags(scope: str = "active"):
+    session = get_session()
+    try:
+        if scope == "sold":
+            rows = (
+                session.query(Bag)
+                .filter(Bag.sold_by == "bot_egaliseur")
+                .order_by(Bag.closed_at.desc())
+                .limit(200)
+                .all()
+            )
+        elif scope == "all":
+            rows = session.query(Bag).order_by(Bag.id.desc()).limit(500).all()
+        else:
+            rows = (
+                session.query(Bag)
+                .filter(Bag.status.in_(("open", "trailing_active", "journal_only")))
+                .order_by(Bag.id.desc())
+                .all()
+            )
+        mark = None
+        try:
+            sym = rows[0].symbol if rows else "BTCUSDT"
+            mark = float(_client().ticker_price(sym)["price"])
+        except Exception:
+            pass
+        out = []
+        for b in rows:
+            d = bag_to_dict(b)
+            if mark and b.status in ("open", "trailing_active", "journal_only"):
+                d["mark_price"] = mark
+                d["floating_pnl"] = (mark - b.entry_price) * b.quantity
+                if b.max_exit_at:
+                    from datetime import datetime, timezone
+
+                    now = datetime.now(timezone.utc)
+                    mx = b.max_exit_at if b.max_exit_at.tzinfo else b.max_exit_at.replace(tzinfo=timezone.utc)
+                    d["time_remaining_s"] = max(0, (mx - now).total_seconds())
+                if b.status == "trailing_active":
+                    d["mechanism"] = "trailing"
+                elif b.status == "journal_only":
+                    d["mechanism"] = "test_only_attente"
+                else:
+                    d["mechanism"] = "pending_trailing"
+            elif b.sold_by == "bot_egaliseur":
+                d["exit_reason"] = b.status
+            out.append(d)
+        return out
+    finally:
+        session.close()
+
+
+@app.get("/api/egaliseur/actions")
+def egaliseur_actions(limit: int = 100):
+    session = get_session()
+    try:
+        rows = (
+            session.query(EgaliseurAction)
+            .order_by(EgaliseurAction.id.desc())
+            .limit(min(limit, 500))
+            .all()
+        )
+        return [
+            {
+                "id": r.id,
+                "bag_id": r.bag_id,
+                "action": r.action,
+                "message": r.message,
+                "payload": r.payload_json,
+                "created_at": r.created_at.isoformat() if r.created_at else None,
+            }
+            for r in rows
+        ]
+    finally:
+        session.close()
+
+
+@app.get("/api/egaliseur/config")
+def egaliseur_get_config():
+    session = get_session()
+    try:
+        cfg = _load_egaliseur_config(session)
+        c = _client()
+        filters = c.get_symbol_filters(cfg.symbol)
+        errors = cfg.validate(
+            trail_min_bips=filters.trailing_delta_min_bips,
+            trail_max_bips=filters.trailing_delta_max_bips,
+        )
+        return {
+            "config": cfg.to_dict(),
+            "trailing_delta_bounds_bips": {
+                "min": filters.trailing_delta_min_bips,
+                "max": filters.trailing_delta_max_bips,
+            },
+            "validation_errors": errors,
+        }
+    finally:
+        session.close()
+
+
+@app.post("/api/egaliseur/config")
+def egaliseur_set_config(body: EgaliseurConfigBody):
+    session = get_session()
+    try:
+        cfg = _load_egaliseur_config(session)
+        data = cfg.to_dict()
+        for k, v in body.model_dump(exclude_none=True).items():
+            data[k] = v
+        new_cfg = EgaliseurConfig.from_dict(data)
+        if new_cfg.operation_mode not in ("test_only", "continuous"):
+            raise HTTPException(400, detail="operation_mode invalide")
+        c = _client()
+        filters = c.get_symbol_filters(new_cfg.symbol)
+        errors = new_cfg.validate(
+            trail_min_bips=filters.trailing_delta_min_bips,
+            trail_max_bips=filters.trailing_delta_max_bips,
+        )
+        if errors:
+            raise HTTPException(400, detail={"validation_errors": errors})
+        _save_egaliseur_config(session, new_cfg)
+        return {"ok": True, "config": new_cfg.to_dict()}
+    finally:
+        session.close()
+
+
+@app.post("/api/egaliseur/pause")
+def egaliseur_pause():
+    session = get_session()
+    try:
+        cfg = _load_egaliseur_config(session)
+        cfg.paused = True
+        _save_egaliseur_config(session, cfg)
+        return {"ok": True, "paused": True}
+    finally:
+        session.close()
+
+
+@app.post("/api/egaliseur/resume")
+def egaliseur_resume():
+    session = get_session()
+    try:
+        cfg = _load_egaliseur_config(session)
+        cfg.paused = False
+        _save_egaliseur_config(session, cfg)
+        return {"ok": True, "paused": False}
+    finally:
+        session.close()
+
+
+@app.post("/api/egaliseur/mode")
+def egaliseur_set_mode(body: EgaliseurModeBody):
+    session = get_session()
+    try:
+        eng = _egaliseur_engine(session)
+        cfg = eng.set_operation_mode(body.operation_mode)
+        return {"ok": True, "operation_mode": cfg.operation_mode, "mode_label": cfg.mode_label()}
+    finally:
+        session.close()
+
+
+@app.post("/api/egaliseur/test/arm")
+def egaliseur_test_arm(body: EgaliseurTestArmBody):
+    """Arme un sac pour test ponctuel réel (mode test_only uniquement)."""
+    session = get_session()
+    try:
+        bag = session.get(Bag, body.bag_id)
+        if not bag:
+            raise HTTPException(404, detail=f"Bag {body.bag_id} introuvable")
+        eng = _egaliseur_engine(session)
+        cfg = eng.arm_test_bag(body.bag_id)
+        return {
+            "ok": True,
+            "bag_id": body.bag_id,
+            "test_armed_bag_ids": cfg.test_armed_bag_ids,
+            "mode_label": cfg.mode_label(),
+        }
+    finally:
+        session.close()
+
+
+@app.post("/api/egaliseur/test/disarm")
+def egaliseur_test_disarm(bag_id: int | None = None):
+    session = get_session()
+    try:
+        eng = _egaliseur_engine(session)
+        cfg = eng.disarm_test_bag(bag_id)
+        return {"ok": True, "test_armed_bag_ids": cfg.test_armed_bag_ids}
     finally:
         session.close()
 

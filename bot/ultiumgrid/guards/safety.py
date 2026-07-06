@@ -124,12 +124,13 @@ class SafetyGuards:
                 )
             except Exception as exc:
                 logger.error("panic sell failed: %s", exc)
-        bags_closed = []
-        for bag in list(bag_manager.open_bags()):
-            bag.status = "closed"
-            bag.closed_at = utcnow()
-            bags_closed.append({"bag_id": bag.id, "note": "closed_via_panic_full_sell"})
-        bag_manager.session.commit()
+        mark_px = None
+        if sold:
+            try:
+                mark_px = float(self.client.ticker_price(symbol)["price"])
+            except Exception:
+                mark_px = None
+        bags_closed = bag_manager.close_bags_via_panic(mark_price=mark_px)
         grid_engine.state.active = False
         grid_engine.state.position_qty = 0.0
         try:

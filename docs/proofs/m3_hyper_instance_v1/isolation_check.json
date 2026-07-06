@@ -1,0 +1,80 @@
+{
+  "ts_utc": "2026-07-05T23:30:50.987664+00:00",
+  "checks": {
+    "container_ids_disjoint": {
+      "instances": {
+        "btc": 5,
+        "sol": 6,
+        "hyper": 6
+      },
+      "pairs": [
+        {
+          "btc": "sol",
+          "intersection": [],
+          "ok": true
+        },
+        {
+          "btc": "hyper",
+          "intersection": [],
+          "ok": true
+        },
+        {
+          "sol": "hyper",
+          "intersection": [],
+          "ok": true
+        }
+      ]
+    },
+    "db_names": {
+      "btc": "ultiumgrid",
+      "sol": "ultiumgrid_sol",
+      "hyper": "ultiumgrid_hyper"
+    },
+    "cycle_counts": {
+      "btc": "10",
+      "sol": "7",
+      "hyper": "0"
+    },
+    "instance_btc": {
+      "instance_id": "btc",
+      "instance_label": "UltiumGrid \u2014 Instance BTC",
+      "accent_color": "#3b82f6"
+    },
+    "ui_btc": {
+      "status": 200,
+      "has_instance_brand": false
+    },
+    "instance_sol": {
+      "instance_id": "sol",
+      "instance_label": "UltiumGrid \u2014 Instance SOL",
+      "accent_color": "#a855f7"
+    },
+    "ui_sol": {
+      "status": 200,
+      "has_instance_brand": true
+    },
+    "instance_hyper": {
+      "instance_id": "hyper",
+      "instance_label": "UltiumGrid \u2014 Instance HYPER",
+      "accent_color": "#f97316",
+      "trading_symbol": "HYPERUSDT",
+      "symbol_disclaimer": "HYPERUSDT est l'actif HYPER sur Binance Demo \u2014 pas HYPE/Hyperliquid."
+    },
+    "ui_hyper": {
+      "status": 200,
+      "has_instance_brand": true
+    },
+    "btc_sol_unaffected_when_hyper_bot_stopped": {
+      "before": {
+        "btc": true,
+        "sol": true
+      },
+      "after": {
+        "btc": true,
+        "sol": true
+      },
+      "ok": true
+    }
+  },
+  "ok": true
+}

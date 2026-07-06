@@ -403,3 +403,323 @@ Simulation Module 7bis : `docs/proofs/m7bis_target_config_simulation.json`
 
 - `backend/app/main.py` : `/api/start` refuse si `bnb_fee_discount` et `BNB≤0`
 - `bot/ultiumgrid/bot_runner.py` : `start()` même garde côté moteur
+
+## Surveillance position résiduelle après Stop + sécurisation Start (2026-07-05)
+
+**Bloquant feu vert run longue durée** — corrigé et prouvé.
+
+### Contexte
+
+| Ancien comportement | Nouveau |
+|---|---|
+| `tick()` sort si `running=false` → garde-fous inactifs | Superviseur `check_orphan_position` tourne en continu |
+| Stop silencieux avec BTC résiduel | `residual_position_warning` dans `/api/stop` + UI |
+| Start skip buy → `entry_avg = center_price` | `prior_bot_state_entry_avg` ou `myTrades_fifo` ; sinon blocage |
+
+### Fichiers
+
+| Fichier | Rôle |
+|---|---|
+| `bot/ultiumgrid/engine/orphan_position.py` | Seuils, détection résiduel, `resolve_entry_avg_existing` |
+| `supervisor/ultium_supervisor/watchdog.py` | `check_orphan_position` → alerte `orphan_position_unwatched` |
+| `bot/ultiumgrid/bot_runner.py` | `stopped_at`, warning au `stop()`, blocage `untracked_inventory` au `start()` |
+| `bot/ultiumgrid/engine/grid.py` | `open_grid(prior_entry_avg=…)` |
+| `backend/app/main.py` | `residual_position_warning` synchrone dans `/api/stop` |
+| `frontend/app.js` | Bandeau ⚠ après Stop |
+| `scripts/m3_orphan_position_proof.py` | Script de preuve bout-en-bout |
+
+### Tests obligatoires — résultats
+
+| Test | Description | Statut | Preuve |
+|---|---|---|---|
+| **A1** | Alerte `orphan_position_unwatched` après Stop + délai | **conforme** | `m3_orphan_position_proof.json` → `tests.A1` + compte `base_total=0.00401` |
+| **A2** | Pas d'alerte si position nulle / sous seuil | **conforme** | `tests.A2.active_orphan_alerts=0`, `notional_usdt=0` après Panic |
+| **B1** | `residual_position_warning` dans réponse Stop | **conforme** | `tests.B1.api_stop_response` + `last_command.result` |
+| **C1** | Start stock existant → `prior_bot_state_entry_avg` | **conforme** | `tests.C1.initial_buy_skipped=true`, `entry_avg=62776` ≠ `center_price` |
+| **C2** | Start sans historique → blocage | **conforme** | `m3_orphan_C2_blocked.json` + `test_start_blocked_untracked_C2` |
+
+Reproductible : `ORPHAN_STOPPED_MIN_S=0 PYTHONPATH=bot python3 scripts/m3_orphan_position_proof.py` (stack Docker requise).
+
+Tests unitaires : `bot/tests/test_m3_orphan_position.py` (5 passed, 3 skipped si solde insuffisant hors Docker).
+
+## Journal de trades filtrable (2026-07-05)
+
+| Exigence | Statut | Preuve |
+|---|---|---|
+| Une ligne par trade DB | **conforme** | `GET /api/trades/journal` — `total` = `COUNT(trades)` |
+| Catégories = matched_ledger | **conforme** | `trade_journal.py` + tests unitaires |
+| Tri / filtres / pagination | **conforme** | UI onglet Journal + params API |
+| Export CSV | **conforme** | `format=csv` |
+| Lecture seule (aucun effet bot) | **conforme** | GET uniquement |
+
+Preuves : `docs/proofs/m_journal_trades_filter.json`, `docs/proofs/m_journal_bags_live_proof.json`  
+Tests : `bot/tests/test_m_journal_bags.py`  
+Script : `scripts/m_journal_bags_proof.py`
+
+## Traçabilité renforcée des sacs (2026-07-05)
+
+| Champ | Statut | Preuve |
+|---|---|---|
+| `creation_reason` | **conforme** | `bags/manager.py` `create_bag()` |
+| `cycle_id_origin` | **conforme** | passé depuis `bot_runner.tick()` |
+| `incomplete_levels_at_creation` | **conforme** | JSON en DB |
+| `market_price_at_creation` | **conforme** | mark au moment coupe |
+| `bag_floating_snapshots` | **conforme** | snapshot création + horaire en tick |
+| `sold_*` / status extensible | **conforme** | `sell_bag`, `close_bags_via_panic` |
+| `GET /api/bags` champs complets | **conforme** | `bag_to_dict()` + `status=all` |
+
+Preuve : `docs/proofs/m_bags_traceability.json`  
+**Découplage** : Bot Égaliseur implémenté — voir § Bot Égaliseur ci-dessous.
+
+## Bot Égaliseur (Bot 2) — 2026-07-05
+
+| Test | Statut | Preuve |
+|---|---|---|
+| T1 — Pose trailing stop testnet | **non validé** | `docs/proofs/m_egaliseur/` (à produire) |
+| T2 — Déclenchement trailing | **non validé** | — |
+| T3 — Stop dur | **non validé** | — |
+| T4 — Sortie temporelle | **non validé** | test unitaire `test_time_exit_forces_market_sell` |
+| T5 — Interdiction BUY | **conforme (code)** | `test_no_buy_in_engine_source`, `scripts/m_egaliseur_proof.py --test 5` |
+| T6 — Pause + plafond perte | **non validé** | — |
+| T7 — Réconciliation superviseur étendue | **conforme (code)** | `watchdog.py` + `m_egaliseur_proof.py --test 7` |
+| T8 — Indépendance architecturale | **non validé (live)** | service Docker séparé ; preuve live après run v2 |
+
+Code : `egaliseur/ultium_egaliseur/`, API `/api/egaliseur/*`, page UI `/egaliseur.html`.  
+**Mode par défaut** : `operation_mode=test_only` (Q7) — tests ponctuels via `/api/egaliseur/test/arm`.  
+**Ne pas marquer conforme** tant que T1–T4, T6, T8 live ne sont pas prouvés.
+
+## Suivi run comparatif BTC/SOL — 2026-07-05 soir
+
+Preuve consolidée : `docs/proofs/m_sol_cycle5_closure_audit.json`, `docs/proofs/m_sol_cycle5_trigger_investigation.json`, `docs/proofs/m_sol_cycle_trigger_5usd_applied.json`.
+
+### Point 1 — Clôture cycle 5 SOL : trigger +5 ou rebuild ?
+
+| Question | Réponse (preuve SQL / logs) |
+|---|---|
+| `close_reason` cycle 5 | **`config_change`** — pas `trigger_5`, pas `trigger_15`, pas `orphan_on_restart` |
+| `closed_at` | **2026-07-05 22:40:35.361386 UTC** |
+| Rebuild bot SOL | **2026-07-05 22:35:51 UTC** — log : `State restored cycle_id=5 running=True` → **cycle 5 conservé**, pas de cycle 6 |
+| Création cycle 6 | **22:40:35.373662 UTC** — **12 ms** après `closed_at` cycle 5 ; log `Command received: config` à 22:40:35.312 → **`close_now` Module 7bis** (demande utilisateur) |
+| `gross_pnl` à la clôture | **-0,72 USD** (pas 9,86 USD — pic flottant antérieur, non capturé à la clôture) |
+| Séquence cycle 6 | Achat initial `#2409892928` à 22:40:35.645 ✅ |
+
+**Trigger +5 USD organique : NON PROUVÉ.**
+
+- Seuil **actif runtime = 15** jusqu'à 22:40 (`configurations` id=5 `is_active=true`).
+- **195** snapshots `pnl_snapshots.grid_pnl ≥ 5` entre 22:02 et 22:40 ; **0** ≥ 15 ; max **12,01 USD** < 15 → pas de close attendue avec seuil 15.
+- Si seuil 5 avait été actif dès 22:03, le trigger aurait dû fermer — **non testé** (wait_cycle puis rebuild sans appliquer le 5).
+- **Cycle 6 ≠ preuve du mécanisme trigger** — effet de `close_now`, pas d'un `should_close_cycle()` organique.
+
+**Statut trigger SOL seuil 5 :** en surveillance sur cycle 6+ (seuil 5 actif depuis 22:40).
+
+### Point 2 — Bug d'affichage « Instance SOL » / données BTC
+
+| Vérification | Résultat |
+|---|---|
+| `/api/instance` SOL | ✅ 200 — `{instance_id: sol, instance_label: …}` |
+| `/api/instance` BTC (avant rebuild backend) | ❌ **404** — image backend **antérieure** au route handler (absent de `openapi.json`) |
+| `/api/instance` BTC (après rebuild 22:46 UTC) | ✅ 200 — `{instance_id: btc, …}` |
+| Usage frontend (`app.js` `loadInstanceBranding`) | **Label, couleur, title uniquement** — catch silencieux si 404 → reste « UltiumGrid » par défaut |
+| Données symbole / capital / tableau | **`GET /api/running`** uniquement |
+
+**Cause racine incident SOL/BTC confirmée (autre piste) :** premier lancement SOL — `POST /api/config` rejeté (BNB=0) → bot démarré en **BTCUSDT par défaut** → `/api/running` servait BTC. Preuve : `pre_launch_proof.json` `post_start.symbol=BTCUSDT`.
+
+**`/api/instance` 404 sur BTC n'explique PAS** l'affichage de données BTC sur la page SOL (branding seulement). Piste **non confirmée** pour l'incident données ; **corrigée** pour cohérence multi-instance (backend BTC rebuildé).
+
+### Point 3 — Réconciliation BTC (écart 0,0039 BTC @ 22:35)
+
+| Instant | Binance BTC | `grid.position_qty` | Delta | Statut |
+|---|---|---|---|---|
+| ~22:35 UTC | — | — | ~0,0039 | fill récent, resync annoncé |
+| **22:46 UTC** | **0,039330000000000004** | **0,039330000000000004** | **0** | ✅ `mismatches: 0` sur `GET /api/running` |
+
+Écart **résorbé** — pas d'écart persistant.
+
+### Point 4 — Égaliseur BTC absent
+
+| Élément | État |
+|---|---|
+| Service dans `docker-compose.yml` | ✅ défini (`test_only`, `EGALISEUR_RESTRICTED_MODE=true`) |
+| Container running | ❌ **non démarré** |
+| Cohérence contrainte run v2 | ✅ **volontaire** — pas d'activation continue avant fin run v2 BTC (2026-07-06 19:23 UTC) ; pas un oubli bloquant |
+| Action | **Aucune** sauf demande explicite démarrage test |
+
+## Suivi run comparatif BTC / SOL / XRP — 2026-07-05/06
+
+> **HYPER retiré de la comparaison en cours** (expérience terminée 2026-07-06). Archive : `docs/m3_hyper_instance_protocol.md`, preuves `docs/proofs/m3_hyper_instance_v1/`.  
+> Instance 3 actuelle : **XRP** — protocole `docs/m3_xrp_instance_protocol.md`, preuves `docs/proofs/m3_xrp_instance_v1/`.
+
+### Fenêtres temporelles (obligatoire pour comparaison)
+
+| Instance | Symbole réel | Seuil cycle | Capital | Début run | Fin cible | Statut |
+|---|---|---|---|---|---|---|
+| BTC v2 | BTCUSDT | +15 USD | 5000 | 2026-07-05 19:23 UTC | 2026-07-06 19:23 UTC | En cours (cycle 10+) |
+| SOL v1 | SOLUSDT | +5 USD | 4000 | 2026-07-05 ~22:02 UTC | alignée | En cours (cycle 10+) |
+| **XRP v1** | **XRPUSDT** | **+15 USD** | **5000** | **2026-07-06 ~01:19 UTC** | alignée | **En cours (cycle 60+)** |
+| ~~HYPER v1~~ | ~~HYPERUSDT~~ | ~~+15~~ | ~~5000~~ | ~~2026-07-05 23:47 UTC~~ | — | **Terminé** (−478 USDT compte) |
+
+### Viabilité seuil +15 (BTC vs XRP, config alignée)
+
+| | BTC v2 | XRP v1 (pré-lancement) |
+|---|---|---|
+| `net_at_gross_threshold` | 13,125 USD | **13,125 USD** (identique : 5000 / 20 / 0,40 % / BNB) |
+| Preuve | `m3_organic_long_run_v2/pre_launch_proof.json` | `m_xrp_candidate_check.json` |
+
+### Métriques comparatives (template — remplir après runs)
+
+| Métrique | BTC v2 | SOL v1 | XRP v1 | Notes |
+|---|---|---|---|---|
+| Durée effective (h) | — | — | — | Fenêtres inégales → normaliser ou signaler |
+| Fills (count) | — | — | — | |
+| Round-trips | — | — | — | |
+| Grid Profit réalisé (USD) | — | — | — | Cycles clos uniquement |
+| Floating gross (USD) | — | — | — | Snapshot courant |
+| Recentrages Cas A | — | — | — | |
+| Recentrages Cas B | — | — | — | |
+| Alertes garde-fou | — | — | — | |
+| Cycles clos `trigger_*` | 8–9 (BTC) | 7–9 (SOL) | — | |
+
+### Isolation 3 instances
+
+Script : `python3 scripts/m_hyper_isolation_proof.py` (labels compose inchangés)  
+Preuve attendue : `docs/proofs/m3_hyper_instance_v1/isolation_check.json`
+
+### UI — test symbole au premier chargement (XRP)
+
+Après `m3_xrp_instance_launch.py`, vérifier `launch_proof.json` → `post_start.symbol = XRPUSDT`, `mark_ok = true`, `ws_xrpusdt_in_logs = true`.
+
+### Transition HYPER → XRP — validation fix WS
+
+Preuve : `docs/proofs/m3_xrp_instance_v1/launch_proof.json` — mark **1,1593** = REST XRP ; WS **`xrpusdt@bookTicker`** ; pas de mark résiduel HYPER (~0,075).
+
+---
+
+## Archive — Suivi run comparatif BTC / SOL / HYPER — 2026-07-05/06
+
+Preuves instance HYPER : `docs/proofs/m3_hyper_instance_v1/`, protocole `docs/m3_hyper_instance_protocol.md`.
+
+### Fenêtres temporelles (obligatoire pour comparaison)
+
+| Instance | Symbole réel | Seuil cycle | Capital | Début run | Fin cible | Statut |
+|---|---|---|---|---|---|---|
+| BTC v2 | BTCUSDT | +15 USD | 5000 | 2026-07-05 19:23 UTC | 2026-07-06 19:23 UTC | En cours (cycle 10+) |
+| SOL v1 | SOLUSDT | +5 USD | 4000 | 2026-07-05 ~22:02 UTC | alignée | En cours (cycle 6+) |
+| HYPER v1 | **HYPERUSDT** (pas HYPE) | +15 USD | 5000 | **2026-07-05 23:47 UTC** (relaunch post-fix WS) | alignée | **Terminé 2026-07-06** |
+
+> **HYPERUSDT** = actif HYPER sur Binance Demo. **HYPE** (Hyperliquid) absent de Demo — voir `m_hype_candidate_check.json`.
+
+### Viabilité seuil +15 (BTC vs HYPER, config alignée)
+
+| | BTC v2 | HYPER v1 (pré-lancement) |
+|---|---|---|
+| `net_at_gross_threshold` | 13,125 USD | **13,125 USD** (identique : 5000 / 20 / 0,40 % / BNB) |
+| Preuve | `m3_organic_long_run_v2/pre_launch_proof.json` | `m3_hyper_instance_v1/precheck.json` |
+
+### Métriques comparatives (template — remplir après runs)
+
+| Métrique | BTC v2 | SOL v1 | HYPER v1 | Notes |
+|---|---|---|---|---|
+| Durée effective (h) | — | — | — | Fenêtres inégales → normaliser ou signaler |
+| Fills (count) | — | — | — | |
+| Round-trips | — | — | — | |
+| Grid Profit réalisé (USD) | — | — | — | Cycles clos uniquement |
+| Floating gross (USD) | — | — | — | Snapshot courant |
+| Recentrages Cas A | — | — | — | |
+| Recentrages Cas B | — | — | — | |
+| Alertes garde-fou | — | — | — | |
+| Cycles clos `trigger_*` | 8–9 (BTC) | 0 organique (SOL) | — | |
+
+### Isolation 3 instances
+
+Script : `python3 scripts/m_hyper_isolation_proof.py`  
+Preuve attendue : `docs/proofs/m3_hyper_instance_v1/isolation_check.json`
+
+### UI — test symbole au premier chargement (HYPER)
+
+Reproduire le test SOL : après `m3_hyper_instance_launch.py`, vérifier `pre_launch_proof.json` → `post_start.symbol = HYPERUSDT` et `ui_data_not_wrong_instance.ok = true`.
+
+## Bug critique — prix BTC utilisé sur instance HYPER (2026-07-05 ~23:30 UTC)
+
+Preuves : `docs/proofs/m3_hyper_instance_v1/ws_price_bug_investigation.json`, `ws_price_bug_fix.json`, `ws_price_regression.json`.
+
+### Symptômes
+
+| Observation | Valeur |
+|---|---|
+| Mark UI/API | ~63 690 (prix BTC) |
+| Mark réel HYPERUSDT (REST) | ~0,075 |
+| Total/Daily PnL affichés | milliards USD (impossible sur 5000 USDT) |
+| Cycles en ~4 min | **58** dont **57** `close_reason=trigger_15` |
+
+### Cause confirmée (distincte de l'incident SOL)
+
+| | Incident SOL | Bug HYPER |
+|---|---|---|
+| Nature | Config rejetée → **symbole tradé** resté BTCUSDT | Symbole tradé **HYPERUSDT correct** |
+| Mark erroné | Données BTC cohérentes avec symbole BTC | **WS bookTicker resté sur `btcusdt@bookTicker`** alors que `cfg.symbol=HYPERUSDT` |
+| Mécanisme | `/api/running` servait BTC | `on_ws_price` écrivait mid BTC dans `_live_mark` / `_last_ticker[HYPERUSDT]` ; `tick()` préfère `_live_mark` → floating × qty HYPER → trigger_15 en boucle |
+
+**Preuve log bot au boot :** `WS connecting wss://demo-stream.binance.com/ws/btcusdt@bookTicker` puis `WS price stream thread started for BTCUSDT` — **avant** fix, alors que cycles DB = HYPERUSDT.
+
+**Bug secondaire :** `request_config_change` (bot inactif) mettait à jour `cfg` sans relancer WS ni rebinder `BagManager` → réconciliation loggée avec `symbol=BTCUSDT`.
+
+### Ampleur réelle des dégâts (Demo)
+
+| Métrique | Valeur |
+|---|---|
+| USDT départ (compte) | ~8 266 |
+| USDT après stop | ~5 646 |
+| HYPER détenu | ~29 880 (~2 250 USDT @ 0,075) |
+| Trades réels Binance | **114** — prix d'exécution **~0,075** (correct) |
+| PnL DB corrigé (58 cycles) | gross/net remis à `grid_profit` (0) — anciennes valeurs journalisées dans `ws_price_bug_fix.json` |
+| Préjudice économique réel | ~**370–2 620 USDT** (frais + churn cycles), **pas** les milliards affichés |
+
+### Actions prises
+
+1. **Stop API** (pas Panic) — 2026-07-05 ~23:35 UTC
+2. **Fix code** `bot_runner.py` : `restart_price_stream()` au changement de symbole + validation `data['s']` dans `on_ws_price` + `_rebind_subsystems()`
+3. **Correction DB** : `scripts/m_fix_hyper_ws_price_damage.py`
+4. **Non-régression** : mark API **0,0755** vs REST **0,0756** ; WS log `hyperusdt@bookTicker`
+5. **Instance HYPER reste arrêtée** — ne pas relancer sans validation utilisateur
+
+### Non-régression multi-instance
+
+Après fix (bot HYPER rebuildé seulement) : BTC et SOL marks inchangés (containers non rebuildés). Rebuild BTC/SOL recommandé avant prochain restart pour bénéficier du fix WS sur changement de config.
+
+## Vérification croisée post-incident WS — BTC/SOL (2026-07-05 ~23:44 UTC)
+
+Preuve : `docs/proofs/m_ws_crosscheck_btc_sol.json`
+
+### Point 1 — Historique changement de symbole
+
+| Instance | Changement symbole ? | Exposition bug WS |
+|---|---|---|
+| **BTC** | **Non** — toutes configs = BTCUSDT ; run v2 démarré directement sur cible (config id=7 active depuis 19:23 UTC) | **Jamais** — WS `btcusdt@bookTicker` = symbole configuré dès le boot |
+| **SOL** | **Oui** — config id=1 **BTCUSDT** (21:55) puis bascule SOLUSDT ; premier lancement raté | **Historique limité** ~21:58–21:59 UTC : **17** `price_ticks` SOLUSDT à ~63 186 (prix BTC) — même mécanisme WS non relancé. Rebuild container **22:35 UTC** → WS `solusdt@bookTicker` |
+
+**Incident SOL affichage BTC (hier) — revue :**
+
+| Piste | Rôle |
+|---|---|
+| Config rejetée → bot **tradait BTCUSDT** | **Cause primaire** — `/api/running` servait symbole/capital BTC |
+| WS figé sur `btcusdt` après changement cfg | **Contribue partiellement** au premier lancement (~90 s de ticks mark BTC sous label SOLUSDT) ; **n'explique pas** l'affichage BTC persistant après relance propre 22:02 (mark SOL ~81,9 dans `pre_launch_proof`) |
+
+### Point 2 — Vérification directe (instant T)
+
+| | BTC | SOL |
+|---|---|---|
+| Mark API | **63 724,915** | **81,695** |
+| REST ticker | **63 727,39** | **81,70** |
+| Écart relatif | **0,004 %** | **0,006 %** |
+| `mark_source` | ws | ws |
+| `live_pnl` DB | 63 703,485 (ws) | 81,675 (ws) |
+| Log WS | `btcusdt@bookTicker` | `solusdt@bookTicker` |
+| Cycles `|gross_pnl| > 1000` | **0** (max **16,13**) | **0** (max **5,83**) |
+| Running | oui (cycle 10) | oui (cycle 7) |
+
+### Point 3 / 4 — Action et feu vert HYPER
+
+- **BTC** : saine — **aucun arrêt** requis.
+- **SOL** : saine **actuellement** — contamination ticks historique sans dégât cycle organique — **aucun arrêt** requis.
+- **HYPER** : **feu vert** pour relance avec code corrigé (`restart_price_stream`, validation `data['s']`, `_rebind_subsystems()`).
+- **Recommandation** : rebuild images bot BTC/SOL lors d'une fenêtre de maintenance (non bloquant — pas de changement symbole prévu).

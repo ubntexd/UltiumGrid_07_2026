@@ -1,0 +1,11 @@
+{
+  "ts_utc": "2026-07-05T23:40:20.022846+00:00",
+  "hyper_rest": 0.0755,
+  "api_mark": 0.0755,
+  "mark_source": "rest",
+  "ratio_error": 0.0,
+  "ws_hyperusdt_connected_in_logs": true,
+  "ok": true,
+  "running": false,
+  "symbol": "HYPERUSDT"
+}

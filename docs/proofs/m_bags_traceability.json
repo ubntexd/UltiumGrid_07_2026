@@ -1,0 +1,25 @@
+{
+  "test": "bag_traceability_fields",
+  "bag": {
+    "id": 1,
+    "symbol": "BTCUSDT",
+    "quantity": 0.05,
+    "entry_price": 61000.0,
+    "status": "open",
+    "source": "cut",
+    "cut_level": 10,
+    "realized_pnl": 0.0,
+    "creation_reason": "cut_level_10",
+    "cycle_id_origin": 7,
+    "incomplete_levels_at_creation": [
+      3,
+      4
+    ],
+    "market_price_at_creation": 60800.0,
+    "sold_price": null,
+    "sold_at": null,
+    "sold_by": null,
+    "created_at": "2026-07-05T19:05:43.083415"
+  },
+  "sql": "('cut_level_10', 7, 60800.0)"
+}

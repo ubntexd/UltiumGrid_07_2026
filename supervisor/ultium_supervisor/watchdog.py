@@ -52,6 +52,12 @@ sys.path.insert(0, str(ROOT / "bot"))
 
 from ultiumgrid.bot_runner import build_client_from_env  # noqa: E402
 from ultiumgrid.engine.config import StrategyConfig  # noqa: E402
+from ultiumgrid.engine.orphan_position import (  # noqa: E402
+    ORPHAN_MIN_NOTIONAL_USDT,
+    ORPHAN_STOPPED_MIN_S,
+    floating_pnl_vs_entry,
+    orphan_qty,
+)
 
 from ultium_supervisor.models import (  # noqa: E402
     SupervisorAlert,
@@ -247,7 +253,8 @@ class Watchdog:
                 ).first()
                 bags = conn.execute(
                     text(
-                        "SELECT COALESCE(SUM(quantity),0) FROM bags WHERE status='open'"
+                        "SELECT COALESCE(SUM(quantity),0) FROM bags "
+                        "WHERE status IN ('open','trailing_active','journal_only')"
                     )
                 ).scalar()
             state = _as_dict(state_row[0] if state_row else {})
@@ -419,12 +426,100 @@ class Watchdog:
         except Exception as exc:
             logger.warning("guardrail check failed: %s", exc)
 
+    def check_orphan_position(self) -> None:
+        """Position résiduelle non surveillée quand le bot est arrêté (running=false ou grille inactive)."""
+        try:
+            with self.bot_engine.connect() as conn:
+                state_row = conn.execute(
+                    text("SELECT value_json FROM bot_state WHERE key='main'")
+                ).first()
+                bags = conn.execute(
+                    text(
+                        "SELECT COALESCE(SUM(quantity),0) FROM bags "
+                        "WHERE status IN ('open','trailing_active','journal_only')"
+                    )
+                ).scalar()
+                lc_row = conn.execute(
+                    text("SELECT value_json FROM bot_state WHERE key='last_command'")
+                ).first()
+            state = _as_dict(state_row[0] if state_row else {})
+            running = bool(state.get("running"))
+            grid_active = bool((state.get("grid") or {}).get("active"))
+
+            if running and grid_active:
+                self.resolve("orphan_position_unwatched")
+                return
+
+            cfg = StrategyConfig.from_dict(state.get("config") or {})
+            bags_qty = float(bags or 0)
+            self.client.account(force=True)
+            binance_qty = self.client.base_asset_qty(cfg.symbol)
+            mark = float(self.client.ticker_price(cfg.symbol, force=True)["price"])
+            oq = orphan_qty(binance_qty, bags_qty)
+            notional = oq * mark
+            threshold = float(os.getenv("ORPHAN_MIN_NOTIONAL_USDT", str(ORPHAN_MIN_NOTIONAL_USDT)))
+            min_stopped_s = float(os.getenv("ORPHAN_STOPPED_MIN_S", str(ORPHAN_STOPPED_MIN_S)))
+            entry = float((state.get("grid") or {}).get("entry_avg") or 0)
+
+            stopped_at = state.get("stopped_at")
+            lc = _as_dict(lc_row[0] if lc_row else {})
+            if entry <= 0 and lc.get("name") == "stop":
+                rw = (lc.get("result") or {}).get("residual_position_warning") or {}
+                entry = float(rw.get("entry_avg") or 0)
+            if not stopped_at:
+                if lc.get("name") == "stop":
+                    stopped_at = (lc.get("result") or {}).get("stopped_at") or lc.get("ts")
+
+            stopped_duration_s = None
+            dt = _as_dt(stopped_at)
+            if dt:
+                stopped_duration_s = (datetime.now(timezone.utc) - dt).total_seconds()
+
+            payload = {
+                "orphan_qty": oq,
+                "notional_usdt": round(notional, 4),
+                "mark_price": mark,
+                "entry_avg": entry if entry > 0 else None,
+                "floating_pnl": (
+                    round(floating_pnl_vs_entry(oq, entry, mark), 6) if entry > 0 else None
+                ),
+                "stopped_at": stopped_at,
+                "stopped_duration_s": stopped_duration_s,
+                "running": running,
+                "grid_active": grid_active,
+                "threshold_usdt": threshold,
+                "min_stopped_s": min_stopped_s,
+                "bags_qty": bags_qty,
+                "binance_qty": binance_qty,
+            }
+            self.set_state("orphan_position", {**payload, "at": utcnow().isoformat()})
+
+            if notional < threshold:
+                self.resolve("orphan_position_unwatched")
+                return
+
+            if stopped_duration_s is not None and stopped_duration_s < min_stopped_s:
+                return
+
+            msg = (
+                f"Position orpheline non surveillée : {oq:.8f} (~{notional:.2f} USDT)"
+                + (
+                    f" — arrêt depuis {int(stopped_duration_s)}s"
+                    if stopped_duration_s is not None
+                    else ""
+                )
+            )
+            self.emit("alert", "orphan_position_unwatched", msg, payload)
+        except Exception as exc:
+            logger.warning("orphan position check failed: %s", exc)
+
     def run_once(self) -> None:
         self.check_heartbeat()
         self.check_exchange_connectivity()
         self.check_reconciliation()
         self.check_market_anomaly()
         self.check_guardrails()
+        self.check_orphan_position()
 
     def run_forever(self) -> None:
         logger.info(
