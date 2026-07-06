@@ -1,6 +1,10 @@
 .env
 .env.sol
 .env.hyper
+.env.observatory
+# Accès Claude Desktop — contient mot de passe PostgreSQL
+GUIDE_CONNEXION_CLAUDE_DESKTOP.md
+docs/claude_readonly_access.md
 .venv/
 __pycache__/
 *.pyc

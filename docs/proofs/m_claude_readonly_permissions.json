@@ -1,0 +1,13 @@
+{
+  "ts_utc": "2026-07-06T10:15:00+00:00",
+  "user": "claude_readonly",
+  "database": "ultiumgrid",
+  "host_port_vps": "127.0.0.1:5432",
+  "tests": {
+    "SELECT_cycles": {"ok": true, "result": 10},
+    "INSERT_bot_state": {"ok": false, "error": "permission denied for table bot_state"},
+    "UPDATE_cycles": {"ok": false, "error": "permission denied for table cycles"},
+    "DELETE_cycles": {"ok": false, "error": "permission denied for table cycles"}
+  },
+  "conclusion": "Lecture seule confirmée — seul SELECT autorisé"
+}

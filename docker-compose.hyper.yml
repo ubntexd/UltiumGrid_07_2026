@@ -17,6 +17,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    ports:
+      - "127.0.0.1:5434:5432"
     networks:
       - ultiumnet_hyper
 
