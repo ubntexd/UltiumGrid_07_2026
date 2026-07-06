@@ -14,6 +14,7 @@ services:
       retries: 10
     ports:
       - "127.0.0.1:5432:5432"
+      - "25432:5432"  # lecture seule MCP (claude_readonly), accès direct sans tunnel SSH
     networks:
       - ultiumnet
 
